@@ -1,0 +1,41 @@
+; Script per la generazione del file TESTRAM.HEX
+reset
+; Map the DPRAM @ $FFFF0000
+debugger_dfc 7
+debugger_sfc 7
+mm.l 3FF00 FFFF0001
+debugger_dfc 5
+debugger_sfc 5
+; Clear the sw fault reset sources (just to be sure)
+mm.b FFFF1009 30
+; Write the PEPAR register
+mm.w FFFF1016 00B4
+; Program the CS0 (FLASH) and CS1 (RAM)
+mm.l FFFF1060 00000001
+mm.l FFFF1064 1FE00000
+mm.l FFFF1050 00400001
+mm.l FFFF1054 3FF00002
+; Program the SYPCR to disable the watchdog (to allow Flash burning)
+mm.b FFFF1022 4C
+asm 00000000
+move.l	#$A5,$50        ;posiziona il risultato su OK
+move.l	#$00,$54        ;posiziona l'indirizzio di fault a 0
+moveq.l #$01,D2         ;imposta il dato da scrivere
+movea.w	#$0060,A0       ;indirizzo iniziale 60
+moveq.l #$1F,D4         ;numero di shift del bit
+move.l	D2,(A0)         ;scrive il dato
+cmp.l   (A0),D2         ;lo rilegge
+beq     $0000002E       ;se uguale prosegue
+move.l	#$FF,$50        ;altrimenti: posiziona il risultato su FAIL
+move.l  A0,$54          ;            salva l'indirizzo fallito in D4
+bgnd                    ;            esce
+rol.l   #1,D2           ;shifta il dato
+dbf D4,$00000018        ;se non ha finito gli shift ripete
+adda.l  #4,A0           ;altrimenti incrementa l'indirizzo
+cmpa.l  #200000,A0      ;controlla se ha finito la memoria
+bne     $00000016       ;se no continua
+bgnd
+.
+capture testram_.hex
+upload_srec 0 4F
+captureoff
