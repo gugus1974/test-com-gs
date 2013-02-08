@@ -1,6 +1,5 @@
 [FileVersion]
 Version=6.0
-
 [Compiler]
 A=8
 B=0
@@ -31,7 +30,6 @@ Z=1
 ShowHints=1
 ShowWarnings=1
 UnitAliases=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
-
 [Linker]
 MapFile=0
 OutputObjs=0
@@ -42,9 +40,8 @@ MinStackSize=16384
 MaxStackSize=1048576
 ImageBase=4194304
 ExeDescription=
-
 [Directories]
-OutputDir=C:\swdel\com\exe
+OutputDir=C:\swdel\testcom\exe
 UnitOutputDir=
 PackageDLLOutputDir=
 PackageDCPOutputDir=
@@ -53,19 +50,16 @@ Packages=vcl;rtl;vclx;VclSmp;vclshlctrls;dbrtl;adortl;vcldb;qrpt;bdertl;vcldbx;d
 Conditionals=
 DebugSourceDirs=
 UsePackages=0
-
 [Parameters]
 RunParams=NONE
 HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
-
 [Language]
 ActiveLang=
 ProjectLang=
 RootDir=C:\PROGRAMMI\BORLAND\DELPHI6\BIN\
-
 [Version Info]
 IncludeVerInfo=0
 AutoIncBuild=0
@@ -80,7 +74,6 @@ Private=0
 DLL=0
 Locale=1040
 CodePage=1252
-
 [Version Info Keys]
 CompanyName=
 FileDescription=
@@ -92,11 +85,10 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
-
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
-
 [HistoryLists\hlOutputDirectorry]
-Count=1
-Item0=C:\swdel\com\exe
+Count=2
+Item0=C:\swdel\testcom\exe
+Item1=C:\swdel\com\exe

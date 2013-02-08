@@ -96,7 +96,7 @@ var
     UserStopTest:     Boolean;
 
 const
-    Version = '1.02';
+    Version = '1.00';
     PassedLogFileName = 'COMTEST.LOG';
     FailedLogFileName = 'COMTESTF.LOG';
 
@@ -1107,10 +1107,10 @@ begin
     end;
 
     (* Lancia icd32 per sbloccare il reset della scheda COM *)
-    if (BDMPort <> 'NONE') then
+//    if (BDMPort <> 'NONE') then
     begin
         copyfile('startup.1','startup.icd',False);
-        ExecAppWait('icd32.exe','quiet '+BDMPort);
+        ExecAppWait('BDMEXIT.bat','');
         copyfile('startup.cpy','startup.icd',False);
     end;
 end;
@@ -1152,6 +1152,7 @@ begin
     txtOperator.TabStop := False;
     txtBoardID.TabStop := False;
 
+    BDMPort := 'lpt1';
 
     (* Cancella i risultati di un eventuale test precedente *)
     BoardOK  := true;
@@ -1207,7 +1208,8 @@ begin
         (* lancia ICD32 *)
         if (BDMPort <> 'NONE') then
         begin
-            ExecAppWait('icd32.exe','quiet '+BDMPort);
+//            ExecAppWait('icd32.exe','quiet '+BDMPort);
+            ExecAppWait('LOAD_COM_USB.BAT','');
         end;
 
         (* attende 2 secondi *)
