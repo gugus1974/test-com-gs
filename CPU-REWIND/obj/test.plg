@@ -1,0 +1,90 @@
+<html>
+<body>
+<pre>
+<h1>µVision3 Build Log</h1>
+<h2>Project:</h2>
+C:\rewcpu\test.uv2
+Project File Date:  02/24/2010
+
+<h2>Output:</h2>
+compiling adc.c...
+SRC\ADC.C(136): error C141: syntax error near 'int'
+SRC\ADC.C(136): error C141: syntax error near ')'
+SRC\ADC.C(137): error C202: 'DELAY': undefined identifier
+src\adc.c - 3 Error(s), 0 Warning(s).
+Build target '80C31'
+compiling main.c...
+compiling adc.c...
+SRC\ADC.C(139): error C202: 'del': undefined identifier
+compiling uart8251.c...
+Target not created
+Build target '80C31'
+compiling adc.c...
+SRC\ADC.C(136): error C141: syntax error near 'char'
+SRC\ADC.C(136): error C202: 'del': undefined identifier
+SRC\ADC.C(139): error C202: 'del': undefined identifier
+Target not created
+Build target '80C31'
+compiling adc.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GET_TIMER0?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TEST_UARTU27_RX_TX?UART8251
+Program Size: data=104.2 xdata=564 code=13374
+creating hex file from ".\obj\test"...
+".\obj\test" - 0 Error(s), 2 Warning(s).
+Build target '80C31'
+compiling adc.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GET_TIMER0?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TEST_UARTU27_RX_TX?UART8251
+Program Size: data=105.2 xdata=564 code=13514
+creating hex file from ".\obj\test"...
+".\obj\test" - 0 Error(s), 2 Warning(s).
+Build target '80C31'
+compiling adc.c...
+SRC\ADC.C(86): warning C280: 'ritardo': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GET_TIMER0?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TEST_UARTU27_RX_TX?UART8251
+Program Size: data=105.2 xdata=564 code=13438
+creating hex file from ".\obj\test"...
+".\obj\test" - 0 Error(s), 3 Warning(s).
+Build target '80C31'
+compiling adc.c...
+SRC\ADC.C(86): warning C280: 'ritardo': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GET_TIMER0?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TEST_UARTU27_RX_TX?UART8251
+Program Size: data=105.2 xdata=564 code=13388
+creating hex file from ".\obj\test"...
+".\obj\test" - 0 Error(s), 3 Warning(s).
+Build target '80C31'
+compiling adc.c...
+SRC\ADC.C(87): warning C280: 'del': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GET_TIMER0?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TEST_UARTU27_RX_TX?UART8251
+Program Size: data=105.2 xdata=564 code=13414
+creating hex file from ".\obj\test"...
+".\obj\test" - 0 Error(s), 3 Warning(s).
+Build target '80C31'
+compiling adc.c...
+SRC\ADC.C(87): warning C280: 'del': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GET_TIMER0?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?TEST_UARTU27_RX_TX?UART8251
+Program Size: data=105.2 xdata=564 code=13420
+creating hex file from ".\obj\test"...
+".\obj\test" - 0 Error(s), 3 Warning(s).

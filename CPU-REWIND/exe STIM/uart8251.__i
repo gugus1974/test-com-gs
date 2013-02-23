@@ -1,0 +1,1 @@
+"src\uart8251.c" OPTIMIZE (SIZE) CODE SYMBOLS PRINT(.\lst\uart8251.lst) PREPRINT(.\lst\uart8251.i) OBJECT(.\exe STIM\uart8251.obj)
