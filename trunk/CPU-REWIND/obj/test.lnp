@@ -1,0 +1,9 @@
+".\obj\main.obj",
+".\obj\test_ram.obj",
+".\obj\adc.obj",
+".\obj\pio.obj",
+".\obj\uart8251.obj" 
+TO ".\obj\test" 
+PRINT(".\lst\test.m51") NOLINES 
+CODE( 0X0000-0X4FFE )
+XDATA( 0X0000-0X1FFE )

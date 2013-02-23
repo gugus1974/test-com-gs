@@ -1,0 +1,9 @@
+".\exe STIM\main.obj",
+".\exe STIM\test_ram.obj",
+".\exe STIM\adc.obj",
+".\exe STIM\pio.obj",
+".\exe STIM\uart8251.obj" 
+TO ".\exe STIM\test" 
+PRINT(".\lst\test.m51") NOLINES 
+CODE( 0X0000-0X4FFE )
+XDATA( 0X0000-0X1FFE )
