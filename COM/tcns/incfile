@@ -1,0 +1,121 @@
+#****************************************************************/
+# 2005/ott/03,lun 12:00                 \SWISV\TCNS\incfile     */
+#****************************************************************/
+#   Definizione variabili per dipendenze da 'include file'      */
+#****************************************************************/
+# $Date: 2005/10/11 09:06:32 $          $Revision: 1.3 $
+# $Author: mungiguerrav $
+
+
+DTCNS   =   \SWISV\TCNS\SRC
+DTDAS   =   \SWISV\TCNS\A\DEA\SRC
+DTDVS   =   \SWISV\TCNS\A\DEV\SRC
+DTSAS   =   \SWISV\TCNS\A\STA\SRC
+DTSBS   =   \SWISV\TCNS\A\STB\SRC
+
+
+IM_atr_sys  =   $(DTDAS)\atr_sys.h      \
+                $(DTDVS)\atr_sys.h      \
+                $(DTSAS)\atr_sys.h      \
+                $(DTSBS)\atr_sys.h      $(I_atr_hw)
+
+I_am_group  =   $(DTCNS)\am_group
+I_am_sub    =   $(DTCNS)\am_sub.h       $(I_am_sys).h   $(I_tm_layer)
+I_am_sys    =   $(DTCNS)\am_sys.h       $(IM_atr_sys)
+I_apd_incl  =   $(DTCNS)\apd_incl.h     $(IM_atr_sys)
+I_atr_map   =   $(DTCNS)\atr_map.h      $(I_recorder).h $(I_old_sys).h  $(I_map)
+I_atr_nma   =   $(DTCNS)\atr_nma.h      $(I_conf_tcn)
+I_baa_auxi  =   $(DTCNS)\baa_auxi.h     $(I_bam_main)
+I_bac_cons  =   $(DTCNS)\bac_cons.h     $(I_baa_auxi).h $(I_bap_poll)
+I_bad_diag  =   $(DTCNS)\bad_diag.h     $(I_bax_incl).h $(I_bal_link)
+I_baf_fram  =   $(DTCNS)\baf_fram
+I_bah_ebac  =   $(DTCNS)\bah_ebac.h     $(I_bal_link).h $(I_lc_sys)
+I_bah_hwre  =   $(DTCNS)\bah_hwre.h     $(I_lc_sys).h   $(I_bah_ebac).h $(I_bah_tcfg).h $(I_bal_link).h $(I_mvbc)
+I_bah_tcfg  =   $(DTCNS)\bah_tcfg
+I_bai_ifce  =   $(DTCNS)\bai_ifce.h     $(I_lc_sys).h   $(I_pi_sys).h   $(I_lp_sys).h   $(I_recorder)
+I_bal_link  =   $(DTCNS)\bal_link.h     $(I_baa_auxi).h $(I_bax_incl)
+I_bam_main  =   $(DTCNS)\bam_main.h     $(I_bax_incl)
+I_bap_poll  =   $(DTCNS)\bap_poll.h     $(I_baa_auxi).h $(I_bal_link)
+I_basetype  =   $(DTCNS)\basetype.h     $(IM_atr_sys)
+I_bat_tfer  =   $(DTCNS)\bat_tfer
+I_bax_incl  =   $(DTCNS)\bax_incl.h     $(IM_atr_sys)
+I_conf_tcn  =   $(DTCNS)\conf_tcn.h     $(I_lc_sys).h   $(I_lp_sys).h   $(I_am_sys).h   $(I_pi_sys).h   \
+                                        $(I_bax_incl).h $(I_mvbc_red).h $(I_tcntypes).h $(I_map).h      $(I_ncdb)
+I_ctrl      =   $(DTCNS)\ctrl
+I_lc_head   =   $(DTCNS)\lc_head.h      $(I_mvbc).h     $(I_lc_tgt)
+I_lc_sys    =   $(DTCNS)\lc_sys.h       $(IM_atr_sys)
+I_lc_tgt    =   $(DTCNS)\lc_tgt.h       $(I_mvbc).h     $(I_lc_sys).h   $(I_pi_sys).h   $(I_recorder)
+I_lm_head   =   $(DTCNS)\lm_head.h      $(I_pi_sys).h   $(I_recorder)
+I_lm_layer  =   $(DTCNS)\lm_layer.h     $(I_md_layer).h $(I_lc_sys)
+I_lme_sys   =   $(DTCNS)\lme_sys.h      $(I_am_group).h $(I_lc_sys).h   $(I_bax_incl).h $(I_lp_sys).h   \
+                                        $(I_apd_incl).h $(I_am_sys)
+I_lp_bits   =   $(DTCNS)\lp_bits
+I_lp_ffld   =   $(DTCNS)\lp_ffld.h      $(I_lpl_4tcn).h $(I_lc_sys)
+I_lp_irpt   =   $(DTCNS)\lp_irpt
+I_lp_sys    =   $(DTCNS)\lp_sys.h       $(IM_atr_sys)
+I_lp_tmo    =   $(DTCNS)\lp_tmo.h       $(I_lp_sys)
+I_lpa_as2c  =   $(DTCNS)\lpa_as2c
+I_lpc_blck  =   $(DTCNS)\lpc_blck
+I_lpd_dbug  =   $(DTCNS)\lpd_dbug.h     $(I_recorder)
+I_lpi_ifce  =   $(DTCNS)\lpi_ifce.h     $(I_lp_sys).h   $(I_lpp_pcmc).h $(I_lc_sys).h   $(I_mvbc).h     \
+                                        $(I_lpa_as2c).h $(I_recorder)
+I_lpl_4tcn  =   $(DTCNS)\lpl_4tcn.h     $(I_lp_sys).h   $(I_lp_tmo).h   $(I_mvbc)
+I_lpp_pcmc  =   $(DTCNS)\lpp_pcmc.h     $(I_lp_sys).h   $(I_lc_sys)
+I_lx_param  =   $(DTCNS)\lx_param
+I_malloc    =   $(DTCNS)\malloc
+I_map       =   $(DTCNS)\map
+I_map_bmi   =   $(DTCNS)\map_bmi
+I_map_ums   =   $(DTCNS)\map_ums
+I_md_ifce   =   $(DTCNS)\md_ifce.h      $(IM_atr_sys).h $(I_recorder)
+I_md_layer  =   $(DTCNS)\md_layer.h     $(I_basetype)
+I_mm_pool   =   $(DTCNS)\mm_pool.h      $(I_md_layer)
+I_mvbc      =   $(DTCNS)\mvbc
+I_mvbcinc   =   $(DTCNS)\mvbc
+I_mvbc_red  =   $(DTCNS)\mvbc_red
+I_ncdb      =   $(DTCNS)\ncdb
+I_nm_disp   =   $(DTCNS)\nm_disp.h      $(I_md_layer).h $(I_am_sys)
+I_nm_layer  =   $(DTCNS)\nm_layer.h     $(I_md_layer)
+I_nm_stadi  =   $(DTCNS)\nm_stadi.h     $(I_am_sys)
+I_old_sys   =   $(DTCNS)\old_sys.h      $(I_am_sys)
+I_pi_rtx    =   $(DTCNS)\pi_rtx
+I_pi_sys    =   $(DTCNS)\pi_sys.h       $(IM_atr_sys).h $(I_pi_rtx)
+I_recorder  =   $(DTCNS)\recorder
+I_strt_tcn  =   $(DTCNS)\strt_tcn.h     $(I_strt_usr).h $(I_pi_sys).h   $(I_conf_tcn)
+I_tcn_mon   =   $(DTCNS)\tcn_mon
+I_tcn_util  =   $(DTCNS)\tcn_util.h     $(I_tcntypes).h $(I_apd_incl)
+I_tcntypes  =   $(DTCNS)\tcntypes
+I_tm_layer  =   $(DTCNS)\tm_layer.h     $(I_nm_layer).h $(I_md_layer)
+I_tm_sub    =   $(DTCNS)\tm_sub.h       $(I_nm_layer).h $(I_md_layer)
+I_tnm       =   $(DTCNS)\tnm
+I_traceenb  =   $(DTCNS)\traceenb.h     $(I_am_sys).h   $(I_nm_layer).h $(I_tm_layer).h $(I_tm_sub).h   $(I_md_layer)
+
+
+#****************************************************************************/
+# $Log: incfile,v $
+# Revision 1.3  2005/10/11 09:06:32  mungiguerrav
+# 2005/ott/03,lun 12:00           Napoli      Mungi
+# - Per la mancata segnalazione delle variabili $(I_xxx) vuote,
+#   in ogni definizione di una variabile:
+#     - si abolisce l'estensione dell'ultimo file
+#     - in ogni uso di altre variabili, si aggiunge l'estensione dell'ultimo file
+# - Si scopre e corregge in tal modo un (I_lp_sys.h) in (I_lp_sys).h
+# - In I_bal_link si elimina:   I_bah_hwre
+#   (come fatto realmente nel file SRC\\BAL_LINK.h
+# - Per evitare include incrociati che non permettono di usare questa
+#   nuova organizzazione, in IM_atr_sys si eliminano:
+#     I_bah_hwre   e   I_bai_ifce
+#
+# Revision 1.2  2005/03/30 13:29:56  mungiguerrav
+# 2005/mar/30,mer 14:10           Napoli      Mungi
+# - In mancanza di risposte alla mail del 2005/03/08,
+#   si eliminano tutti i riferimenti alla scheda STR
+#
+# Revision 1.1  2004/12/13 12:22:43  mungiguerrav
+# 2004/nov/30,mar 18:30           Napoli      Mungi
+# - Si crea per permettere ai mekefile di gestire gli include a piu' livelli:
+#   in questo file sono create le variabili con gli include a cascade dei file
+#   header presenti nella dir  SRC  e  A\DEA,DEV,STA,STB,STR\SRC
+# - Si noti la variabile   IM_atr_sys,   ove IM significa Include Multiplo, in quanto
+#   fa riferimento a   atr_sys.h   presente in tutte le cinque dir di scheda
+#
+#

@@ -1,0 +1,143 @@
+# -----------------------------------------------------------------------------------------------
+# Xconfig definition file for the COM board
+#
+# (c)1997 Ansaldo Trasporti
+# Written by Giuseppe Carnevale
+# -----------------------------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------------------------
+# Fix the directories
+# -----------------------------------------------------------------------------------------------
+
+board.boarddir:		/sw/com/bsp
+board.devcnfgdir:	/sw/com/bsp
+
+
+# -----------------------------------------------------------------------------------------------
+# Define the board name and processor (board.chip is the "real" processor)
+# -----------------------------------------------------------------------------------------------
+
+board.name:          atrcom
+board.target:        mc68010
+board.proc:          68010
+board.tool.type:     m68k
+board.cc_flag:       -DMC68010 -DM68K
+board.chip:          68360
+
+
+# -----------------------------------------------------------------------------------------------
+# Devices in this BSP
+# -----------------------------------------------------------------------------------------------
+
+board.devices:         board
+# board.devices:         board,serial_1,timer_1
+
+dev.board.name:        DEV_BOARD
+dev.board.method:      logio_board_method
+
+# dev.serial_1.name:     DEV_SERIAL_1
+# dev.serial_1.method:   logio_serial_1_method
+
+# dev.timer_1.name:      DEV_TIMER_1
+# dev.timer_1.method:    logio_timer_1_method
+
+
+# -----------------------------------------------------------------------------------------------
+# Memory map
+#                                                       Name        Type
+#        +------------------------------------------------------------------------+
+# 000000 | Cold Reset Exception Vectors and crt0 code : ---       : ---           | 000FFF
+#        +------------------------------------------------------------------------+
+# 001000 | VRTXsa "small" data (not used)             : ---       : ---           | 002FFF
+#        +------------------------------------------------------------------------+
+# 003000 | Monitor code (if in RAM)                   : ---       : ---           | 005FFF
+#        +------------------------------------------------------------------------+
+# 006000 | Monitor data                               : ---       : ---           | 006FFF
+#        +------------------------------------------------------------------------+
+# 007000 | Monitor EVT                                : ---       : ---           | 0073FF
+#        +------------------------------------------------------------------------+
+# 007400 | Unused                                     : ---       : ---           | 007FFF
+#        +------------------------------------------------------------------------+
+# 008000 | Boot code                                  : boot_code : boot          | 00FFFF
+#        +------------------------------------------------------------------------+
+# 010000 | Application code                           : user_code : unused-host   | 0DFFFF
+#        +------------------------------------------------------------------------+
+# 0E0000 | External NCDB                              : ---       : ---           | 0FFFFF
+#        +------------------------------------------------------------------------+
+# 100000 | Boot data                                  : boot_data : shared        | 11FFFF
+#        +------------------------------------------------------------------------+
+# 120000 | Application data                           : user_data : booted        | 15FFFF
+#        +------------------------------------------------------------------------+
+# 160000 | sys_mem_get() workspace                    : workspace : unused-target | 1FFFFF
+#        +------------------------------------------------------------------------+
+#
+# -----------------------------------------------------------------------------------------------
+
+board.memory                  : boot_code,user_code,boot_data,user_data,workspace
+
+@dnl board.memory.vrtx_data.address     : 0x001000
+@dnl board.memory.vrtx_data.size        : 0x007000
+@dnl board.memory.vrtx_data.type        : BOOTOS_MEMORY_BOOTED
+
+board.memory.boot_code.address     : 0x008000
+board.memory.boot_code.size        : 0x008000
+board.memory.boot_code.type        : BOOTOS_MEMORY_BOOT | BOOTOS_MEMORY_READONLY
+
+board.memory.user_code.address     : 0x010000
+board.memory.user_code.size        : 0x0D0000
+board.memory.user_code.type        : BOOTOS_MEMORY_UNUSED_HOST
+
+board.memory.boot_data.address     : 0x100000
+board.memory.boot_data.size        : 0x020000
+board.memory.boot_data.type        : BOOTOS_MEMORY_SHARED
+
+board.memory.user_data.address     : 0x120000
+board.memory.user_data.size        : 0x060000
+board.memory.user_data.type        : BOOTOS_MEMORY_BOOTED
+
+board.memory.workspace.address     : 0x160000
+board.memory.workspace.size        : 0x0A0000
+board.memory.workspace.type        : BOOTOS_MEMORY_UNUSED_TARGET
+
+
+# -----------------------------------------------------------------------------------------------
+# Fix the addresses as specified in the memory map
+# -----------------------------------------------------------------------------------------------
+
+board.boot.code    : `@substr(@(board.memory.boot_code.address),2)'
+board.boot.data    : `@substr(@(board.memory.boot_data.address),2)'
+
+make.*.vrtxos.code : `@substr(@(board.memory.user_code.address),2)'
+make.*.vrtxos.data : `@substr(@(board.memory.user_data.address),2)'
+
+
+# -----------------------------------------------------------------------------------------------
+# Specify the boot actions
+# -----------------------------------------------------------------------------------------------
+
+boot.env.verbosity.value:     3
+@dnl boot.env.devices:             board,timer,console
+boot.env.devices:             board
+boot.methods:                 go
+boot.env.boot_order:          go
+boot.method.go.orderparam:    `@substr(@(board.memory.user_code.address),2)'
+
+
+# -----------------------------------------------------------------------------------------------
+# Specify the system console and the startup verbosity
+# -----------------------------------------------------------------------------------------------
+
+@dnl vrtxos.console		: CONSOLE
+@dnl sys.verbose.major	: yes
+@dnl sys.verbose.minor 	: yes
+@dnl sys.verbose.panic 	: yes
+
+
+# -----------------------------------------------------------------------------------------------
+# Specify that we have a "devcnfg" file
+# -----------------------------------------------------------------------------------------------
+
+boot.objs.rs.curdir: bootcnfg,devices,devcnfg
+
+

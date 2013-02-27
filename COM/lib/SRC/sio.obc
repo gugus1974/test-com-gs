@@ -1,0 +1,37 @@
+@echo off
+rem 2004/nov/11,gio 15:35               \SWISV\LIB\SRC\sio.obc
+rem ==============================================================
+rem
+rem ==============================================================
+rem $Date: 2004/11/11 14:50:00 $        $Revision: 1.3 $
+rem $Author: mungiguerrav $
+
+
+:HL7
+call    \SWISV\COMANDI\skca     %1      dea     v403    lib
+if "%risSK%"=="0"           goto HL7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:HL7end
+
+
+rem ****************************************************************************/
+rem $Log: sio.obc,v $
+rem Revision 1.3  2004/11/11 14:50:00  mungiguerrav
+rem 2004/nov/11,gio 15:35          Napoli       Mungi
+rem - Si aggiungono keyword CVS e breve storia
+rem
+rem
+rem ----------------   Fase transitoria tra *.mod e CVS    ------------
+rem     Revision 1.2        2004/08/31 14:25:16     mungiguerrav
+rem     2004/ago/31,mar 16:25        Napoli          Mungi\Busco
+rem     - Si effettua Merge da branch makefile
+rem
+rem     Revision 1.1.2.1    2004/07/14 15:31:26     buscob
+rem 02.00   2004.apr.07,mer         Napoli                  Mungi
+rem         - Adegua il test di errore a Win2000        (if "%risXX%"=="0")
+rem         - Migliora le informazioni fornite in caso di errore di compilazione
+rem
+rem     Revision 1.1        2004/06/15 11:25:22   buscob
+rem     - Inserimento in CVS della versione in lib07n
+rem 01.00   2003/nov/30,dom         Madrid              Mungi
+rem         - Creazione con la compilazione solo per OBJ7L

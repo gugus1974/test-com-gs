@@ -1,0 +1,119 @@
+@echo off
+rem 2004/nov/22,lun 11:30               \SWISV\TCNS\SRC\default.obc
+rem ===============================================================
+rem
+rem ===============================================================
+rem $Date: 2006/11/17 13:10:19 $        $Revision: 1.3.4.1.2.1 $
+rem $Author: schiavor $
+
+
+:deaSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      DEA     SRC
+call    \SWISV\COMANDI\skca     %1      dea     v403    tcns    dea
+if "%risSK%"=="0"           goto deaSKend
+    echo .obc: errore in A\DEA\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:deaSKend
+del     \SWISV\TCNS\A\DEA\SRC\%1.c
+rem ==============================================================
+
+:devSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      DEV     SRC
+call    \SWISV\COMANDI\skca     %1      dev     v403    tcns    dev
+if "%risSK%"=="0"           goto devSKend
+    echo .obc: errore in A\DEV\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:devSKend
+del     \SWISV\TCNS\A\DEV\SRC\%1.c
+rem ==============================================================
+
+:idudevSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      IDUDEV     SRC
+call    \SWISV\COMANDI\skca     %1      idudev     v403    tcns    idudev
+if "%risSK%"=="0"           goto idudevSKend
+    echo .obc: errore in A\IDUDEV\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:idudevSKend
+del     \SWISV\TCNS\A\IDUDEV\SRC\%1.c
+rem ==============================================================
+
+:dewSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      DEW     SRC
+call    \SWISV\COMANDI\skca     %1      dew     v403    tcns    dew
+if "%risSK%"=="0"           goto dewSKend
+    echo .obc: errore in A\DEW\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:dewSKend
+del     \SWISV\TCNS\A\DEW\SRC\%1.c
+rem ==============================================================
+
+:staSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      STA     SRC
+call    \SWISV\COMANDI\skca     %1      sta     v403    tcns    sta
+if "%risSK%"=="0"           goto staSKend
+    echo .obc: errore in A\STA\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:staSKend
+del     \SWISV\TCNS\A\STA\SRC\%1.c
+rem ==============================================================
+
+:stbSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      STB     SRC
+call    \SWISV\COMANDI\skca     %1      stb     v403    tcns    stb
+if "%risSK%"=="0"           goto stbSKend
+    echo .obc: errore in A\STB\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:stbSKend
+del     \SWISV\TCNS\A\STB\SRC\%1.c
+rem ==============================================================
+
+:strSK
+call    \SWISV\COMANDI\cglx     TCNS    %1      STR     SRC
+call    \SWISV\COMANDI\skca     %1      str     v403    tcns    str
+if "%risSK%"=="0"           goto strSKend
+    echo .obc: errore in A\STR\OBJ7L\%1     >>  \SWISV\TEMP.DAN\error.rac
+:strSKend
+del     \SWISV\TCNS\A\STR\SRC\%1.c
+rem ==============================================================
+
+
+rem ****************************************************************************/
+rem $Log: default.obc,v $
+rem Revision 1.3.4.1.2.1  2006/11/17 13:10:19  schiavor
+rem 17/11/2006             Napoli                      Schiavor
+rem  -creata nuovo scheda IDUDEV
+rem
+rem Revision 1.3.4.1  2005/09/09 09:48:56  schiavor
+rem Si aggiunge compilazione per scheda DEW
+rem
+rem Revision 1.3  2004/11/24 20:03:31  mungiguerrav
+rem 2004/nov/22,lun 11:30           Napoli      Mungi
+rem - Si aggiungono keyword CVS e storia invertita
+rem - Adegua il test di errore a Win2000        (if "%risXX%"=="0")
+rem - Migliora le informazioni fornite in caso di errore di compilazione
+rem - Si utilizza nuovo batch cglx invece di cgl16x, che permette di dichiarare
+rem   la libreria in cui si agisce (L16x) nel primo parametro
+rem
+rem
+rem ----------------   Fase transitoria tra *.mod e CVS    ------------
+rem     Revision 1.2        2004/09/02 10:01:26     mungiguerrav
+rem     2004/set/02,gio 11:50       Napoli          Mungi
+rem     - Merge da branch di sviluppo  makefile
+rem     - In effetti su tale branch si sono spostate in  TCNS\SRC tutti i componenti
+rem       che nella organizzazione di Carnevale erano sotto SW\TCN\JDP\XX: la
+rem       posizione originaria puo' essere ricavata dall'inizio del nome del componente
+rem       o dal commento nel file TCNS\makefile
+rem     - Si spera quanto prima di inserire i token di gestioni automatiche CVS
+rem       (DATE, FILE, AUTHOR, LOG), per abolire i file .mod o i pezzi di storia
+rem       inseriti senza regole nei componenti stessi
+rem     - Si spera soprattutto che qualcuno con la nuova organizzazione si prenda
+rem       la briga di migliorare la qualita' di questo modulo, sia in termini formali che
+rem       prestazionali (MNG)
+rem     - Merge da branch di sviluppo  makefile
+rem     - E' in effetti la creazione dei file nelle nuove directory dedicate alle
+rem       singole schede registrate (DEA,DEV,STA,STB,STR)
+rem     - Non sono ancora inseriti i token di gestioni automatiche CVS (DATE, FILE, AUTHOR, LOG)
+rem
+rem     Revision 1.1.2.2    2004/07/15 14:49:45     nappoc
+rem     2004/lug/15,gio             Napoli              Nappo
+rem     - Si aggiunge compilazione per scheda STR   (Mng: anche DEA e DEV)
+rem
+rem     Revision 1.1.2.1    2004/07/09 16:24:40     buscob
+rem 01.00   2004/lug/08,gio         Napoli              Busco/Nappo
+rem         - Addio monolite !!
+rem
+

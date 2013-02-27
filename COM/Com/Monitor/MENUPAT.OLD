@@ -1,0 +1,156 @@
+*-============================================================
+*	%W%	%G%
+*
+* File:    BOARD.EQU (included as BOARDSET.INC)
+* Created: Dec. 20, 1989
+*
+* Copyright (c) 1991-1996  Microtec Research, Inc.
+* All rights reserved
+*
+*	Rev 8.3		G. Boehm, MRI, April 23, 1991
+*			Add CONFCOPY equate
+*
+*	Rev 6.4		M. Mahar, MRI, December 20, 1991
+*			Add MESBFSZ equate
+*
+*	Rev 6.3		G. Boehm, MRI, November 6, 1991
+*			Add BOARD_FAMILY equate
+*
+*	Rev 5.3		G. Boehm, MRI, July 31, 1991
+*			Implement 68040
+*
+*	Rev 5.2		G. Boehm, MRI, July 22, 1991
+*			Implement 68070
+*
+*	Rev 4.2		G. Boehm, MRI, April 18, 1991
+*			Add support for 68332
+*			Add utility flag
+*
+* 	New rev #1.1	G. Boehm, MRI, October 30, 1990
+*			Put under SCCS
+*
+*-============================================================
+*
+*        XRAYMON Board Support include file
+*                     for
+*      	Generic boards (specific ones in name.equ)
+*  	This file patched by menu program as boardset.inc
+*	Specific values will be set where $str$ found
+*
+*-============================================================
+* Board setup include file for monitor
+
+* CPU family designators
+CPU68000	equ	1
+CPU68010	equ	2
+CPU68020	equ	4
+CPU68030	equ	8
+CPU68332	equ	16
+CPU68070	equ	32		; GRB 7/22/91
+CPU68040	equ	64		; GRB 7/31/91
+CPU68360        equ    128		; Ray Apr 95
+
+* I/O baud rates
+IO19200		equ	1
+IO9600		equ	2
+IO4800		equ	3
+IO2400		equ	4
+IO1200		equ	5
+*
+* Parity styles for I/O init
+PAR_NONE	equ	0
+PAR_ODD		equ	1
+PAR_EVEN	equ	2
+PAR_SPACE	equ	3
+PAR_MARK	equ	4
+*** This area for user defined specials for board files
+*
+
+** Output format
+POLLED		equ	1	; Polled I/O (with or without INTRPT)
+TRAP15		equ	2	; special for MVME TRAP 15 code
+PROBEIO		equ	4	; special for pROBE I/O using VBR+44h lookup
+INITIO		equ	8	; 0=no init, else init (for boot start or int)
+HWIO		equ	16	; hardware I/O
+AUXMON		equ	32	; auxillary monitor started us
+VECTSTART	equ	64	; puts PC/SP as fisrt two longs for power-up
+INTRPT		equ	128	; interrupt I/O (with or without POLLED)
+WITHFPU		equ	256	; FPU present
+PARIO		equ	512	; Parallel I/O (ADS 302 ADI interface)
+ETHER		equ	1024	; Ethernet I/O
+CONFCOPY	equ	2048	; copy config table from ROM to RAM
+
+* Normal configs are as follows:
+*  - MVMEBUG: POLLED+TRAP15+AUXMON
+*  - PROBE:   POLLED+PROBEIO+AUXMON
+*  - HWIO:
+*     - W/AUXMON: [POLLED]+AUXMON
+*     - NO MON:   [POLLED]+INITIO
+
+**-------------------------------------------------------------------------
+* The next equates are set to describe the board and I/O in use
+**-------------------------------------------------------------------------
+BOARD_FAMILY	equ	0	; GRB 11/6/91:  0=no board family
+BOARD		equ	0
+TARGET		equ	CPU68360	; cpu used by board - for init stuff
+CONIO		equ	POLLED+HWIO+VECTSTART+INITIO	; set to combination of I/O flags
+ABVECT		equ	0	; abort vector if any (for button abort)
+BAUD		equ	IO9600	; set if IOINIT enabled
+IOBASE		equ	$0	; base address of device I/O
+IOOFF		equ	1 ; offset as 1, 2, or 4
+TIMECONST	equ	0 ; time constant for baud rate
+INTLEVEL	equ	0 ; interupt level to run at (0 is default)
+IOINTVECT	equ	$0 ; I/O interrupt vector (or 0)
+PARITY		equ	PAR_NONE	; I/O parity for init (if needed)
+UFLAG		equ	$1	; Utility Flag - can have many meanings
+MESBFSZ		equ	$MESBFSZ$ ; Message buffer size
+
+
+*
+* if using ethernet then use packet numbering
+*
+
+	ifne CONIO&ETHER
+flag1	equ COPAKSEQ
+
+	elsec
+flag1	equ 0
+	endc
+
+
+	ifne	CONIO&AUXMON
+MO_WSP_SIZE	equ	$A00	; XRAYMON workspace size (incl initial stack)
+ 	  ifne CONIO&WITHFPU
+INIT_FLAG	equ	COINIVECT+COAUXMON+COFPU + flag1  ; flags for MON_INIT
+	  elsec
+INIT_FLAG	equ	COINIVECT+COAUXMON + flag1  ; flags for MON_INIT
+	  endc
+	elsec
+MO_WSP_SIZE	equ	$600	; XRAYMON workspace size (incl initial stack)
+ 	  ifne CONIO&WITHFPU
+INIT_FLAG	equ	COINIVECT+COFPU + flag1  ; flags for MON_INIT
+	  elsec
+INIT_FLAG	equ	COINIVECT + flag1  ; flags for MON_INIT
+	  endc
+	endc
+**
+**  Note if debugging ethernet by allowing debug messages out the serial port
+**  +ETHER is  needed below if the Ethernet code uses trap15 for debugging
+**
+
+	ifne	CONIO&(TRAP15+PROBEIO)
+BOARD_SAVE	equ	1	; # of longs to reserve in workspace
+CON_SCHEME	equ	3	; 7-bit no control chars in transmissions
+	elsec
+BOARD_SAVE	equ	0	; # of longs to reserve in workspace
+          ifne PARITY
+CON_SCHEME	equ	3	; 7-bit no control chars in transmissions
+	  elsec
+CON_SCHEME	equ	0	; 8-bit full control chars in transmissions
+	  endc
+	endc
+
+	ifeq	CONIO&(POLLED+INTRPT)
+	  MUST HAVE POLLED AND/OR INTRPT
+	endc
+

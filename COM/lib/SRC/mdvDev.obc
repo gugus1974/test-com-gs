@@ -1,0 +1,24 @@
+@echo off
+rem 2004/nov/30,mar 16:10               \SWISV\LIB\SRC\mdvDev.obc
+rem ==============================================================
+rem
+rem ==============================================================
+rem $Date: 2004/12/13 12:02:11 $        $Revision: 1.1 $
+rem $Author: mungiguerrav $
+
+
+:HL7
+call    \SWISV\COMANDI\skca     %1      dea     v403    lib
+if "%risSK%"=="0"           goto HL7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:HL7end
+
+
+rem ****************************************************************************/
+rem $Log: mdvDev.obc,v $
+rem Revision 1.1  2004/12/13 12:02:11  mungiguerrav
+rem 2004/nov/30,mar 16:10           Napoli      Mungi
+rem - Essendo impossibili le compilazioni per BorlandC e modello 167 medium,
+rem   si impone la compilazione solo per modello 167 Large
+rem
+rem 

@@ -1,0 +1,83 @@
+@echo off
+rem 2004/nov/12,ven 08:30               \SWISV\LIB\SRC\default.obc
+rem ==============================================================
+rem
+rem ==============================================================
+rem $Date: 2004/11/12 09:53:16 $        $Revision: 1.4 $
+rem $Author: mungiguerrav $
+
+
+:bc30
+call    \SWISV\COMANDI\bcca     %1      pca     v403    lib
+if "%risBC%"=="0"           goto bc30end
+    echo .obc: errore in OBJL\%1        >>  \SWISV\TEMP.DAN\error.rac
+:bc30end
+
+:sm7
+call    \SWISV\COMANDI\skca     %1      pca     v403    lib
+if "%risSK%"=="0"           goto sm7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:sm7end
+
+:HL7
+call    \SWISV\COMANDI\skca     %1      dea     v403    lib
+if "%risSK%"=="0"           goto HL7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:HL7end
+
+
+rem ****************************************************************************/
+rem $Log: default.obc,v $
+rem Revision 1.4  2004/11/12 09:53:16  mungiguerrav
+rem 2004/nov/12,ven 08:30          Napoli       Mungi\Formato\Cascone
+rem - BugFix: Su segnalazione di Formato e Cascone si scopre che in caso di
+rem   errore di compilazione Borland l'avviso di errore ingannava, in quanto
+rem   utilizzava %dObj% (e quindi OBJ7M) invece del corretto OBJL
+rem
+rem Revision 1.3  2004/11/05 08:37:33  mungiguerrav
+rem 2004/nov/05,ven 09:10          Napoli       Mungi
+rem - Si aggiungono keyword CVS e storia invertita
+rem
+rem
+rem ----------------   Fase transitoria tra *.mod e CVS    ------------
+rem     Revision 1.2            2004/08/31 14:25:16     mungiguerrav
+rem     2004/ago/31,mar 16:25        Napoli          Mungi\Busco
+rem     - Si effettua Merge da branch makefile
+rem
+rem     Revision 1.1.1.1.2.3    2004/07/15 14:59:40     nappoc
+rem 03.01   2004/lug/15,gio             Napoli                  Nappo
+rem         - Si elimina compilazione per scheda DAU che è stata rimossa
+rem
+rem     Revision 1.1.1.1.2.2    2004/07/14 15:27:51     buscob
+rem     - Si reinserisce una versione dalle librerie fuori CVS,
+rem       perdendo la modifica precedente
+rem 03.00   2004/apr/07,mer             Napoli                  Mungi
+rem         - Adegua il test di errore a Win2000        (if "%risXX%"=="0")
+rem         - Migliora le informazioni fornite in caso di errore di compilazione
+rem
+rem     Revision 1.1.1.1.2.1    2004/06/24 14:34:45     nappoc
+rem     - Si elimina la compilazione per la scheda DAU che è stata rimossa
+rem
+rem     Revision 1.1      2002/03/27 18:19:56   accardol
+rem     - Inserimento in CVS della versione in lib07n
+rem     Revision 1.1.1.1  2002/03/27 18:19:56   accardol
+rem     - Inserimento in CVS in branch STP della versione in lib07n
+rem 02.01   2002/mar/27,mer         Napoli              Mungi\Accardo
+rem         - Si agg. parametro     v403    in posizione 3 spostando gli altri.
+rem         - Si agg. percorso  \SWISV\COMANDI      alle chiamate a bcca, skca
+rem
+rem -----------------   Prima del CVS   -------------------------------------
+rem 02.00   2002/feb/25,lun         Napoli              Mungi\Accardo
+rem         - Si abol. il param.1 della DirSorgente, spostando gli altri parametri
+rem         - Si elim parametro \OBJL per la comp. BorlandC
+rem 01.02   2001/dic/20,gio         Napoli              Mungi
+rem         - Si agg. i parametri: dirSorgente, Libreria e dirOutput, ottenendo:
+rem             :bc30       call bcca   SRC     %1      pca     LIB     \OBJL
+rem             :sm6        call skca   SRC     %1      dau     LIB
+rem             :sm7        call skca   SRC     %1      pca     LIB
+rem             :HL7        call skca   SRC     %1      dea     LIB
+rem 01.01   2001/dic/19,mer         Napoli              Mungi
+rem         - Si agg. compilazione per BorlandC, ossia per simulazione
+rem 01.00   2001/dic/18,mar         Napoli              Mungi
+rem         - Creazione con i primi tentativi di creazione controllata di oggetti
+rem           per vari modelli di memoria

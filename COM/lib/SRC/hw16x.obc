@@ -1,0 +1,30 @@
+@echo off
+rem 2004/nov/30,mar 16:00               \SWISV\LIB\SRC\hw16x.obc
+rem ==============================================================
+rem
+rem ==============================================================
+rem $Date: 2004/12/13 12:01:02 $        $Revision: 1.1 $
+rem $Author: mungiguerrav $
+
+
+:sm7
+call    \SWISV\COMANDI\skca     %1      pca     v403    lib
+if "%risSK%"=="0"           goto sm7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:sm7end
+
+:HL7
+call    \SWISV\COMANDI\skca     %1      dea     v403    lib
+if "%risSK%"=="0"           goto HL7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:HL7end
+
+
+rem ****************************************************************************/
+rem $Log: hw16x.obc,v $
+rem Revision 1.1  2004/12/13 12:01:02  mungiguerrav
+rem 2004/nov/30,mar 16:00           Napoli      Mungi
+rem - Essendo impossibili le compilazioni per BorlandC di istruzione assembler 167,
+rem   si impone la compilazione solo per modello 167 medium e Large
+rem
+rem 

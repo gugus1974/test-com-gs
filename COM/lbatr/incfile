@@ -1,0 +1,29 @@
+#****************************************************************/
+# 2004/nov/30,mar 17:00                 \SWISV\LBATR\incfile    */
+#****************************************************************/
+#   Definizione variabili per dipendenze da 'include file'      */
+#****************************************************************/
+# $Date: 2004/12/10 14:21:41 $          $Revision: 1.1 $
+# $Author: mungiguerrav $
+
+
+DLBAS   =   \SWISV\LBATR\SRC
+
+I_atr_hw    =   $(DLBAS)\atr_hw.h
+I_atr_log   =   $(DLBAS)\atr_log.h      $(I_pi_sys)     $(I_recorder)
+I_c_utils   =   $(DLBAS)\c_utils.h
+I_crc       =   $(DLBAS)\crc.h
+I_hw_mon    =   $(DLBAS)\hw_mon.h
+I_xilinx    =   $(DLBAS)\xilinx.h
+I_xmodem    =   $(DLBAS)\xmodem.h
+
+
+#****************************************************************************/
+# $Log: incfile,v $
+# Revision 1.1  2004/12/10 14:21:41  mungiguerrav
+# 2004/nov/30,mar 17:00           Napoli      Mungi
+# - Si crea per permettere ai mekefile di gestire gli include a piu' livelli:
+#   in questo file sono create le variabili con gli include a cascade dei file
+#   header presenti nella dir SRC
+#
+#

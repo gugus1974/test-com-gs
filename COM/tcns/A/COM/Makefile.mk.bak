@@ -1,0 +1,686 @@
+# -----------------------------------------------------------------------------------------------
+# Makefile for building COM board libraries
+#
+#
+# This Makefile is able to build different versions of the COM library, depending on the
+# value of the $(TARGET) macro:
+# - "$(TARGET) == MVB" : the "com_mvb.lib" library in the "MVB_OBJs" dir. is built (MVB only)
+# - "$(TARGET) == TCN" : the "com_tcn.lib" library in the "TCN_OBJs" dir. is built (MVB+WTB+MAP10)
+# - "$(TARGET) == UIC" : the "com_uic.lib" library in the "UIC_OBJs" dir. is built (MVB+WTB+MAP12)
+#
+# (c)1997 Ansaldo Trasporti
+# Written by Giuseppe Carnevale
+# -----------------------------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------------------------
+# Set the default target library
+# -----------------------------------------------------------------------------------------------
+
+#TARGET *= MVB
+ TARGET *= TCN
+# TARGET *= UIC
+
+
+# -----------------------------------------------------------------------------------------------
+# Base directories
+# -----------------------------------------------------------------------------------------------
+DIR_MASTER = c:\MASTER
+DIR_SW     = c:\SW
+
+# -----------------------------------------------------------------------------------------------
+# Set the directory where to store the produced objects and libraries
+# -----------------------------------------------------------------------------------------------
+
+.IF $(TARGET) == TCN
+DIR_OBJS = OBJM
+.ELIF $(TARGET) == UIC
+DIR_OBJS = UIC_OBJs
+.ELIF $(TARGET) == MVB
+DIR_OBJS = OBJM
+.END
+
+DIR_INCS = $(DIR_SW)\COM\LIBs\INC
+DIR_LIBS = $(DIR_SW)\COM\LIBs\LIB
+DIR_SRCS = $(DIR_SW)\COM\LIBs\SRC
+
+.SOURCE.obj: $(DIR_OBJS)
+.SOURCE.lib: $(DIR_LIBS)
+
+
+# -----------------------------------------------------------------------------------------------
+# Default rule: build the complete library
+# -----------------------------------------------------------------------------------------------
+
+.IF $(TARGET) == TCN
+LIBRARY = com_tcn.lib
+.ELIF $(TARGET) == UIC
+LIBRARY = com_uic.lib
+.ELIF $(TARGET) == MVB
+LIBRARY = com_mvb.lib
+.END
+
+all: $(LIBRARY)
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP sources modified by ATR fake-module
+# -----------------------------------------------------------------------------------------------
+
+DIR_MOD = $(DIR_SW)\TCNS\SRC
+DIR_HW = $(DIR_SW)\TCNS\A\COM\SRC
+DIR_LIB = $(DIR_SW)\LIB\SRC
+
+HEADERS_MOD = \
+	$(DIR_MOD)\AM_SYS.h	    \
+	$(DIR_MOD)\BAX_INCL.h	\
+	$(DIR_MOD)\LC_SYS.h	    \
+	$(DIR_MOD)\LP_SYS.h 	\
+	$(DIR_MOD)\APD_INCL.h	\
+	$(DIR_MOD)\MVBC.h	    \
+	$(DIR_MOD)\recorder.h	\
+	$(DIR_HW)\atr_sys.h 	\
+	$(DIR_MOD)\Pi_sys.h	    \
+	$(DIR_MOD)\basetype.h	\
+	$(DIR_MOD)\TCNTYPES.h
+
+HEADERS_LIB = \
+	$(DIR_LIB)\ushell.h	    \
+    $(DIR_LIB)\STRPARSE.h	\
+    $(DIR_LIB)\AM29F040.h	\
+    $(DIR_LIB)\logmac.h	\
+    $(DIR_LIB)\sio.h
+
+# -----------------------------------------------------------------------------------------------
+# VRTX PIL module
+# -----------------------------------------------------------------------------------------------
+
+DIR_PIL = $(DIR_SW)\TCNS\A\COM\SRC
+
+SOURCES_PIL = \
+	$(DIR_PIL)\pi_vrtx.cc
+
+HEADERS_PIL = ${SOURCES_PIL:s/.cc/.h/}
+
+OBJECTS_PIL = ${SOURCES_PIL:s/.cc/.obj/:f}
+
+pil: $(OBJECTS_PIL)
+
+# %.obj: $(DIR_PIL)\%.c '$(HEADERS_PIL:t"' '")' '$(HEADERS_MOD:t"' '")'
+# 	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+%.obj: $(DIR_PIL)\%.cc '$(HEADERS_PIL:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CPP) -d $(CPP_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP LC module
+# -----------------------------------------------------------------------------------------------
+
+DIR_LC = $(DIR_SW)\TCNS\SRC
+
+SOURCES_LC = \
+	$(DIR_LC)\lc_intr.c	\
+	$(DIR_LC)\lc_layer.c	\
+	$(DIR_LC)\lc_wait.c
+
+HEADERS_LC = \
+	$(DIR_LC)\lc_tgt.h	\
+	$(DIR_LC)\lc_head.h
+
+OBJECTS_LC = ${SOURCES_LC:s/.c/.obj/:f}
+
+lc: $(OBJECTS_LC)
+
+%.obj: $(DIR_LC)\%.c '$(HEADERS_LC:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP LM module
+# -----------------------------------------------------------------------------------------------
+
+DIR_LM = $(DIR_SW)\TCNS\SRC
+
+SOURCES_LM = \
+	$(DIR_LM)\lm_v_lay.c
+#	$(DIR_LM)\lm_layer.c
+
+HEADERS_LM = \
+	$(DIR_LM)\lm_head.h	\
+	$(DIR_LM)\lm_layer.h
+#	$(DIR_MD)\md_layer.h
+
+OBJECTS_LM = ${SOURCES_LM:s/.c/.obj/:f}
+
+lm: $(OBJECTS_LM)
+
+%.obj: $(DIR_LM)\%.c '$(HEADERS_LM:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP PD module
+# -----------------------------------------------------------------------------------------------
+
+DIR_PD = $(DIR_SW)\TCNS\SRC
+
+SOURCES_PD = \
+	$(DIR_PD)\lp_frce.c	\
+	$(DIR_PD)\lpa_as2c.c	\
+	$(DIR_PD)\LPC_BLCK.c	\
+	$(DIR_PD)\LPD_EXTD.c	\
+	$(DIR_PD)\LPL_LACS.c	\
+	$(DIR_PD)\LPM_4MPB.c	\
+	$(DIR_PD)\LPX_LIST.c	\
+	$(DIR_PD)\LP_CLUS.c	\
+	$(DIR_PD)\LP_FFLD.c	\
+	$(DIR_PD)\LP_INDT.c	\
+	$(DIR_PD)\LP_INIT.c	\
+	$(DIR_PD)\LP_TMO.c	\
+	$(DIR_PD)\LP_VAR.c	\
+	$(DIR_PD)\apd_layr.c
+
+HEADERS_PD = \
+	$(DIR_PD)\Lpa_as2c.h	\
+	$(DIR_PD)\LPC_BLCK.h	\
+	$(DIR_PD)\LPD_DBUG.h	\
+	$(DIR_PD)\LPI_IFCE.h	\
+	$(DIR_PD)\LPL_4TCN.h	\
+	$(DIR_PD)\LPP_PCMC.h	\
+	$(DIR_PD)\LP_BITS.h	\
+	$(DIR_PD)\LP_FFLD.h	\
+	$(DIR_PD)\LP_TMO.h
+
+OBJECTS_PD = ${SOURCES_PD:s/.c/.obj/:f}
+
+pd: $(OBJECTS_PD)
+
+%.obj: $(DIR_PD)\%.c '$(HEADERS_PD:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP MD module
+# -----------------------------------------------------------------------------------------------
+
+DIR_MD = $(DIR_SW)\TCNS\SRC
+
+SOURCES_MD = \
+	$(DIR_MD)\AM_DIREC.c	\
+	$(DIR_MD)\AM_GROUP.c	\
+	$(DIR_MD)\AM_LAYER.c	\
+	$(DIR_MD)\LX_PARAM.c	\
+	$(DIR_MD)\MD_DEVIC.c	\
+	$(DIR_MD)\MD_LISTS.c	\
+	$(DIR_MD)\MM_POOL.c	\
+	$(DIR_MD)\NM_DISP.c	\
+	$(DIR_MD)\NM_LAYER.c	\
+	$(DIR_MD)\NM_STADI.c	\
+	$(DIR_MD)\TM_I_LAY.c	\
+	$(DIR_MD)\TM_M_LAY.c	\
+	$(DIR_MD)\Am_call.c	\
+	$(DIR_MD)\Am_reply.c
+
+HEADERS_MD = \
+	$(DIR_MD)\TRACEENB.h	\
+	$(DIR_MD)\AM_GROUP.h	\
+	$(DIR_MD)\AM_SUB.h	\
+	$(DIR_MD)\CTRL.h	\
+	$(DIR_MD)\LME_SYS.h	\
+	$(DIR_MD)\LX_PARAM.h	\
+	$(DIR_MD)\MM_POOL.h	\
+	$(DIR_MD)\NM_DISP.h	\
+	$(DIR_MD)\NM_LAYER.h	\
+	$(DIR_MD)\NM_STADI.h	\
+	$(DIR_MD)\TM_LAYER.h	\
+	$(DIR_MD)\TM_SUB.h	\
+	$(DIR_MD)\MD_LAYER.h	\
+	$(DIR_MD)\Md_ifce.h
+
+.IF $(TARGET) != MVB
+SOURCES_MD += $(DIR_MD)\NM_MANAG.c
+HEADERS_MD += $(DIR_MD)\NM_MANAG.h
+.ENDIF
+
+OBJECTS_MD = ${SOURCES_MD:s/.c/.obj/:f}
+
+md: $(OBJECTS_MD)
+
+# The -ni option is to override a cbe68k bug
+%.obj: $(DIR_MD)\%.c '$(HEADERS_MD:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -ni -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP NMA module
+# -----------------------------------------------------------------------------------------------
+
+DIR_NMA = $(DIR_SW)\TCNS\SRC
+
+SOURCES_NMA = \
+	$(DIR_NMA)\MA_MAIN.c	\
+	$(DIR_NMA)\MA_MVB.c	\
+	$(DIR_NMA)\MA_WTB.c	\
+	$(DIR_NMA)\MACLOCK.c	\
+	$(DIR_NMA)\MADOMAIN.c	\
+	$(DIR_NMA)\MAMESSE.c	\
+	$(DIR_NMA)\MASTATIO.c	\
+	$(DIR_NMA)\MATASKS.c	\
+	$(DIR_NMA)\MAVARIAB.c	\
+	$(DIR_NMA)\MM_UTIL.c
+
+HEADERS_NMA = \
+	$(DIR_NMA)\TNM.h
+
+OBJECTS_NMA = ${SOURCES_NMA:s/.c/.obj/:f}
+
+nma: $(OBJECTS_NMA)
+
+%.obj: $(DIR_NMA)\%.c '$(HEADERS_NMA:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP BA module
+# -----------------------------------------------------------------------------------------------
+
+DIR_BA = $(DIR_SW)\TCNS\SRC
+
+SOURCES_BA = \
+	$(DIR_BA)\BAA_AUXI.c \
+	$(DIR_BA)\BAC_CONS.c \
+	$(DIR_BA)\BAD_DIAG.c \
+	$(DIR_BA)\BAH_HWRE.c \
+	$(DIR_BA)\BAL_LINK.c \
+	$(DIR_BA)\BAM_MAIN.c \
+	$(DIR_BA)\BAP_POLL.c \
+	$(DIR_BA)\BAT_TFER.c \
+	$(DIR_BA)\BAV_VTAB.c
+
+HEADERS_BA = \
+	$(DIR_BA)\bah_tcfg.h \
+	$(DIR_BA)\BAA_AUXI.h \
+	$(DIR_BA)\BAC_CONS.h \
+	$(DIR_BA)\BAD_DIAG.h \
+	$(DIR_BA)\BAF_FRAM.h \
+	$(DIR_BA)\BAH_EBAC.h \
+	$(DIR_BA)\BAH_HWRE.h \
+	$(DIR_BA)\BAI_IFCE.h \
+	$(DIR_BA)\BAL_LINK.h \
+	$(DIR_BA)\BAM_MAIN.h \
+	$(DIR_BA)\BAP_POLL.h \
+	$(DIR_BA)\BAT_TFER.h
+
+OBJECTS_BA = ${SOURCES_BA:s/.c/.obj/:f}
+
+ba: $(OBJECTS_BA)
+
+%.obj: $(DIR_BA)\%.c '$(HEADERS_BA:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP PDM module
+# -----------------------------------------------------------------------------------------------
+
+DIR_PDM = $(DIR_SW)\TCNS\SRC
+
+SOURCES_PDM = \
+	$(DIR_PDM)\PDM_LCFG.c	\
+	$(DIR_PDM)\PDM_MAIN.c	\
+	$(DIR_PDM)\PDM_CP.c	\
+	$(DIR_PDM)\PDM_FUNC.c	\
+	$(DIR_PDM)\PDMDEBUG.c	\
+	$(DIR_PDM)\atr_pdm.c
+
+HEADERS_PDM = \
+	$(DIR_PDM)\PDM_LCFG.h	\
+	$(DIR_PDM)\PDM_CP.h	\
+	$(DIR_PDM)\PDM_FUNC.h	\
+	$(DIR_PDM)\C_DEFS.h	\
+	$(DIR_PDM)\PDM_MAIN.h	\
+	$(DIR_PDM)\PDMDEBUG.h	\
+	$(DIR_PDM)\PDMTYPES.h	\
+	$(DIR_PDM)\atr_pdm.h
+
+OBJECTS_PDM = ${SOURCES_PDM:s/.c/.obj/:f}
+
+pdm: $(OBJECTS_PDM)
+
+%.obj: $(DIR_PDM)\%.c '$(HEADERS_PDM:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+#	$(CC) -d $(CC_FLAGS_FILE) -DDEBUG -nO -o$@ $<
+
+
+
+
+# -----------------------------------------------------------------------------------------------
+# JDP WTB-LL module
+# -----------------------------------------------------------------------------------------------
+
+DIR_WTBLL = $(DIR_SW)\TCNS\SRC
+
+SOURCES_WTBLL = \
+	$(DIR_WTBLL)\BMI.c	\
+	$(DIR_WTBLL)\DIAGwtb.c	\
+	$(DIR_WTBLL)\MAC.c	\
+	$(DIR_WTBLL)\BM.c	\
+	$(DIR_WTBLL)\MMI.c	\
+	$(DIR_WTBLL)\NVM.c	\
+	$(DIR_WTBLL)\PD_JDP.c	\
+	$(DIR_WTBLL)\ZAS.c
+
+HEADERS_WTBLL = \
+	$(DIR_WTBLL)\pil.h	\
+	$(DIR_WTBLL)\coco.h	\
+	$(DIR_WTBLL)\ll.h	\
+	$(DIR_WTBLL)\pd_hand.h	\
+	$(DIR_WTBLL)\MAC.h	\
+	$(DIR_WTBLL)\BMI.h	\
+	$(DIR_WTBLL)\DIAGwtb.h	\
+	$(DIR_WTBLL)\MMI.h	\
+	$(DIR_WTBLL)\NVM.h	\
+	$(DIR_WTBLL)\PD_JDP.h	\
+	$(DIR_WTBLL)\PD_TS.h	\
+	$(DIR_WTBLL)\WTB.h	\
+	$(DIR_WTBLL)\WTB_PD.h	\
+	$(DIR_WTBLL)\ZAS.h	\
+	$(DIR_WTBLL)\Wtbdrv.h
+#	$(DIR_WTBLL)\TCNTYPES.h
+
+OBJECTS_WTBLL = ${SOURCES_WTBLL:s/.c/.obj/:f}
+
+wtbll: $(OBJECTS_WTBLL)
+
+%.obj: $(DIR_WTBLL)\%.c '$(HEADERS_WTBLL:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# UIC Mapping Server module version 10
+# -----------------------------------------------------------------------------------------------
+
+
+DIR_MAP = $(DIR_SW)\TCNS\SRC
+
+SOURCES_MAP = \
+	$(DIR_MAP)\MAP_BMI.c	\
+	$(DIR_MAP)\MAP_NFU.c	\
+	$(DIR_MAP)\MAP_NPT.c	\
+	$(DIR_MAP)\MAP_UI.c	\
+	$(DIR_MAP)\atr_map.c
+
+HEADERS_MAP = \
+	$(DIR_MAP)\MAP_BMI.h	\
+	$(DIR_MAP)\MAP_UMS.h	\
+	$(DIR_MAP)\MAP.h	\
+	$(DIR_MAP)\atr_map.h
+
+OBJECTS_MAP = ${SOURCES_MAP:s/.c/.obj/:f}
+
+map: $(OBJECTS_MAP)
+
+%.obj: $(DIR_MAP)\%.c '$(HEADERS_MAP:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# UIC Mapping Server module version 12
+# -----------------------------------------------------------------------------------------------
+
+DIR_MAP12 = $(DIR_SW)\TCNS\SRC
+
+SOURCES_MAP12 = \
+	$(DIR_MAP12)\UTBCRNG.c	\
+	$(DIR_MAP12)\ADID.c	\
+	$(DIR_MAP12)\UAGT.c	\
+	$(DIR_MAP12)\UIMCS.c	\
+	$(DIR_MAP12)\UMSCONV.c	\
+	$(DIR_MAP12)\UNGS.c	\
+	$(DIR_MAP12)\UTBC.c	\
+	$(DIR_MAP12)\UWTM.c	\
+	$(DIR_MAP12)\atr_ums.c
+#	$(DIR_MAP12)\atr_map2.c
+
+HEADERS_MAP12 = \
+	$(DIR_MAP12)\ADID.h	\
+	$(DIR_MAP12)\UAGT.h	\
+	$(DIR_MAP12)\UIMCS.h	\
+	$(DIR_MAP12)\UMS.h	\
+	$(DIR_MAP12)\UMSCONV.h	\
+	$(DIR_MAP12)\UNGS.h	\
+	$(DIR_MAP12)\UTBC.h	\
+	$(DIR_MAP12)\UWTM.h	\
+	$(DIR_MAP12)\profile.h	\
+	$(DIR_MAP12)\tcntypes.h	\
+	$(DIR_MAP12)\atr_ums.h
+
+OBJECTS_MAP12 = ${SOURCES_MAP12:s/.c/.obj/:f}
+
+map12: $(OBJECTS_MAP12)
+
+%.obj: $(DIR_MAP12)\%.c '$(HEADERS_MAP12:t"' '")' '$(HEADERS_MOD:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+#	$(CC) -d $(CC_FLAGS_FILE) -nO -i -v -o$@ $<
+
+# -----------------------------------------------------------------------------------------------
+# LIB generic routines module
+# -----------------------------------------------------------------------------------------------
+
+
+SOURCES_LIB = \
+	$(DIR_LIB)\ushell.c	\
+	$(DIR_LIB)\STRPARSE.c	\
+	$(DIR_LIB)\AM29F040.c	\
+	$(DIR_LIB)\SIO.c
+
+
+OBJECTS_LIB = ${SOURCES_LIB:s/.c/.obj/:f}
+
+lib: $(OBJECTS_LIB)
+
+%.obj: $(DIR_LIB)\%.c '$(HEADERS_LIB:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+
+# -----------------------------------------------------------------------------------------------
+# TCN related ATR routines module
+# -----------------------------------------------------------------------------------------------
+
+DIR_TCNATR = $(DIR_SW)\TCNS\SRC
+
+SOURCES_TCNATR = \
+	$(DIR_TCNATR)\atr_nma.c 	\
+	$(DIR_TCNATR)\conf_tcn.c 	\
+	$(DIR_TCNATR)\tcn_mon.c		\
+	$(DIR_TCNATR)\mvbc_red.c	\
+	$(DIR_TCNATR)\tcn_util.c
+
+HEADERS_TCNATR = \
+	$(DIR_TCNATR)\atr_nma.h		\
+	$(DIR_TCNATR)\conf_tcn.h	\
+	$(DIR_TCNATR)\ncdb.h		\
+	$(DIR_TCNATR)\tcn_mon.h		\
+	$(DIR_TCNATR)\mvbc_red.h	\
+	$(DIR_TCNATR)\lib_ver.h	\
+	$(DIR_TCNATR)\tcn_util.h
+
+
+OBJECTS_TCNATR = ${SOURCES_TCNATR:s/.c/.obj/:f}
+
+tcnatr: $(OBJECTS_TCNATR)
+
+%.obj: $(DIR_TCNATR)\%.c '$(HEADERS_TCNATR:t"' '")' '$(HEADERS_MOD:t"' '")' '$(HEADERS_LIB:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# ATR generic routines module
+# -----------------------------------------------------------------------------------------------
+
+#DIR_ATR = $(DIR_SW)\ATR
+DIR_ATR = $(DIR_SW)\LBATR\SRC
+
+SOURCES_ATR = \
+	$(DIR_ATR)\crc.c	\
+	$(DIR_ATR)\XMODEM.c	\
+	$(DIR_ATR)\HW_MON.c	\
+	$(DIR_ATR)\C_UTILS.c	\
+	$(DIR_ATR)\atr_log.c
+
+HEADERS_ATR = ${SOURCES_ATR:s/.c/.h/}
+
+OBJECTS_ATR = ${SOURCES_ATR:s/.c/.obj/:f}
+
+atr: $(OBJECTS_ATR)
+
+%.obj: $(DIR_ATR)\%.c '$(HEADERS_ATR:t"' '")'
+#'$(HEADERS_LIB:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+
+# -----------------------------------------------------------------------------------------------
+# COM board hardware routines module
+# -----------------------------------------------------------------------------------------------
+
+
+SOURCES_HW = \
+	$(DIR_HW)\hw_com.c	\
+	$(DIR_HW)\cpmdrv.c	\
+	$(DIR_HW)\sio_cpm.c	\
+	$(DIR_HW)\x25642.c
+
+HEADERS_HW = \
+	$(DIR_ATR)\atr_hw.h	\
+	$(DIR_HW)\hw_360.h	\
+	$(DIR_HW)\Pram360.h	\
+	$(DIR_HW)\Quicc360.h	\
+	$(DIR_HW)\Regs360.h	\
+	$(DIR_HW)\hw_com.h	\
+	$(DIR_HW)\cpmdrv.h	\
+	$(DIR_LIB)\sio.h	\
+	$(DIR_HW)\x25642.h
+
+.IF $(TARGET) != MVB
+SOURCES_HW += $(DIR_HW)\wtbcpm.c
+HEADERS_HW += $(DIR_HW)\wtbcpm.h
+.ENDIF
+
+OBJECTS_HW = ${SOURCES_HW:s/.c/.obj/:f}
+
+hw: $(OBJECTS_HW)
+
+%.obj: $(DIR_HW)\%.c '$(HEADERS_HW:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+
+# -----------------------------------------------------------------------------------------------
+# Build the complete library
+# -----------------------------------------------------------------------------------------------
+
+OBJECTS = $(OBJECTS_PIL) $(OBJECTS_LC) $(OBJECTS_LM) $(OBJECTS_PD) $(OBJECTS_MD) $(OBJECTS_NMA) \
+          $(OBJECTS_BA) $(OBJECTS_TCNATR) $(OBJECTS_ATR) $(OBJECTS_HW) $(OBJECTS_LIB)
+.IF   $(TARGET) == TCN
+OBJECTS += $(OBJECTS_PDM) $(OBJECTS_WTBLL) $(OBJECTS_MAP)
+.ELIF $(TARGET) == UIC
+OBJECTS += $(OBJECTS_PDM) $(OBJECTS_WTBLL) $(OBJECTS_MAP12)
+.END
+
+$(LIBRARY): $(OBJECTS)
+	del $(DIR_LIBS)\$(LIBRARY)
+	$(LIB) < $(LIB_CMD_FILE)
+	del  $(DIR_INCS)\*.h
+	copy $(DIR_HW)\*.h $(DIR_INCS)
+	copy $(DIR_ATR)\*.h $(DIR_INCS)
+
+	copy $(DIR_LIB)\sio.h $(DIR_INCS)
+	copy $(DIR_LIB)\am29f040.h $(DIR_INCS)
+	copy $(DIR_LIB)\strparse.h $(DIR_INCS)
+	copy $(DIR_LIB)\ushell.h $(DIR_INCS)
+	copy $(DIR_LIB)\logmac.h $(DIR_INCS)
+
+	copy $(DIR_LM)\lm_layer.h $(DIR_INCS)
+	copy $(DIR_MD)\md_layer.h $(DIR_INCS)
+	copy $(DIR_MOD)\*_sys.h $(DIR_INCS)
+	copy $(DIR_MOD)\bax_incl.h $(DIR_INCS)
+	copy $(DIR_MOD)\basetype.h $(DIR_INCS)
+	copy $(DIR_MOD)\recorder.h $(DIR_INCS)
+	copy $(DIR_MOD)\tcntypes.h $(DIR_INCS)
+	copy $(DIR_TCNATR)\*.h $(DIR_INCS)
+	copy $(DIR_PIL)\*.h $(DIR_INCS)
+	copy $(DIR_PDM)\pdm_main.h $(DIR_INCS)
+	copy $(DIR_PDM)\pdm_lcfg.h $(DIR_INCS)
+	copy $(DIR_PDM)\pdmtypes.h $(DIR_INCS)
+	copy $(DIR_PDM)\atr_pdm.h $(DIR_INCS)
+	copy $(DIR_WTBLL)\bmi.h $(DIR_INCS)
+	copy $(DIR_MAP)\map.h $(DIR_INCS)
+	copy $(DIR_MAP12)\adid.h $(DIR_INCS)
+	copy $(DIR_MAP12)\uagt.h $(DIR_INCS)
+	copy $(DIR_MAP12)\uimcs.h $(DIR_INCS)
+	copy $(DIR_MAP12)\ungs.h $(DIR_INCS)
+	copy $(DIR_MAP12)\utbc.h $(DIR_INCS)
+	copy $(DIR_MAP12)\uwtm.h $(DIR_INCS)
+	copy $(DIR_MAP12)\ums.h $(DIR_INCS)
+#	echo #define LIB_VER "GTWLIB_03" " (" __DATE__ " " __TIME__ ")" > $(DIR_INCS)\lib_ver.h
+	copy $(DIR_TCNATR)\strt_tcn.c $(DIR_SRCS)
+
+
+# -----------------------------------------------------------------------------------------------
+# Cleanup rule
+# -----------------------------------------------------------------------------------------------
+
+clean:
+	del $(DIR_OBJS)\*.obj
+	del $(DIR_LIBS)\*.lib
+
+
+# -----------------------------------------------------------------------------------------------
+# C compiler definitions
+# -----------------------------------------------------------------------------------------------
+
+CC            = MCC68K
+
+CC_FLAGS      = -p68360 -g -Xp -Za2 -c -U_SIZE_T -DMC68360 -DM68K -D__READY_EXTENSIONS__ \
+                -Gf -O -Ob -Oe -Ot -zc \
+                -J$(DIR_MASTER)/target/include -J$(DIR_MASTER)/target/device/include
+
+CC_FLAGS_LIB  = -I@ -I$(DIR_MOD) -I$(DIR_PIL) -I$(DIR_LC) -I$(DIR_LM) -I$(DIR_PD) -I$(DIR_MD) \
+                -I$(DIR_NMA) -I$(DIR_BA) -I$(DIR_TCNATR) -I$(DIR_ATR) -I$(DIR_HW) -I$(DIR_LIB)\
+				-DTRACE_ENB
+
+.IF   $(TARGET) == MVB
+CC_FLAGS_LIB += -I$(DIR_MAP)
+.ELIF $(TARGET) == TCN
+CC_FLAGS_LIB += -I$(DIR_MAP) -I$(DIR_WTBLL) -I$(DIR_PDM) -DATR_WTB
+.ELIF $(TARGET) == UIC
+CC_FLAGS_LIB += -I$(DIR_MAP12) -I$(DIR_WTBLL) -I$(DIR_PDM) -DATR_WTB -DUMS
+.END
+
+CC_FLAGS_FILE := $(mktmp $(CC_FLAGS) $(CC_FLAGS_LIB)\n)
+
+
+# -----------------------------------------------------------------------------------------------
+# C++ compiler definitions
+# -----------------------------------------------------------------------------------------------
+
+CPP             = CCC68K
+
+CPP_FLAGS       = $(CC_FLAGS)
+
+CPP_FLAGS_FILE := $(mktmp $(CPP_FLAGS) $(CC_FLAGS_LIB)\n)
+
+
+# -----------------------------------------------------------------------------------------------
+# Librarian definitions
+# -----------------------------------------------------------------------------------------------
+
+LIB           = LIB68K
+
+XXX = $(DIR_OBJS)/{$(OBJECTS)}
+LIB_CMD_FILE  = $(mktmp CREATE $(DIR_LIBS)/$(LIBRARY)\nADDMOD $(XXX:t"\n ADDMOD ")\nSAVE\nEND\n)
+
+
+# -----------------------------------------------------------------------------------------------
+

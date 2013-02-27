@@ -1,0 +1,101 @@
+Microtec Research 68K Linker  Version 7.1J    Thu Jul 16 15:59:16 1998    Page   1
+
+Command line: C:\MRI\ASM68K\LNK68K.exe  -m -o xdm68k.het -c board.cmd 
+
+*	%W%	%G%
+*
+*	board.lnk
+*
+* Copyright (c) 1991-1996  Microtec Research, Inc.
+* All rights reserved
+*
+*	Rev 4.2		G. Boehm, MRI, April 30, 1991
+*			Add "format s" cause 6.7e linker
+*			defaults to IEEE format
+*
+* 	New rev #1.1	G. Boehm, MRI, October 30, 1990
+*			Put under SCCS
+*
+* This is the generic loader command file for the xdm68k monitor
+* The strings in $$ are replaced with information required for loading
+* the specific monitor.
+* No chip specification, so picked based on input
+format s
+list x
+listabs nointernals
+* monbase is the base monitor user routines
+load monbase
+* board is the board drivers (I/O) and startup
+load board
+* xmon68k is the core monitor
+load xmon68k
+* The base is specified based on code start
+sect 9,$400000
+* The section base for data can be specified or not.
+* If not, SECT14 must be order 13,14
+order 9,13
+SECT 14,$6000
+SECT monitor_evt,$7000
+end
+Microtec Research 68K Linker  Version 7.1J    Thu Jul 16 15:59:16 1998
+    Page   2
+
+
+
+OUTPUT MODULE NAME:    xdm68k
+OUTPUT MODULE FORMAT:  MOTOROLA S3
+
+
+SECTION SUMMARY
+---------------
+
+SECTION    ATTRIBUTE                     START      END        LENGTH     ALIGN
+
+14         NORMAL DATA                   00006000   00006609   0000060A   4 (LONG)  
+monitor_evt
+           NORMAL DATA                   00007000   000073FF   00000400   4 (LONG)  
+9          NORMAL CODE                   00400000   00402DE9   00002DEA   4 (LONG)  
+13         NORMAL ROM                    00402DEC   00402E4B   00000060   4 (LONG)  
+
+
+MODULE SUMMARY
+--------------
+
+MODULE         SECTION:START        SECTION:END       FILE
+
+MONBUG               9:00400000           9:0040002D  C:\SW\Com\Monitor\monbase.obj   
+                    13:00402DEC          13:00402E4B      
+                    14:00006000          14:000065FF      
+BOARDSUP    monitor_ev:00007000  monitor_ev:000073FF  C:\SW\Com\Monitor\board.obj   
+                     9:0040002E           9:004002BB      
+                    14:00006600          14:00006609      
+xmon68k              9:004002BC           9:00402DE9  C:\SW\Com\Monitor\xmon68k.obj   
+
+
+
+PUBLIC SYMBOL TABLE
+-------------------
+
+SYMBOL                                    SECTION          ADDRESS     MODULE
+
+BOARD_START                               9                0040002E    BOARDSUP
+COLD_PC                                   9                00400008    MONBUG
+CON_IN                                    9                00400286    BOARDSUP
+CON_INIT                                  9                0040010C    BOARDSUP
+CON_OUT                                   9                0040025A    BOARDSUP
+CON_TERM                                  9                00400116    BOARDSUP
+EVT_BASE                                  monitor_ev       00007000    BOARDSUP
+MO_CONFIG                                 13               00402DEC    MONBUG
+MO_SAVE                                   14               00006000    MONBUG
+MO_START                                  9                004002BC    xmon68k
+MO_WSP                                    14               00006000    MONBUG
+_mo_start                                 9                004002BC    xmon68k
+end_board_start                           9                00400016    MONBUG
+
+
+START ADDRESS:   00400008
+
+Microtec Research 68K Linker  Version 7.1J    Thu Jul 16 15:59:16 1998
+    Page   3
+
+Link Completed 

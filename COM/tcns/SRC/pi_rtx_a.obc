@@ -1,0 +1,155 @@
+@echo off
+rem 2004/nov/26,ven 11:20               \SWISV\TCNS\SRC\pi_rtx_a.obc
+rem =====================================================================
+rem
+rem =====================================================================
+rem $Date: 2006/11/17 13:10:19 $        $Revision: 1.6.4.1.2.1 $
+rem $Author: schiavor $
+
+
+:deaSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\dea\SRC
+@echo off
+call    \SWISV\COMANDI\glx     TCNS     DEA     SRC
+call    \SWISV\COMANDI\ska      %1      dea     v403    tcns    dea
+if "%risSK%"=="0"           goto deaSKend
+    echo  errore in A\DEA\OBJ7L\%1    >>  \SWISV\TEMP.DAN\error.rac
+:deaSKend
+del     \SWISV\TCNS\A\DEA\SRC\%1.a66
+rem ==============================================================
+
+:devSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\dev\SRC
+@echo off
+call    \SWISV\COMANDI\glx      TCNS    DEV     SRC
+call    \SWISV\COMANDI\ska      %1      dev     v403    tcns    dev
+if "%risSK%"=="0"           goto devSKend
+    echo  errore in A\DEV\OBJ7L\%1      >>  \SWISV\TEMP.DAN\error.rac
+:devSKend
+del     \SWISV\TCNS\A\DEV\SRC\%1.a66
+rem ==============================================================
+rem ==============================================================
+
+:idudevSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\idudev\SRC
+@echo off
+call    \SWISV\COMANDI\glx      TCNS    iduDEV     SRC
+call    \SWISV\COMANDI\ska      %1      idudev     v403    tcns    idudev
+if "%risSK%"=="0"           goto idudevSKend
+    echo  errore in A\idudev\OBJ7L\%1      >>  \SWISV\TEMP.DAN\error.rac
+:idudevSKend
+del     \SWISV\TCNS\A\iduDEV\SRC\%1.a66
+rem ==============================================================
+
+:deWSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\deW\SRC
+@echo off
+call    \SWISV\COMANDI\glx      TCNS    DEW     SRC
+call    \SWISV\COMANDI\ska      %1      dew     v403    tcns    dew
+if "%risSK%"=="0"           goto dewSKend
+    echo  errore in A\DEW\OBJ7L\%1      >>  \SWISV\TEMP.DAN\error.rac
+:dewSKend
+del     \SWISV\TCNS\A\DEW\SRC\%1.a66
+rem ==============================================================
+
+:staSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\STA\SRC
+@echo off
+call    \SWISV\COMANDI\glx      TCNS    STA     SRC
+call    \SWISV\COMANDI\ska      %1      sta     v403    tcns    sta
+if "%risSK%"=="0"           goto staSKend
+    echo  errore in A\STA\OBJ7L\%1      >>  \SWISV\TEMP.DAN\error.rac
+:staSKend
+del     \SWISV\TCNS\A\STA\SRC\%1.a66
+rem ==============================================================
+
+:stbSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\STB\SRC
+@echo off
+call    \SWISV\COMANDI\glx      TCNS    STB     SRC
+call    \SWISV\COMANDI\ska      %1      stb     v403    tcns    stb
+if "%risSK%"=="0"           goto stbSKend
+    echo  errore in A\STB\OBJ7L\%1      >>  \SWISV\TEMP.DAN\error.rac
+:stbSKend
+del     \SWISV\TCNS\A\STB\SRC\%1.a66
+rem ==============================================================
+
+:strSK
+@echo on
+copy    \SWISV\TCNS\SRC\%1.a66      \SWISV\TCNS\A\str\SRC
+@echo off
+call    \SWISV\COMANDI\glx      TCNS    STR     SRC
+call    \SWISV\COMANDI\ska      %1      str     v403    tcns    str
+if "%risSK%"=="0"           goto strSKend
+    echo  errore in A\STR\OBJ7L\%1      >>  \SWISV\TEMP.DAN\error.rac
+:strSKend
+del     \SWISV\TCNS\A\STR\SRC\%1.a66
+rem ==============================================================
+
+
+rem ****************************************************************************/
+rem $Log: pi_rtx_a.obc,v $
+rem Revision 1.6.4.1.2.1  2006/11/17 13:10:19  schiavor
+rem 17/11/2006             Napoli                      Schiavor
+rem  -creata nuovo scheda IDUDEV
+rem
+rem Revision 1.6.4.1  2005/09/09 09:48:56  schiavor
+rem Si aggiunge compilazione per scheda DEW
+rem
+rem Revision 1.6  2004/11/26 10:33:09  mungiguerrav
+rem 2004/nov/26,ven 11:20           Napoli      Mungi
+rem - Si utilizza nuovo batch glx invece di gtcns, che permette di dichiarare
+rem   la libreria in cui si agisce (TCNS) nel primo parametro      (si noti che non si
+rem   può usare  cglx  in quanto il file da copiare è un  .a66 e non un  .c)
+rem
+rem Revision 1.5  2004/11/26 10:21:08  mungiguerrav
+rem 2004/nov/19,ven 14:05           Napoli      Mungi
+rem - Si aggiungono keyword CVS e storia invertita
+rem - BugFix:   si aggiunge uso di  gtcns   per creare ambiente adatto alla
+rem             compilazione nelle dir inferiori    A\XXX
+rem - Si anticipano le chiamate a compilazioni per DEA e DEV, per rispettare
+rem   un ordine unico generale
+rem
+rem
+rem ----------------   Fase transitoria tra *.mod e CVS    ------------
+rem Revision 1.4        2004/11/26 09:58:42     mungiguerrav
+rem 2004/nov/15,lun 13:00           Napoli      Mungi
+rem - Si trasforma da .obc di un singolo file nelle dir inferiori A\XXX\SRC
+rem   in un file .obc che gestisce un solo sorgente SRC\pi_rtx_a.a66 e
+rem   crea gli oggetti in tutte le DIR inferiori A\XXX\OBJ7L\pi_rtx_a.obj
+rem
+rem Revision 1.3        2004/11/26 09:53:50     mungiguerrav
+rem 2004/nov/26,ven 10:50           Napoli      Mungi
+rem - Si aggiungono immodificati dalle directory inferiori TCNS\A\XXX\SRC,
+rem   prima di iniziare il processo di ripulitura e adeguamento alle regole
+rem   di codifica e alle regole di gestione CVS
+rem
+rem Revision 1.2        2004/11/26 09:52:57     mungiguerrav
+rem 2004/nov/26,ven 10:49           Napoli      Mungi
+rem - Si elimina in quanto inserita una versione già modificata
+rem
+rem Revision 1.1        2004/11/26 09:45:55     mungiguerrav
+rem 2004/nov/26,ven 10:50           Napoli      Mungi
+rem - Si aggiungono immodificati dalle directory inferiori TCNS\A\XXX\SRC,
+rem   prima di iniziare il processo di ripulitura e adeguamento alle regole
+rem   di codifica e alle regole di gestione CVS
+rem
+rem     --------------  Spostamento da A\XXX\SRC a SRC  ---------------------
+rem     Revision 1.2        2004/09/02 11:31:19     mungiguerrav
+rem     2004/set/02,gio 13:25   Napoli          Mungi\Busco
+rem     - Merge da branch di sviluppo  makefile
+rem     - E' in effetti la creazione dei file nelle nuove directory dedicate alle
+rem       singole schede registrate (DEA,DEV,STA,STB,STR)
+rem     - Non sono ancora inseriti i token di gestioni automatiche CVS (DATE, FILE, AUTHOR, LOG)
+rem
+rem     Revision 1.1.2.1    2004/07/09 16:24:26     buscob
+rem 01.00   2004/lug/08,gio         Napoli              Busco/Nappo
+rem         - Addio monolite !!
+rem         - Si crea per assemblare pi_rtx_a.a66 per ogni scheda
+
