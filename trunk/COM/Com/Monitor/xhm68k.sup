@@ -1,0 +1,15 @@
+*   The s: command defines the communication scheme
+*   The a: command defines the entry point to the Monitor for init
+*   The m: command names the Monitor to download when the l: command is used
+*   The g: command gives the auxiliary monitor's GO command to start the
+*	   XRAY Monitor.
+*   The d: command gives the auxiliary monitor's S-record download command.
+*   The w: command specifies delays between chars, lines, commands when
+*	   talking to an auxiliary monitor
+*   Use "-e l:;m:filename" on the XHM68K command to initiate a download 
+*     	   when needed (the filename is the name of the Monitor to download).
+*
+* (s: use default communication setup)
+
+s:com1,38400,8,n
+

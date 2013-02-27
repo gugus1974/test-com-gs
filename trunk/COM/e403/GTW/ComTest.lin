@@ -1,0 +1,42 @@
+#################################################################
+#Ven.13.ott.2001        v.1.00    \SW\E403\GTW\ComTest.lin  #
+#################################################################
+# Procedura di linker  per applicativo GTW 
+#################################################################
+#################################################################
+LISTABS
+LISTMAP CROSSREF,PUBLICS/ADDR
+CHIP	68360
+ALIAS	9,code
+ALIAS	13,const
+ALIAS	13,strings
+ALIAS	13,literals
+ALIAS	13,vars
+ALIAS	14,zerovars
+ALIAS	14,tags
+*INITDATA 13
+ORDER	9,initfini,ehsftbl,13
+ORDER	14,ioports,stack,heap
+SECT 14	= $120000
+SECT 9	= $010000
+ LOAD c:\MASTER\target\lib\68010\microtec\syscrt0.o
+ LOAD c:\sw\e403\gtw\exe\sysintbl.o
+ LOAD c:\sw\e403\gtw\exe\vosintbl.o
+ LOAD c:\sw\e403\gtw\exe\vrtxcftb.o
+ LOAD c:\sw\e403\gtw\exe\vrtxcvt.o
+ LOAD c:\sw\e403\gtw\exe\vrtxcals.o
+ LOAD c:\sw\e403\gtw\exe\initcomp.o
+ LOAD c:\MASTER\target\lib\68010\microtec\vde_sc.o
+ LOAD c:\MASTER\target\lib\68010\microtec\vsyslib.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\vrtxsa.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\kernsupp.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\kernel.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\kernsupp.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\vsyslib.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\cpu.lib
+ LOAD c:\MASTER\target\lib\68010\microtec\rtnofp.lib
+ LOAD ..\OBJ\ComTest.lib
+# LOAD c:\sw\com\libs\lib\com_tcn.lib
+ LOAD c:\sw\com\libs\lib\com_mvb.lib
+ LOAD c:\MRI\MCC68K\68020\ccc68kab.lib
+ LOAD c:\MRI\MCC68K\68020\mcc68kab.lib

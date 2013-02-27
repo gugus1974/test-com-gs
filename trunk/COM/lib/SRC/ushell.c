@@ -1,0 +1,526 @@
+/********************************************************************/
+/* 2004/nov/12,ven 10:00                \SWISV\LIB\SRC\ushell.c     */
+/********************************************************************/
+/*                  Gestione linea di Comando                       */
+/********************************************************************/
+/*
+    $Date: 2006/12/05 14:00:06 $          $Revision: 1.3.2.1 $
+    $Author: schiavor $
+*/
+
+
+/*==================================================================*/
+/* Includes */
+#include "ushell.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include "sio.h"
+#include "pi_sys.h"
+#include "query.h"
+
+/*==================================================================*/
+/* Constants */
+#define MAX_CMD_NUM 100     /* maximum number of registered commands    */
+#define MAX_ARGC    16      /* max number of arguments                  */
+#define MAXCMDLEN   20      /* max number of characters in a command    */
+
+
+/*==================================================================*/
+/* Typedefs */
+typedef struct
+{
+    const char      *cmd;                   /* command                      */
+    const char      *arg_desc;              /* argument description string  */
+    const char      *cmd_desc;              /* command description string   */
+    ShellCmdFct     fct;                    /* function to call             */
+    char            enabled;                /* flag di abilitazione comando */
+} ShellCmdEntry;
+
+
+/*==================================================================*/
+/* External routine */
+
+/*==================================================================*/
+/* Globals */
+short   ushell_sema;                        /* semaphore that could be used by commands */
+                                            /* to sync with other tasks                 */
+
+static  char            shell_quit;         /* shell quit flag              */
+static  short           cmd_num     = 0;    /* number of registered commands*/
+static  ShellCmdEntry   cmd_en[MAX_CMD_NUM];/* commands entries             */
+
+
+/*==================================================================*/
+/* Private routines */
+
+/*------------------------------------------------------------------*/
+static short parse(char *s, short max_argc, char *argv[])
+{
+    short   argc    = 0;                    /* argument count */
+    char    *ns;                            /* next string pointer */
+
+    /* loop until end of string */
+    while (s && *s)
+    {
+        /* skip the white-spaces */
+        if (*s == ' ')
+        {
+            s++;
+            continue;
+        }
+
+        /* find the end of the argument */
+        if (*s == '\'')
+        {
+            s++;
+            ns  = strchr(s, '\'');
+        }
+        else
+        {
+            ns = strchr(s, ' ');
+        }
+
+        /* save the argument */
+        argv[argc++]    = s;
+
+        if (argc == max_argc)
+        {
+            break;
+        }
+
+        /* mark the end of argument */
+        if (ns)
+        {
+            *ns = 0;
+        }
+
+        /* set the next start of string */
+        s   = ns;
+        if (s)
+        {
+            s++;
+        }
+    }
+
+    /* return the argument count */
+    return argc;
+}
+
+
+/*------------------------------------------------------------------*/
+static short exec(char *s)
+{
+    short           argc;                   /* argument count       */
+    static char     *argv[MAX_ARGC];        /* argument values      */
+    static char     argvOld[MAXCMDLEN];     /* Old command buffer   */
+    short           i;                      /* index                */
+
+    argc    = parse(s, MAX_ARGC, argv);
+
+    if (!argc)
+    {
+        strncpy(argv[0],argvOld,MAXCMDLEN);
+        argc = 1;
+    }
+
+    for (i = 0; i < cmd_num; i++)
+    {
+        if (!strcmp(argv[0], cmd_en[i].cmd) && cmd_en[i].enabled)
+        {
+            strncpy(argvOld,argv[0],MAXCMDLEN);
+            return (*cmd_en[i].fct)(argc, argv);
+        }
+    }
+    return -1;
+}
+
+
+/*==================================================================*/
+/* Default commands */
+
+/*------------------------------------------------------------------*/
+static short help(short argc, char *argv[])
+{
+    short           i;                      /* index */
+
+    if (argc > 2)
+    {
+        return 1;
+    }
+
+    if (argc == 1)
+    {
+        printf("\n<CTRL>+<C> : clear line; <CTRL>+<V> : history up; <CTRL>+<B> : history down\n\n");
+    }
+
+    for (i = 0; i < cmd_num; i++)
+    {
+        if (cmd_en[i].enabled)
+        {
+            if (argc == 1 || !strcmp(argv[1], cmd_en[i].cmd))
+            {
+                printf("%s %s :: %s\n",cmd_en[i].cmd,
+                                       cmd_en[i].arg_desc,
+                                       cmd_en[i].cmd_desc);
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+/*==================================================================*/
+/* Interface */
+
+/*------------------------------------------------------------------*/
+short ushell_init(void)
+{
+    short   err     = 0;                    /* generic error code */
+
+    /* initialize the number of commands */
+    cmd_num         = 0;
+
+    /* create the ushell semaphore */
+    ushell_sema     = pi_create_semaphore(0, PI_ORD_FCFS, &err);
+
+    return err;
+}
+
+
+/*------------------------------------------------------------------*/
+short ushell_register( const char *cmd,
+                       const char *arg_desc,
+                       const char *cmd_desc,
+                       ShellCmdFct fct)
+{
+    short   i;
+
+    /* check if a command with a same name is already installed */
+    for (i = 0; i < cmd_num; i++)
+    {
+        if (!strcmp(cmd, cmd_en[i].cmd))
+        {
+            cmd_en[i].arg_desc          = arg_desc;
+            cmd_en[i].cmd_desc          = cmd_desc;
+            cmd_en[i].fct               = fct;
+            cmd_en[i].enabled           = 1;
+            return 0;
+        }
+    }
+
+    /* install it if there is space */
+    if (cmd_num < MAX_CMD_NUM)
+    {
+        cmd_en[cmd_num].cmd         = cmd;
+        cmd_en[cmd_num].arg_desc    = arg_desc;
+        cmd_en[cmd_num].cmd_desc    = cmd_desc;
+        cmd_en[cmd_num].fct         = fct;
+        cmd_en[i].enabled           = 1;
+        cmd_num++;
+    }
+
+    return 0;
+}
+
+
+/*--------------------------------------------------------------*/
+short ushell_exec(const char *s)
+{
+    char    *as;                            /* allocated string pointer */
+    char    *ts;                            /* temp string pointer      */
+    char    *ns;                            /* next string pointer      */
+    short   result;                         /* command execution result */
+
+    printf("\n");
+
+    /* allocate a copy for the commands */
+    ts  = as    = pi_alloc(strlen(s) + 1);
+
+    if (as)
+    {
+        /* make a copy of the commands string */
+        pi_copy8(ts, s, strlen(s) + 1);
+
+        do
+        {
+            /* find the end of the command and mark it */
+            ns = strchr(ts, '\n');
+
+            if (ns)
+            {
+                *ns++   = 0;
+            }
+
+            /* print the command and exec it */
+            printf(">>> %s\n", ts);
+            result = exec(ts);
+
+            /* jump to the next command (or NULL if none) */
+            ts  = ns;
+
+        } while (ts && !result);
+
+        /* deallocate the temporary storage and return */
+        pi_free(as);
+        return result;
+    }
+
+    return -2;
+}
+
+
+/*--------------------------------------------------------------*/
+/* abilitazione comando                                         */
+/*--------------------------------------------------------------*/
+void ushell_cmdon(const char *s)
+{
+    short i;
+
+    for (i = 0; i < cmd_num; i++)
+    {
+        if (!strcmp(s, cmd_en[i].cmd))
+        {
+            cmd_en[i].enabled = 1;
+        }
+    }
+}
+
+/*--------------------------------------------------------------*/
+/* disabilitazione comando                                      */
+/*--------------------------------------------------------------*/
+void ushell_cmdoff(const char *s)
+{
+    short i;
+
+    for (i = 0; i < cmd_num; i++)
+    {
+        if (!strcmp(s, cmd_en[i].cmd))
+        {
+            cmd_en[i].enabled = 0;
+        }
+    }
+}
+
+
+/*--------------------------------------------------------------*/
+short ushell(const char *prompt)
+{
+    static char     s[250];
+    static char     shell_initialized   = FALSE;
+
+    /* initialize the shell */
+    shell_quit = FALSE;
+    if (!shell_initialized)
+    {
+        ushell_register("?", "[<command>]", "Help", help);
+    }
+
+    /* loop processing commands until there is a quit request */
+    while (!shell_quit)
+    {
+        printf("\n%s", prompt);
+        get_line(s, sizeof(s), TRUE);
+        if (exec(s) < 0)
+        {
+            printf("???\n");
+        }
+    }
+
+    return 0;
+}
+
+
+/*==============================================================*/
+/* Bonus get_line() with history */
+
+/*--------------------------------------------------------------*/
+
+#define HISTORY_NUM     16
+
+#define bs_char()       {putchar(0x08); putchar(' '); putchar(0x08);}
+
+#define CNTLQ           0x11
+#define CNTLS           0x13
+#define DEL             0x7F
+#define BACKSPACE       0x08
+#define CR              0x0D
+#define LF              0x0A
+#define HIST_UP         0x16    /* ctrl - V */
+#define HIST_DOWN       0x02    /* ctrl - B */
+#define CANCEL          0x03    /* ctrl - C */
+
+static char             *history[HISTORY_NUM];
+static unsigned short   history_pos = 0;
+
+unsigned char get_line(char *line, unsigned char n, char use_history_flag)
+{
+    char            *p  = line;                 /* ptr inside the line      */
+    char            c;                          /* current char             */
+    unsigned short  cur_hist_pos = history_pos; /* current history position */
+
+    do
+    {
+        /******************************************/
+        /* read a character ignoring some of them */
+        /******************************************/
+        do
+        {
+            c   = sio_poll_key(0);
+
+            if (!c)
+            {
+                c   = EOF;
+            }
+#if defined(__C166__)
+
+            c   = query_filter(c);
+#endif
+            if (c == CR)
+            {
+                c   = LF;
+            }
+        } while (c == CNTLS || c == CNTLQ || c== EOF);
+
+        if      (c == BACKSPACE || c == DEL)
+        {
+            /*---------------------------------------*/
+            /*           process backspace           */
+            /*---------------------------------------*/
+            if (p != line)
+            {
+                p--;
+                bs_char();
+            }
+        }
+        else if (c == HIST_UP || c == HIST_DOWN || c == CANCEL)
+        {
+            /*---------------------------------------*/
+            /*       clear the previous string       */
+            /*---------------------------------------*/
+            while (p != line)
+            {
+                 bs_char();
+                 p--;
+            }
+
+            *p  = 0;
+
+            if      (c == HIST_UP)
+            {
+                cur_hist_pos    = (cur_hist_pos - 1) % HISTORY_NUM;
+                if (history[cur_hist_pos])
+                {
+                    strcpy(line, history[cur_hist_pos]);
+                }
+            }
+            else if (c == HIST_DOWN)
+            {
+                cur_hist_pos    = (cur_hist_pos + 1) % HISTORY_NUM;
+                if (history[cur_hist_pos])
+                {
+                    strcpy(line, history[cur_hist_pos]);
+                }
+            }
+
+            p = line + strlen(line);
+            printf("%s", line);
+        }
+        else
+        {
+            /*---------------------------------------*/
+            /*       echo and store character        */
+            /*---------------------------------------*/
+            putchar(*p = c);
+            if (c != LF)
+            {
+                p++;
+            }
+        }
+    } while (p - line < n - 1 && c != LF);      /* check limit and line feed */
+
+    /* mark end of string */
+    *p = 0;
+
+    /* save in the history and exit */
+    if (use_history_flag && (p - line) != 0)
+    {
+        pi_free(history[history_pos]);
+        history[history_pos]    = pi_alloc(p - line + 1);
+
+        if (history[history_pos])
+        {
+            strcpy(history[history_pos], line);
+            history_pos     = (history_pos + 1) % HISTORY_NUM;
+        }
+    }
+
+    return p - line;
+}
+
+
+/* ****************************************************************************
+    $Log: ushell.c,v $
+    Revision 1.3.2.1  2006/12/05 14:00:06  schiavor
+    05/12/2006                         Napoli                            SchiavoR
+    si rende compatibile con il sw del gtw
+
+    Revision 1.3  2004/11/12 11:45:46  mungiguerrav
+    2004/nov/12,ven 10:00          Napoli       Mungi
+        - Si aggiungono keyword CVS e storia recente invertita
+        - Si sostituiscono i TAB con 4 spazi
+        - Si applica regole di codifica per incolonnamento
+        - Non si applicano ancora regole di codifica per nomi routine e variabili
+
+
+ ----------------   Fase transitoria tra *.mod e CVS    ------------
+    Revision 1.2      2004/06/15 12:05:04     buscob
+01.28   2003/nov/21,ven         Napoli                  Nappo
+        - Per poter utilizzare il nuovo compilatore Borland C++ Builder 6 si convertono
+          tutti gli int in short o long a seconda dell'uso.
+
+    Revision 1.1        2001/12/10 17:37:42     accardol
+    - Inserimento in CVS della versione in lib07m
+    Revision 1.1.1.1    2001/12/10 17:37:42     accardol
+    - Inserimento in CVS in branch STP della versione in lib07m
+        La data è arretrata con un artificio
+01.27   2001/dic/10,lun             Napoli              Mungi\Busco
+        - Si elim. la dich. di call-back:   void C167_background( void )
+        - get_line(): Nel loop di lettura caratteri si elimina chiamata a:  C167_background()
+                      in quanto la gestione e' spostata nei cpudrv
+
+ ------------------------   Prima di CVS    ------------------------
+01.26   2001/lug/26,gio             Napoli              Accardo
+        - Si ripristina corretto ordine temporale tra file sorgente e file delle modifiche.
+01.25   2000/ott/30,lun             Napoli              Busco
+        - Si aggiunge la possibilita' di abilitare/disabilitare i comandi
+          mediante le funzioni ushell_cmdon(..) e ushell_cmdoff(..)
+01.24   2000/feb/07,lun             Napoli              Busco/Mungi
+        - Si correggono errori di v.01.22 di Mungi su exec():
+            - argvOld era un puntatore e non una stringa per contenere il vecchio comando
+            - strcpy() era usato con dst e src invertito
+            - Si usa ora strncpy() per copiare al massimo MAXCMDLEN=20
+01.23   2000/feb/07,lun             Napoli              Mungi
+        - Dopo inserimento di libreria TCNS del 1999/apr/14,
+          si riporta ushell_register alla forma compatibile con essa.
+01.22   2000/feb/05,sab             Napoli              Mungi
+        - Si agg. chiamata a C167_background definita da applicativo
+        - exec(): una linea vuota da tastiera ripete ultimo comando senza parametri
+        - Si cambia ushell_register(..) da short a void, eliminando i return 0,
+          per adeguarsi alla libreria STAR del 1998/giu/24.giu, in uso in TLRV, E500P, GSTAF
+        - Si riportano tutte le strutture nella forma standard ATR
+01.21   2000/gen/20,gio             Napoli              Busco,Balbi,Mungi
+        - Si modifica valore per timeout di sio_poll_key da 1 a 0
+01.20   2000/gen/19,mer             Napoli              Busco,Balbi,Mungi
+        - Si agg. query_filter su input caratteri
+        - Si utilizza sio_poll_key(1) invece di sio_get_key() per evitare l'attesa PI_FOREVER
+          del carattere: si crea un background per l'esecuzione di query_replystr()
+        - Si introduce un filtro per modificare l'assenza di caratteri da 0 a EOF,
+          impedendo comunque l'uscita di EOF verso il resto del programma.
+01.10   1999/lug/13,mar             Napoli              Carnevale
+        - L'addio ....                  (con ushell_sema !!!!)
+01.00   1996/xxx/XX,xxx             Napoli              Carnevale
+        - Creazione
+*/

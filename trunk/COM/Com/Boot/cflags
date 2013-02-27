@@ -1,0 +1,11 @@
+ -p68010
+ -g
+ -Xp
+ -Za2
+ -c
+ -U_SIZE_T
+ -DMC68010
+ -DM68K
+ -JC:\MASTER\target\include
+ -JC:\MASTER\target\xsp\atrcom\include
+ -JC:\MASTER\target\device\include

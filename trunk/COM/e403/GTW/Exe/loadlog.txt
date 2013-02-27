@@ -1,0 +1,90 @@
+Opening log file C:\SW\e403\GTW\Exe\loadlog.txt
+>macro testcom\testcom.icd
+>; Gateway application load macro file for ICD32 debugger
+>
+>; RESET the target, stopping it
+>reset
+USB-ML-16/32 detected - Flash Version 5.03
+WARNING - CSBOOT is the only active chip select.
+CPU reset by debugger.
+>
+>; Map the DPRAM @ $FFFF0000
+>debugger_dfc 7
+>debugger_sfc 7
+>mm.l 3FF00 FFFF0001
+>debugger_dfc 5
+>debugger_sfc 5
+>
+>; Clear the sw fault reset sources (just to be sure)
+>mm.b FFFF1009 30
+>
+>; Write the PEPAR register
+>mm.w FFFF1016 00B4
+>
+>; Program the CS0 (FLASH) and CS1 (RAM)
+>mm.l FFFF1060 00000001
+>mm.l FFFF1064 1FE00000
+>mm.l FFFF1050 00400001
+>mm.l FFFF1054 3FF00002
+>
+>; Program the SYPCR to disable the watchdog (to allow Flash burning)
+>mm.b FFFF1022 4C
+>
+>; Set the first MB of RAM to $FF (we lose the PC.. oops)
+>asm FFFF0000
+>FFFF0000         ORI.B #00,D0           >movea.w	#$0000,A0
+ FFFF0000         MOVEA.W #0,A0          
+>FFFF0004         ORI.B #00,D0           >moveq.l	#$03,D1
+ FFFF0004         MOVEQ #03,D1           
+>FFFF0006         ORI.B #00,D0           >moveq.l	#$FF,D0
+ FFFF0006         MOVEQ #FF,D0           
+>FFFF0008         ORI.B #00,D0           >moveq.l #$FF,D2
+ FFFF0008         MOVEQ #FF,D2           
+>FFFF000A         ORI.B #00,D0           >move.l	D2,(A0)+
+ FFFF000A         MOVE.L D2,(A0)+        
+>FFFF000C         ORI.B #00,D0           >dbf	D0,$FFFF000A
+ FFFF000C         DBF D0,0A              
+>FFFF0010         ORI.B #00,D0           >dbf	D1,$FFFF000A
+ FFFF0010         DBF D1,0A              
+>FFFF0014         ORI.B #00,D0           >bgnd
+ FFFF0014         BGND                   
+>FFFF0016         ORI.B #00,D0           >.
+>g FFFF0000
+Waiting for keystroke or breakpoint ...
+Hardware breakpoint signal received from ICD cable.
+>pc 100
+>
+>; Un-Map the DPRAM
+>debugger_dfc 7
+>debugger_sfc 7
+>mm.l 3FF00 0
+>debugger_dfc 5
+>debugger_sfc 5
+>
+>; Load the XRAY monitor (could be commented out if you don't want to debug)
+>; Load the GTW application (use LOADV to verify the loading)
+>
+>loadv testcom\xdm68kR.hex
+Loading ...  loaded.
+Load time was 0.30s.
+Verifying ...  verified.
+Verify time was 0.24s.
+Map file does not exist.
+>loadv testcom\boot.het
+Loading ...  loaded.
+Load time was 0.23s.
+Verifying ...  verified.
+Verify time was 0.18s.
+Map file does not exist.
+>loadv testcom\testcom.hex
+Loading ...  loaded.
+Load time was 6.13s.
+Verifying ...  verified.
+Verify time was 4.57s.
+Map file does not exist.
+>;pc 110
+>pc 100
+>;pc 120
+>goexit
+Exiting Application...
+Macro file execution terminated by user.

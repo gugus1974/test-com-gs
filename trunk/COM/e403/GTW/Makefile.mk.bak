@@ -1,0 +1,168 @@
+#-----------------------------------------------------------------------------
+# 2001.lun.10.set      v.1.02         \SW\COM\PRJs\GTW\makefile.mk
+#
+#
+# Description: Makefile for building the TCN gateway application                                           */
+#                                                         MAKEFILE
+#-----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------------------------
+# Set the target and version
+# -----------------------------------------------------------------------------------------------
+
+TARGET *= COMTEST
+# TARGET *= GTWT
+
+VERSION = 00
+
+
+# -----------------------------------------------------------------------------------------------
+# Base directories
+# -----------------------------------------------------------------------------------------------
+
+DIR_MASTER = c:\MASTER
+DIR_SW     = c:\SW
+
+# -----------------------------------------------------------------------------------------------
+# Used directories
+# -----------------------------------------------------------------------------------------------
+
+DIR_LIB_BASE = $(DIR_SW)\COM\LIBS
+
+DIR_LIB_INCS = $(DIR_LIB_BASE)\INC
+DIR_LIB_LIBS = $(DIR_LIB_BASE)\LIB
+DIR_LIB_SRCS = $(DIR_LIB_BASE)\SRC
+
+DIR_DBS = $(DIR_SW)\E403\DB\SRC
+DIR_GTW = c:\SW\E403\GTW
+
+DIR_INCS = SRC
+DIR_SRCS = SRC
+DIR_OBJS = OBJ
+DIR_EXES = EXE
+
+# -----------------------------------------------------------------------------------------------
+# Set the directory where to store the produced objects and libraries
+# -----------------------------------------------------------------------------------------------
+
+.SOURCE.obj: $(DIR_OBJS)
+.SOURCE.lib: $(DIR_OBJS)
+.SOURCE.x:   $(DIR_EXES)
+
+
+# -----------------------------------------------------------------------------------------------
+# *** This is the only section you need to change for a new project ***
+# Rules to build the project files. In this section you >must< define the following macros:
+# PROJECT        = project name
+# DEPEND         = list of extra dependencies that force the .x rebuilding
+# CC_EXTRA_FLAGS = extra flags to define for the C compilation
+# OBJECTS        = list of objects to build
+# -----------------------------------------------------------------------------------------------
+
+PROJECT = ComTest
+
+#DEPEND  = $(DIR_LIB_LIBS)\com_tcn.lib
+DEPEND  = $(DIR_LIB_LIBS)\com_mvb.lib
+
+#CC_EXTRA_FLAGS = -DATR_WTB
+
+
+OBJECTS = \
+    ../../DB/OBJ/tcmsncdb.obj \
+	gtw_appl.obj \
+	gtw_test.obj \
+	gtw_util.obj \
+	gtw_ncap.obj \
+	tstflash.obj \
+	strt_tcn.obj
+
+HEADERS = \
+	$(DIR_SRCS)\gtw_util.h \
+	$(DIR_DBS)\tcmsncdb.h \
+	$(DIR_DBS)\gtw_ncdb.h \
+	$(DIR_SRCS)\gtw_ncap.h \
+	$(DIR_SRCS)\strt_usr.h \
+	$(DIR_SRCS)\shd_var.h \
+	$(DIR_SRCS)\cod_st.h \
+	$(DIR_SRCS)\tstflash.h
+
+all: $(PROJECT).x
+
+%.obj: $(DIR_SRCS)\%.c '$(HEADERS:t"' '")'
+	$(CC) -d $(CC_FLAGS_FILE) -o$@ $<
+
+%.obj: $(DIR_SRCS)\%.cc '$(HEADERS:t"' '")'
+	$(CPP) -d $(CPP_FLAGS_FILE) -o$@ $<
+
+strt_tcn.obj .PHONY : $(DIR_LIB_SRCS)\strt_tcn.c
+	$(CC) -d $(CC_FLAGS_FILE) -o$(DIR_OBJS)\$@ -DVERSION_NAME=$(TARGET)$(VERSION) $<
+
+
+
+# -----------------------------------------------------------------------------------------------
+# Rules to build the project executable
+# -----------------------------------------------------------------------------------------------
+
+$(PROJECT).x: $(PROJECT).lib $(DEPEND)
+	$(DIR_GTW)\$(PROJECT).bat
+
+$(PROJECT).lib: $(OBJECTS)
+	del $(DIR_OBJS)\$(PROJECT).lib
+	$(LIB) < $(LIB_CMD_FILE)
+
+
+# -----------------------------------------------------------------------------------------------
+# Rules to clean up all the mess we create
+# -----------------------------------------------------------------------------------------------
+
+clean:
+	del $(DIR_OBJS)\*.obj
+	del $(DIR_OBJS)\*.lib
+	del $(DIR_EXES)\*.
+	del $(DIR_EXES)\*.x
+	del $(DIR_EXES)\*.c
+	del $(DIR_EXES)\*.o
+	del $(DIR_EXES)\*.cmd
+	del $(DIR_EXES)\*.hex
+	del $(DIR_EXES)\*.map
+	del $(DIR_EXES)\*.lnk
+
+
+# -----------------------------------------------------------------------------------------------
+# C compiler definitions
+# -----------------------------------------------------------------------------------------------
+
+CC            = MCC68K
+
+CC_FLAGS      = -p68360 -g -Xp -Za2 -c -U_SIZE_T -DMC68360 -DM68K -D__READY_EXTENSIONS__ \
+                -Gf -O -Ob -Oe -Ot -zc \
+                -J$(DIR_MASTER)/target/include -J$(DIR_MASTER)/target/device/include \
+				-I$(DIR_LIB_INCS:t" -I") -I$(DIR_INCS:t" -I") -I$(DIR_SRCS:t" -I") -I@
+CC_FLAGS_FILE := $(mktmp $(CC_FLAGS) $(CC_EXTRA_FLAGS)\n)
+
+
+
+# -----------------------------------------------------------------------------------------------
+# C++ compiler definitions
+# -----------------------------------------------------------------------------------------------
+
+CPP            = CCC68K
+
+CPP_FLAGS      = $(CC_FLAGS)
+
+CPP_FLAGS_FILE := $(mktmp $(CPP_FLAGS) $(CC_EXTRA_FLAGS)\n)
+
+
+# -----------------------------------------------------------------------------------------------
+# Librarian definitions
+# -----------------------------------------------------------------------------------------------
+
+LIB           = LIB68K
+
+XXX = $(DIR_OBJS)/{$(OBJECTS)}
+LIB_CMD_FILE  = $(mktmp CREATE $(DIR_OBJS)/$(PROJECT).lib\nADDMOD $(XXX:t"\n ADDMOD ")\nSAVE\nEND\n)
+
+
+# -----------------------------------------------------------------------------------------------
+

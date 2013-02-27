@@ -1,0 +1,164 @@
+*************************************************************************************************
+*                                                                                               *
+* COM board initialization assembler source                                                     *
+*                                                                                               *
+* (c)1997 Ansaldo Trasporti                                                                     *
+* Written by Giuseppe Carnevale                                                                 *
+* 31.03.2000   Balbi/Iusto  Dopo intervento wdog c'e' reset (ATR 01)                                                                                               *
+*************************************************************************************************
+
+
+				IFNDEF	DPRBASE
+DPRBASE			EQU		$FFFF8000				; 68360 DP-RAM base address
+				ENDC
+
+MCR				EQU		DPRBASE+$1000+$0000		; Module Configuration Register
+AVR				EQU		DPRBASE+$1000+$0008		; Autovector Register
+RSR				EQU		DPRBASE+$1000+$0009		; Reset Status
+CLKOCR			EQU     DPRBASE+$1000+$000C     ; CLKO Control
+PLLCR			EQU     DPRBASE+$1000+$0010     ; PLL Control
+CDVCR			EQU     DPRBASE+$1000+$0014     ; Clock Divider Control
+PEPAR			EQU		DPRBASE+$1000+$0016		; Port E Pin Assignment Register
+SYPCR   		EQU     DPRBASE+$1000+$0022     ; System Protection Control
+PITR	   		EQU     DPRBASE+$1000+$002A     ; Periodic Interrupt Timing Register
+SWSR	   		EQU     DPRBASE+$1000+$002F     ; Software Service Register
+GMR				EQU		DPRBASE+$1000+$0040		; Global Memory Register
+BR0				EQU		DPRBASE+$1000+$0050		; Base Register 0
+OR0				EQU		DPRBASE+$1000+$0054		; Option Register 0
+BR1				EQU		DPRBASE+$1000+$0060		; Base Register 1
+OR1				EQU		DPRBASE+$1000+$0064		; Option Register 1
+BR2				EQU		DPRBASE+$1000+$0070		; Base Register 2
+OR2				EQU		DPRBASE+$1000+$0074		; Option Register 2
+BR3				EQU		DPRBASE+$1000+$0080		; Base Register 3
+OR3				EQU		DPRBASE+$1000+$0084		; Option Register 3
+BR4				EQU		DPRBASE+$1000+$0090		; Base Register 4
+OR4				EQU		DPRBASE+$1000+$0094		; Option Register 4
+BR5				EQU		DPRBASE+$1000+$00A0		; Base Register 5
+OR5				EQU		DPRBASE+$1000+$00A4		; Option Register 5
+BR6				EQU		DPRBASE+$1000+$00B0		; Base Register 6
+OR6				EQU		DPRBASE+$1000+$00B4		; Option Register 6
+BR7				EQU		DPRBASE+$1000+$00C0		; Base Register 7
+OR7				EQU		DPRBASE+$1000+$00C4		; Option Register 7
+CR      		EQU     DPRBASE+$1000+$05C0     ; CP Command
+
+*************************************************************************************************
+
+				IFNDEF	use_watchdog			; define always the "use_watchdog" symbol
+use_watchdog	SET		0                         
+				ENDC
+
+				IFNE	use_watchdog			; define the "SWT" macro do service the watchdog
+SWT				MACRO
+				move.b	#$55,SWSR
+				move.b	#$AA,SWSR
+				ENDM
+				ELSEC
+SWT				MACRO
+				ENDM
+				ENDC
+
+*************************************************************************************************
+
+*------------------------------------------------------------------------------------------------
+* Map the QUICC DP-RAM
+
+				move.l	#$7,D0
+				movec	D0,SFC					; SFC & DFC must be set first to idicate
+				movec	D0,DFC					; CPU space and before accessing master MBAR
+				move.l	#DPRBASE+1,A0			; init. master MBAR
+				moves.l	A0,($3FF00).L
+
+*------------------------------------------------------------------------------------------------
+* If we want to do different things depending on the reset source, this is the right place.
+
+				move.b	RSR,D0					; get a copy of RSR
+				move.b  #$ff,RSR				; clear the reset sources
+				
+				btst	#5,D0					; is it a software watchdog reset?
+*				bne		*						; if yes, don't go on  ATR 01
+
+				btst	#4,D0					; is it a double bus fault reset?
+				bne		*						; if yes, don't go on
+				
+				tst.b	D0						; is it a real reset...?
+				beq		*						; if not, don't go on
+
+*------------------------------------------------------------------------------------------------
+* Initialize the clock
+* Multiplication factor: 1
+* CLKO1 to full strength, CLKO2 disabled
+* Do not use the low power lock divider
+
+				ori.w	#$4000,PLLCR			; write protect the PLLCR register	
+				move.b	#%10001100,CLKOCR		; program CLKO1 and CLKO2 operations
+				ori.w	#$8000,CDVCR			; write protect the CDVCR register
+
+*------------------------------------------------------------------------------------------------
+* System protection and periodic interrupt
+* The periodic interrupt is not used
+* The software watchdog is enabled depending on the "use_watchdog" symbol (with SWT=00, SWP=1)
+* The Double Bus Fault Monitor is enabled
+* The Bus Monitor External is enabled with a 1K System Clocks timeout
+* The Module Configuration Register is left to its defaults
+
+				IFNE	use_watchdog
+				move.b	#%11001100,SYPCR		; we want the software watchdog
+				move.w	#$0200,PITR
+				SWT								; watchdog restart
+				ELSEC
+				move.b	#%01001100,SYPCR		; no software watchdog, please
+				ENDC
+
+*------------------------------------------------------------------------------------------------
+* Clear the DP-RAM and reset the CPM
+
+				lea		DPRBASE,A0
+				move.w	#($1000/4)-1,D0
+dp_clear:		clr.l	(A0)+
+				dbra	D0,dp_clear
+
+				move.w	#$8000,CR
+
+*------------------------------------------------------------------------------------------------
+* Write the PEPAR
+* /WE0-3 selected
+
+				move.w	#$00B4,PEPAR
+
+*------------------------------------------------------------------------------------------------
+* Initialize the memory map (GMR, OR, BR)
+* CS0 : ROM  : SRAM 16-bit 2 wait-states 1MB, all FCs @$400000
+* CS1 : RAM  : SRAM 32-bit 0 wait-states 2MB, all FCs @$000000
+* CS2 : MVBC : SRAM DSACK  1 wait-states 1MB, all FCs @$C00000
+* CS5 : I/O  : SRAM 32-bit 0 wait-states 2KB, all FCs @$B00000
+
+				move.l	#0,GMR
+
+				move.l	#$00400001,BR0
+				move.l	#$3FF00002,OR0
+				move.l	#$00000001,BR1
+				move.l	#$1FE00000,OR1
+				move.l	#$00C00001,BR2
+				move.l	#$2FF00006,OR2
+				move.l	#$00B00001,BR5
+				move.l	#$1FFFF800,OR5
+
+*------------------------------------------------------------------------------------------------
+* Program the AVR to use the autovector for all the external interrupts
+
+				move.b	#$FE,AVR
+
+*------------------------------------------------------------------------------------------------
+* Clear the last MB of RAM
+
+				lea		$100000,A0
+				move.w	#$0003,D1				; ($3+1)*($FFFF+1)*4 = 1024K
+				move.w	#$FFFF,D0
+ram_clear:		clr.l	(A0)+
+				dbra	D0,ram_clear
+				SWT								; watchdog restart
+				dbra	D1,ram_clear
+
+*------------------------------------------------------------------------------------------------
+* This is the end of the initialization
+

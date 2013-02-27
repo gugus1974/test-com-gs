@@ -1,0 +1,326 @@
+*-============================================================
+*	%W%	%G%
+*
+* File:    MONBASE.SRC
+* Created: 09-12-89
+*
+* Copyright (c) 1991-1996  Microtec Research, Inc.
+* All rights reserved
+*	Rev 8.9 	R.O'Farrell , MRI Jan 12 1993
+*			Incorrect comments regarding the use of 
+*			reserved config table fields  fixed
+*
+*	Rev 8.5		R. Monajjemi, MRI, June 17, 1992
+*			Added Illegal instruction for PC initializtion.
+*			If user types go before loading any file, generates
+*			illegal instruction trap.
+*
+*	Rev 8.4		G. Boehm, MRI, April 23, 1992
+*			CONFCOPY - copy CONFIG table from ROM to RAM
+*
+*	Rev 8.3		G. Boehm, MRI, February 20, 1992
+*			RESET_PC fix
+*
+*	Rev 6.5		M. Mahar, MRI, December 20, 1991
+*			removed $MESBFSZ$ patch macro for
+*			message buffer size set by MCT
+*			Added MESBFSZ define macro now in boardset.inc
+*
+*	Rev 6.4		M. Mahar, MRI, December 11, 1991
+*			Added $MESBFSZ$ patch macro for
+*			message buffer size set by MCT
+*
+*	Rev 6.3		G. Boehm, MRI, November 6, 1991
+*			Add test for BOARD_FAMILY equate
+*
+*	Rev 5.4		G. Boehm, MRI, July 31, 1991
+*			Implement 68040
+*
+*	Rev 5.3		G. Boehm, MRI, July 22, 1991
+*			Implement 68070
+*
+*	Rev 5.2		G. Boehm, MRI, June 24, 1991
+*			Add support for 68340
+*
+*	Rev 4.2		G. Boehm, MRI, April 18, 1991
+*			Add support for 68332
+*			Add comments on CFENALVL
+*
+*	Rev 2.2		G. Boehm, MRI, March 12, 1991
+*			Install Kjell's new RESET PC routine
+*
+* 	New rev #1.1	G. Boehm, MRI, October 30, 1990
+*			Put under SCCS
+*
+*-============================================================
+*
+*                 XRAYMON Board Support Base file
+*
+*  This file contains the COLD_BOOT entry (or start point from
+* another monitor or cold-boot routine).
+* It also contains the configuration table (to go in ROM or RAM),
+* and the Workspace data area (RAM).
+*  The equates in boardset.inc define how the monitor will 
+* operate.
+*-============================================================
+*
+*  Sections used:
+*
+*   9	Code
+*  13	ROMable data
+*  14	Normal data
+*
+*-============================================================
+
+MONBUG idnt
+
+	opt	E,case
+
+*-============================================================
+* include files
+*-============================================================
+	nolist
+	include monvisi.inc	; XRAYMON definitions
+	include	boardset.inc	; def of equates for board setup
+	list
+
+	ifne	TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	 chip	68000
+	endc
+	ifne	TARGET&CPU68010
+	 chip	68010
+	endc
+	ifne	TARGET&CPU68020
+	 chip	68020
+	endc
+	ifne	TARGET&CPU68030
+	 chip	68030
+	endc
+	ifne	TARGET&CPU68040
+	 chip	68040
+	endc
+	ifne	TARGET&(CPU68332+CPU68360)
+	 chip	68332				; just for the assembler
+	endc
+
+*-============================================================
+* Externals
+*-============================================================
+	xref	MO_START	; XRAYMON start address
+	xref	BOARD_START	; Board startup code
+	xref	CON_INIT	; init for console code (hook for init)
+	xref	CON_TERM	; terminate I/O connect or reconn.
+      ifne CONIO&POLLED
+	xref	CON_IN		; read input
+      endc
+	xref	CON_OUT		; write output
+
+*-============================================================
+* Section: Code
+*-============================================================
+	section 9,4,C
+
+*-============================================================
+*
+* Entry point
+*
+*-============================================================
+      ifne CONIO&VECTSTART
+VECTOR_START:				; if board reads these 8 bytes
+	dc.l	MSP_STACK		; as address 0-7 during power-up,
+	dc.l	COLD_PC			; it will vector to us.
+      endc
+
+	xdef	COLD_PC
+COLD_PC:				; normal entrypoint for monitor
+*
+* first disable interrupts, then setup stack
+*
+      ifne	TARGET&(CPU68000+CPU68010+CPU68332+CPU68360+CPU68070) ; no cache
+	MOVE	#$2700,SR		; enter intr mode
+      endc
+      ifne	TARGET&(CPU68020+CPU68030+CPU68040) ; cache plus extra stacks
+       ifeq CONIO&VECTSTART		; if RAM based (ROM uses startup)
+	MOVE	#$3700,SR		; disable interrupts, Intr mode
+	MOVE.L	#COLD_PC,A7		; use memory below COLD_PC as MSP
+       endc
+	MOVE	#$2700,SR		; enter intr mode
+      endc
+
+	MOVE.L	#INIT_STACK,SP		; initial stack, use low workspace
+
+*
+* if the config table is in ROM and needs to be in RAM, copy it
+*
+  ifne CONIO&CONFCOPY
+CONF_END equ	CFSUSHK+4
+	LEA	MO_CONFIG_ROM,A0	; current ROM address
+	LEA	MO_CONFIG,A1		; new RAM address
+	MOVE.L	#CONF_END-1,D0		; size of table
+conf_copy:
+	MOVE.B	(A0)+,(A1)+		; copy (use words if known aligned)
+	DBF	D0,conf_copy
+  endc
+
+*----------------------------------------------------------------
+* Call BOARD_START to do any board specific initialization before
+* calling MOINIT
+*----------------------------------------------------------------
+
+  ifne CONIO&VECTSTART 	    ; ROM based........................
+		bra	BOARD_START
+		xdef end_board_start   	; (only if ROM based)
+end_board_start:
+  endc				; CONIO&VECTSTART
+
+
+
+    
+
+*----------------------------------------------------------------
+* Call MOINIT
+* -----------
+* note that MOINIT expects the following:
+*	A0=reset PC
+*	SR=reset SR
+*	SP=reset SP
+*----------------------------------------------------------------
+
+        MOVE.L  #RESET_PC,A0            ; set startup PC=RESET_PC
+	BSR	MO_START+MOINIT		; initialize XRAYMON
+      ifne INIT_FLAG&COAUXMON
+	ILLEGAL				; trap back to aux monitor
+      elsec
+	STOP	#$2700			; Comes here if bad init
+      endc
+
+* dummy code here, used if user types go without loading any code
+RESET_PC:
+	illegal				; Illegal instruction for PC
+					; initializtion
+        and.w   #$F8FF,SR               ; enable interrupts (so ctrl-C works)
+        				; GRB 2/20/92: above changed from $3000
+        nop                             ; do a NOP just for fun
+        bra     RESET_PC                ; do it again
+
+	page
+*-============================================================
+* Section: ROMable Data
+*-============================================================
+
+*-============================================================
+*
+* XRAYMON Configuration Table
+*
+*-============================================================
+	section 13,4,R
+
+  ifne CONIO&CONFCOPY
+	xdef	MO_CONFIG_ROM
+MO_CONFIG_ROM:
+  elsec
+	xdef	MO_CONFIG
+MO_CONFIG:
+  endc
+ 	dc.l	MO_WSP			* pointer to workspace
+	dc.l	MO_WSP_SIZE		* workspace size (bytes)
+ 	dc.l	0			* pointer to codespacewsp_size
+ 	dc.l	0			* codespace size
+	dc.w	INIT_FLAG		* options
+	ifne	TARGET&CPU68000
+	  dc.w	CCPU68000		* cpu type
+	endc
+	ifne	TARGET&CPU68010
+	  dc.w	CCPU68010		* cpu type
+	endc
+	ifne	TARGET&CPU68020
+	  dc.w	CCPU68020		* cpu type
+	endc
+	ifne	TARGET&CPU68030
+	  dc.w	CCPU68030		* cpu type
+	endc
+	ifne	TARGET&CPU68040
+	  dc.w	CCPU68040		* cpu type
+	endc
+	ifne	TARGET&CPU68332
+	  dc.w	CCPU68332		* cpu type
+	endc
+	ifne	TARGET&CPU68360
+	  dc.w	CCPU68360		* cpu type
+	endc
+	ifne	TARGET&CPU68070
+	  dc.w	CCPU68070		* cpu type
+	endc
+ 	dc.w	1000			* delay loops before timeout
+ 	dc.w	0			* max number of breakpoints
+ 	dc.w	0			* breakpoint instruction
+ 	dc.w	0			* breakpoint vector
+ 	dc.w	0			* auxmon invoke vector
+* 		For CFENALVL, MCT defines as follows:
+*		Use default: 0		Enable all: 8
+* 		Disable all: 7		Level N:    N  (1-7)
+	dc.b	INTLEVEL		* interupt level
+	dc.b	0			* RESERVED
+ 	dc.w	MESBFSZ			* message buffer size
+ 	dc.w	0			* input buffer size
+	dc.w	CON_SCHEME		* max encoding scheme (no control chr)
+	dc.w	-1			* abort vector (we use -1 so no init)
+ 	dc.l	CON_OUT			* output poll routine
+  	ifne CONIO&POLLED
+	  dc.l	CON_IN			* input poll routine
+	elsec
+	  dc.l	0			* interupt routine used instead
+  	endc
+ 	dc.l	0			* set breakpoint hook
+ 	dc.l	0			* affect breakpoint hook
+ 	dc.l	CON_INIT		* initialization hook
+ 	dc.l	0	  		* idle hook
+ 	dc.l	0			* interrupt enable/disable hook
+ 	dc.l	CON_TERM		* aux-mon hook (I/O reset)
+	dc.l	0			* execution start/stop hook
+ 	dc.l	0			* human component pointer
+	dc.l	0			* extension hook
+ 	dc.l	COLD_PC			* start of user monitor support code
+ 	dc.l	0			* Utility hook USED BY MTD COMPONENT
+ 	dc.l	0			* Suspend hook USED BY MTD COMPONENT
+
+
+*-============================================================
+* Section: Normal Data
+*-============================================================
+
+*-============================================================
+*
+* XRAYMON Workspace / Initial Stack
+*
+*-============================================================
+	section 14,4,D
+
+  ifne CONIO&CONFCOPY
+
+	xdef MO_CONFIG
+MO_CONFIG: ds.b	CONF_END		; Allocate space for the 
+					; RAM copy of config table
+  endc
+
+
+	xdef	MO_SAVE
+MO_SAVE: ds.l	BOARD_SAVE		; save area for Board specifics
+					; 1st long for trap15/probe vector
+					; next 4 for 302 regs (if 302)
+
+
+	xdef	MO_WSP			; Define the monitors Workspace
+MO_WSP:
+	ds.b	MO_WSP_SIZE		; Allocate Space for Workspace
+
+	ds.l	0			
+INIT_STACK:				; Use MO_WSP as initial stack
+					
+ 
+      ifne CONIO&VECTSTART		; Let MSP use same stack as ISP
+	ds.l	0			; (more MSP stack could be added here)
+MSP_STACK:				
+      endc
+
+	end	COLD_PC

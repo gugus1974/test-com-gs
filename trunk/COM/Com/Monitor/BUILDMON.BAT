@@ -1,0 +1,19 @@
+:: Assembling monbase.src into monbase.obj...
+asm68k -fe monbase.src
+:: Assembling board.src into board.obj...
+asm68k -fe board.src
+:: Assembling testcomm.src into testcomm.obj...
+asm68k -fe testcomm.src
+
+:: Linking to produce xdm68k.hex...
+lnk68k -m  -o xdm68k.het  -c board.cmd >xdm68k.map
+sutil -r -400000 xdm68k.het  >xdm68k.hex
+
+:: Linking to produce testcomm.abs...
+lnk68k -m  -o testcomm.abs  -c testcomm.cmd >testcomm.map
+
+:: Convert the monitor ".hex" file to the most stupid SREC format known
+m68k-coff-objcopy -O srec --gap-fill=0 xdm68k.hex xdm68k.d32
+
+:: Create the RAMmable version xdm68kR.hex...
+lnk68k -m  -o xdm68kR.hex  -c boardR.cmd >xdm68kR.map

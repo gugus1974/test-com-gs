@@ -1,0 +1,204 @@
+#---------------------------------------------------------------------------
+#-
+#-              Copyright (c) 1992 READY SYSTEMS CORPORATION.
+#-
+#-      All rights reserved. READY SYSTEMS' source code is an unpublished
+#-      work and the use of a copyright notice does not imply otherwise.
+#-      This source code contains confidential, trade secret material of
+#-      READY SYSTEMS. Any attempt or participation in deciphering, decoding,
+#-      reverse engineering or in any way altering the source code is
+#-      strictly prohibited, unless the prior written consent of
+#-      READY SYSTEMS is obtained.
+#-
+#-
+#-      Module Name:            makeall.tpl
+#-
+#-      Identification:          6.45 makeall.tpl
+#-
+#-      Date:                   10/28/94  10:28:33
+#-
+#---------------------------------------------------------------------------
+
+
+
+
+
+
+TOPDIR	= $(SPECTRA)
+
+.SUFFIXES:
+.SUFFIXES: .o .cc $(SUFFIXES)
+
+
+RM	= -del
+COPY	= copy
+CHMOD	= echo >nul
+
+PROC	= 68010
+BOARD	= atrcom
+FORMAT	= microtec
+
+LIBSDIRSMALL = $(TOPDIR)\target\lib\$(PROC)_s\$(FORMAT)
+LIBSDIR = $(TOPDIR)\target\lib\$(PROC)\$(FORMAT)
+BOARDDIR = \sw\com\bsp
+DEVCNFGFILE = devcnfg.c
+DEVCNFGDIR = \sw\com\bsp
+
+INCDIRS = -J$(TOPDIR)\target\include -J$(TOPDIR)\target\xsp\$(BOARD)\include -J$(TOPDIR)\target\device\include
+
+CC	= mcc68k
+CCC	= ccc68k
+AS	= asm68k
+LD	= lnk68k
+
+CFLAGS = -p68010 -g -Xp -Za2 -c -U_SIZE_T -DMC68010 -DM68K -I/SW/COM/LIBs/INC -g -Gf -O -Ob -Oe -Ot -zc -D__READY_EXTENSIONS__    $(INCDIRS)
+CCFLAGS = -p68010 -g -Za2 -c -Dsize_t=_SIZE_T -DMC68010 -DM68K -I/SW/COM/LIBs/INC -g -Gf -O -Ob -Oe -Ot -zc -D__READY_EXTENSIONS__ $(INCDIRS)  
+
+# vrtxos_LIBS and vrtxos_OBJS are used in command lines
+# vrtxos_LIBS_DEPEND and vrtxos_OBJS_DEPEND are used for dependencies
+
+vrtxos_LIBS = $(LIBSDIR)\vsyslib.lib \
+	$(LIBSDIR)\vrtxsa.lib \
+	$(LIBSDIR)\kernsupp.lib \
+	$(LIBSDIR)\kernel.lib \
+	$(LIBSDIR)\kernsupp.lib \
+	$(LIBSDIR)\vsyslib.lib \
+	$(LIBSDIR)\cpu.lib \
+	$(LIBSDIR)\rtnofp.lib \
+	..\OBJ\ComTest.lib \
+	\SW\COM\LIBs\LIB\com_mvb.lib \
+	$(MRI_68K_LIB)\ccc68kab.lib \
+	$(MRI_68K_LIB)\mcc68kab.lib
+
+vrtxos_LIBS_DEPEND = $(LIBSDIR)\vsyslib.lib \
+	$(LIBSDIR)\vrtxsa.lib \
+	$(LIBSDIR)\kernsupp.lib \
+	$(LIBSDIR)\kernel.lib \
+	$(LIBSDIR)\kernsupp.lib \
+	$(LIBSDIR)\vsyslib.lib \
+	$(LIBSDIR)\cpu.lib \
+	$(LIBSDIR)\rtnofp.lib \
+	..\OBJ\ComTest.lib \
+	\SW\COM\LIBs\LIB\com_mvb.lib \
+	$(MRI_68K_LIB)\ccc68kab.lib \
+	$(MRI_68K_LIB)\mcc68kab.lib
+
+
+vrtxos_OBJS = $(LIBSDIR)\syscrt0.o \
+	sysintbl.o \
+	vosintbl.o \
+	vrtxcftb.o \
+	vrtxcvt.o \
+	vrtxcals.o \
+	initcomp.o \
+	$(LIBSDIR)\vde_sc.o
+
+vrtxos_OBJS_DEPEND = $(LIBSDIR)\syscrt0.o \
+	sysintbl.o \
+	vosintbl.o \
+	vrtxcftb.o \
+	vrtxcvt.o \
+	vrtxcals.o \
+	initcomp.o \
+	$(LIBSDIR)\vde_sc.o
+
+
+ComTest.x ComTest.map:		makefile cflags ComTest.lnk $(vrtxos_OBJS_DEPEND) $(vrtxos_LIBS_DEPEND)
+	$(RM) ComTest.x
+	$(LD) -o ComTest.x -c ComTest.lnk -f i,c,x,t -m > ComTest.map
+
+ComTest.lnk:         ComTest.cmd makefile
+	@type ComTest.cmd > $@
+	@echo >> $@ LOAD $(LIBSDIR)\syscrt0.o
+	@echo >> $@ LOAD sysintbl.o
+	@echo >> $@ LOAD vosintbl.o
+	@echo >> $@ LOAD vrtxcftb.o
+	@echo >> $@ LOAD vrtxcvt.o
+	@echo >> $@ LOAD vrtxcals.o
+	@echo >> $@ LOAD initcomp.o
+	@echo >> $@ LOAD $(LIBSDIR)\vde_sc.o
+	@echo >> $@ LOAD $(LIBSDIR)\vsyslib.lib
+	@echo >> $@ LOAD $(LIBSDIR)\vrtxsa.lib
+	@echo >> $@ LOAD $(LIBSDIR)\kernsupp.lib
+	@echo >> $@ LOAD $(LIBSDIR)\kernel.lib
+	@echo >> $@ LOAD $(LIBSDIR)\kernsupp.lib
+	@echo >> $@ LOAD $(LIBSDIR)\vsyslib.lib
+	@echo >> $@ LOAD $(LIBSDIR)\cpu.lib
+	@echo >> $@ LOAD $(LIBSDIR)\rtnofp.lib
+	@echo >> $@ LOAD ..\OBJ\ComTest.lib
+	@echo >> $@ LOAD \SW\COM\LIBs\LIB\com_mvb.lib
+	@echo >> $@ LOAD $(MRI_68K_LIB)\ccc68kab.lib
+	@echo >> $@ LOAD $(MRI_68K_LIB)\mcc68kab.lib
+
+
+
+
+.s.o :
+	$(RM) $@
+	$(AS) -o $@ $<
+
+.c.o :
+	$(RM) $@
+	$(CC) -o $@ -dcflags $<
+
+cflags : makefile
+	$(RM) $@
+	@echo >> $@ -p68010
+	@echo >> $@ -g
+	@echo >> $@ -Xp
+	@echo >> $@ -Za2
+	@echo >> $@ -c
+	@echo >> $@ -U_SIZE_T
+	@echo >> $@ -DMC68010
+	@echo >> $@ -DM68K
+	@echo >> $@ -I/SW/COM/LIBs/INC
+	@echo >> $@ -g
+	@echo >> $@ -Gf
+	@echo >> $@ -O
+	@echo >> $@ -Ob
+	@echo >> $@ -Oe
+	@echo >> $@ -Ot
+	@echo >> $@ -zc
+	@echo >> $@ -D__READY_EXTENSIONS__
+	@echo >> $@ -J$(TOPDIR)\target\include
+	@echo >> $@ -J$(TOPDIR)\target\xsp\$(BOARD)\include
+	@echo >> $@ -J$(TOPDIR)\target\device\include
+
+.cc.o :
+	$(RM) $@
+	$(CCC) -o $@ -dcxxflags $<
+
+cxxflags : makefile
+	$(RM) $@
+	@echo >> $@ -p68010
+	@echo >> $@ -g
+	@echo >> $@ -Za2
+	@echo >> $@ -c
+	@echo >> $@ -Dsize_t=_SIZE_T
+	@echo >> $@ -J$(TOPDIR)\target\include
+	@echo >> $@ -J$(TOPDIR)\target\xsp\$(BOARD)\include
+	@echo >> $@ -J$(TOPDIR)\target\device\include
+
+mostlycl :
+	$(RM) *.o 
+	$(RM) *.x
+	$(RM) *.abs 
+	$(RM) *.tmp
+	$(RM) *.het
+	$(RM) *.lnk
+	$(RM) cflags
+	$(RM) cxxflags
+
+clean : mostlycl
+	$(RM) *.hex 
+	$(RM) *.map
+
+distclea : clean
+	$(RM) ComTest.cmd
+	$(RM) vosintbl.c
+	$(RM) sysintbl.c
+	$(RM) initcomp.c
+	$(RM) vrtxcvt.c
+	$(RM) vrtxcals.c
+	$(RM) vrtxcftb.c
+	$(RM) makefile

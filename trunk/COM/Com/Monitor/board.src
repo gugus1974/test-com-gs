@@ -1,0 +1,397 @@
+*-============================================================
+*	%W%	%G%
+*
+* File:    BOARD.SRC - generic board file for xdm68k monitor
+* Created: Dec. 20, 1989
+*
+* Copyright (c) 1991-1996  Microtec Research, Inc.
+* All rights reserved
+*
+*	Rev 5.4		G. Boehm, MRI, July 31, 1991
+*			Implement 68040
+*
+*	Rev 5.3		G. Boehm, MRI, July 22, 1991
+*			Implement 68070
+*
+*	Rev 5.2		G. Boehm, MRI, June 24, 1991
+*			Re-do EVT_BASE/VBR handling
+*
+*	Rev 4.2		G. Boehm, MRI, April 18, 1991
+*			Add support for 68332
+*
+* 	New rev #1.1	G. Boehm, MRI, October 30, 1990
+*			Put under SCCS
+*
+*-============================================================
+*
+*                 XRAYMON Board Support
+*                         for
+*		  Boards (MVME boards in moto.src)
+*
+*		  Various I/O techniques
+*
+*-============================================================
+*
+*  Sections used:
+*
+*   9	Code
+*  13	ROMable data
+*  14	Normal data
+*
+*-============================================================
+
+BOARDSUP idnt			; name for BOARD support package
+
+	opt	E,case
+
+*-============================================================
+* include files
+*-============================================================
+	nolist
+	include monvisi.inc	; XRAYMON definitions
+	include	boardset.inc	; def of equates for board setup
+	list
+
+	ifne	TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	 chip	68000
+	endc
+	ifne	TARGET&CPU68010
+	 chip	68010
+	endc
+	ifne	TARGET&CPU68020
+	 chip	68020
+	endc
+	ifne	TARGET&CPU68030
+	 chip	68030
+	endc
+	ifne	TARGET&CPU68040
+	 chip	68040
+	endc
+	ifne	TARGET&(CPU68332+CPU68360)
+	 chip	68332
+	endc
+
+
+*-============================================================
+* User Configuration equates
+*
+* NOTE: Selection of board and I/O style is handled in .sup file
+*
+*-============================================================
+
+			 
+
+*-============================================================
+* Motorola TRAP 15 style syscall macro and equates (if used)
+*-============================================================
+	ifne	CONIO&TRAP15
+TR15VCT	equ	$BC		; Trap #15 vector offset
+.INCHR	equ	$0000		; Input a character function
+.INSTAT	equ	$0001		; Receive status function
+.OUTCHR	equ	$0020		; Output a character function
+
+SYSCALL	MACRO	code
+	 TRAP	#15
+	 DC.W	code
+	ENDM
+
+	endc
+
+*-============================================================
+* SCG pROBE CONIO hook equates
+*-============================================================
+	ifne	CONIO&PROBEIO
+NODEPTR	equ	$44		; VBR+44h -> INT11 hook to IOtab
+PROBE_OFF equ	$12		; 4th dword entry is pROBE conf table
+* NOTE: for old pSOS/pROBE, use 40h and 18h for above equ's
+	endc
+
+*-============================================================
+* Externals
+*-============================================================
+	xref	MO_SAVE		; save area for monitor
+	xref	MO_START	; start point for monitor
+
+*-============================================================
+* Publics defined in here
+*-============================================================
+	xdef	BOARD_START	; startup code for board specifics
+	xdef	CON_INIT	; initialization after MON_INIT
+	xdef	CON_TERM	; termination before going to aux-mon
+      ifne CONIO&POLLED
+	xdef	CON_IN		; read input
+      endc
+	xdef	CON_OUT		; write output
+	xdef	EVT_BASE
+
+	page
+*-============================================================
+* Section: Data
+*-============================================================
+	section monitor_evt,4,D
+EVT_BASE	ds.l 256    	; EVT (exception vector table)
+
+
+*-============================================================
+* Section: Code
+*-============================================================
+	section 9,,C
+
+*-============================================================
+*
+* Entry points
+*
+*-============================================================
+
+BOARD_START:
+*
+*** Insert any board init code you may need
+*
+
+	INCLUDE	\sw\com\bsp\com_init.src
+
+
+*
+*** We have prep code for TRAP15 and pROBE handlers. These just save vectors
+*
+
+      ifne	CONIO&TRAP15
+       ifne	TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	MOVE.L	TR15VCT,MO_SAVE	; save BUGxxx trap #15 vector
+       elsec
+	MOVEC.L	VBR,A1		; get address of vector table
+	ADD.L	#TR15VCT,A1	; get address of trap 15 vector
+	MOVE.L	(A1),MO_SAVE	; save BUGxxx trap #15 vector
+       endc
+      endc
+
+
+      ifne	CONIO&PROBEIO
+       ifne	TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	MOVE.L	NODEPTR,A1	; get table it points to
+       elsec
+	MOVEC.L	VBR,A1
+	ADD.L	#NODEPTR,A1	; vector address of hook
+	MOVE.L	(A1),A1		; get table it points to
+       endc
+	ADD.L	#PROBE_OFF,A1	; 4th entry of longs is ptr to pROBE CONF
+	MOVE.L	(A1),MO_SAVE	; save it aside for later
+      endc
+
+
+*-============================================================
+* Exception Vector Table
+* ----------------------
+* The preceding code, which saved the TRAP15 or PROBE I/O vector,
+* assumed the VBR was pointing to the Exception Vector Table (EVT)
+* that had been set up by VMEbug or pSOS.  Later on (in CON_INIT),
+* after MOINIT has replaced the EVT with its own table, this I/O
+* vector will be restored to the (Monitor's) EVT.
+*
+* If you were planning on loading a new EVT table address into 
+* the VBR, AND HAVEN'T DONE SO ALREADY, you should do it now by 
+* changing the EVT_BASE equate and uncommenting the 2 lines of
+* code below it.  
+*  
+* Note that even if your EVT is not at address 0, you don't need
+* to change EVT_BASE to point to it unless you are also loading
+* the VBR here.
+*-------------------------------------------------------------
+
+;EVT_BASE   equ 0    	; EVT (exception vector table) address
+
+	MOVE.L	#EVT_BASE,A1	; Load address of new EVT
+	MOVEC.L	A1,VBR		; into VBR
+*-============================================================
+
+	xref	end_board_start
+	jmp		end_board_start
+
+*-============================================================
+*
+* INT_INIT and INT_CLR routines used by some hardware device
+*	drivers to supplement the normal init and reset
+* Note: you may need to add code if special PICs need to be
+*	setup/cleared during init and after an int fires.
+*	The common case is clearing the ISR and initializing
+*	the enable masks.
+*
+*-============================================================
+INT_INIT:
+	RTS			; normal init ok
+
+INT_CLR:
+	RTS			; normal interrupt handling ok
+
+*-============================================================
+*
+* XRAYMON init hook
+*
+*-============================================================
+
+CON_INIT:
+*
+*** First we vector the ABORT handler in - if any
+*
+      ifne ABVECT
+      ifeq	TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	MOVEC.L	VBR,A0			; fetch current VBR
+	ADD.L	#ABVECT*4,A0		; form absolute abort vector adress
+	MOVE.L	#ABORT,(A0)		; insert new abort switch routine
+      elsec
+	MOVE.L	#ABVECT*4,A0		; form absolute abort vector adress
+	MOVE.L	#ABORT,(A0)		; insert new abort switch routine
+      endc
+      endc
+
+*
+*** Now restore vectors that the monitor clobbered 
+*** (pROBE & TRAP15 for instance)
+*
+      ifne CONIO&TRAP15
+       ifeq TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	MOVEC.L	VBR,A0			; fetch current VBR
+	ADD.L	#TR15VCT,A0		; form absolute trap15 vector adr
+	MOVE.L	MO_SAVE,(A0)		; Restore BUGxxx trap #15 vector
+       elsec
+        MOVE.L	MO_SAVE,TR15VCT		; Restore BUGxxx trap #15 vector
+       endc
+      endc
+
+      ifne CONIO&PROBEIO
+       ifeq TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	MOVEC.L	VBR,A0			; fetch current VBR
+	ADD.L	#NODEPTR,A0		; adr of configuration table
+	MOVE.L	(A0),A0			; Get adr of config table
+       elsec
+        MOVE.L	NODEPTR,A0		; Get adr of config table
+       endc
+       ADD.L	#PROBE_OFF,A0	; 4th entry of longs is ptr to pROBE CONF
+       MOVE.L	MO_SAVE,(A0)		; Restore pROBE I/O vector
+      endc
+
+
+*
+*** If INIT enabled, call the INIT routine
+*
+      ifne CONIO&INITIO
+	clr.l	D0			; 0 means first init.
+	BSR	IO_INIT			; init I/O hardware
+      endc
+
+	MOVEQ.L	#RET_OK,D0
+	RTS
+
+*-============================================================
+*
+* XRAYMON aux-mon hook - called before enter/exit of aux-mon
+*
+*-============================================================
+
+CON_TERM:
+      ifne CONIO&INITIO
+	cmp.w	#AUX_ENTER,D0
+	beq	term_io		; entering aux-mon, disable ints or restore
+				; baud rate, etc.
+	moveq.l	#1,D0		; indicate reinit, not first init
+	BSR	IO_INIT		; reinit
+	bra	term_done
+;;
+term_io:
+	BSR	IO_TERM		; terminate I/O stuff or reset back.
+      endc
+term_done:
+	MOVEQ.L	#RET_OK,D0	; indicate ok
+	RTS
+
+*-============================================================
+*
+* Abort handler - services ABORT button on boards
+*
+*-============================================================
+ABORT:
+*
+*** Insert any code required for clearing ABORT (for debounce, etc)
+*
+	BRA	MO_START+MOHALT		; jump to XRAYMON halt, stop execution
+
+
+*
+*** THE CODE BELOW IS FOR GENERIC DRIVERS
+*
+
+
+*************************************************************************
+*
+*		TRAP15 I/O CODE (MOTOROLA STYLE)
+*
+*************************************************************************
+
+	ifne 	CONIO&TRAP15		; all MVME board's trap15 code
+
+*-============================================================
+*
+* Polled #output
+*
+*  -> D1 = character to transmit
+*  <- D0 = RET_OK (transmitted ok)
+*	   ER_TBF (transmit buffer full)
+*
+*-============================================================
+
+CON_OUT:
+	MOVE.B	D1,-(SP)		; Move char on stack
+	SYSCALL .OUTCHR			; Send char
+	MOVEQ.L #RET_OK,D0		; Always good
+	RTS
+
+
+*-============================================================
+*
+* Polled trap #15 input
+*
+*  <- D1 = received character
+*     D0 = RET_OK (received ok)
+*	   ER_NCA (no character available)
+*	   ER_REC (receive error)
+*
+*-============================================================
+CON_IN:
+	MOVEQ	#ER_NCA,D0		; assume no character
+	SYSCALL .INSTAT			; get status
+	BEQ.S	pi_x			; (no)
+	SUBQ.L	#2,A7			; make room for char
+	SYSCALL .INCHR			; fetch character
+	MOVE.B	(SP)+,D1		; put it in D1
+	MOVEQ.L	#RET_OK,D0		; always good
+pi_x:
+	RTS
+
+	endc				; end TRAP15 code
+
+
+*************************************************************************
+*
+*		DIRECT HARDWARE I/O CODE
+*
+*************************************************************************
+
+      ifne	CONIO&HWIO	; direct hardware I/O
+
+	include hwequ.inc	; equates for UART address, etc
+	include hwdrv.inc	; driver selected by user
+
+      endc			; end HWIO code
+
+
+*************************************************************************
+*
+*	    PROBE CONIO CODE WHEN INT11 VECTORS TO TABLES
+*
+*************************************************************************
+
+      ifne	CONIO&PROBEIO	; direct hardware PROBE I/O
+
+	include	probe.inc	; drivers for probe conection
+
+      endc			; end PROBE code

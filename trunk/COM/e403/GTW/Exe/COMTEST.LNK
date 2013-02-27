@@ -1,0 +1,34 @@
+
+LISTABS
+LISTMAP CROSSREF,PUBLICS/ADDR
+CHIP	68360
+ALIAS	9,code
+ALIAS	13,const
+ALIAS	13,strings
+ALIAS	13,literals
+ALIAS	13,vars
+ALIAS	14,zerovars
+ALIAS	14,tags
+ORDER	9,13
+SECT 14	= $120000
+SECT 9	= $010000
+ LOAD C:\MASTER\target\lib\68010\microtec\syscrt0.o
+ LOAD sysintbl.o
+ LOAD vosintbl.o
+ LOAD vrtxcftb.o
+ LOAD vrtxcvt.o
+ LOAD vrtxcals.o
+ LOAD initcomp.o
+ LOAD C:\MASTER\target\lib\68010\microtec\vde_sc.o
+ LOAD C:\MASTER\target\lib\68010\microtec\vsyslib.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\vrtxsa.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\kernsupp.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\kernel.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\kernsupp.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\vsyslib.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\cpu.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\rtnofp.lib
+ LOAD ..\OBJ\ComTest.lib
+ LOAD \SW\COM\LIBs\LIB\com_mvb.lib
+ LOAD C:\MRI\MCC68K\68020\ccc68kab.lib
+ LOAD C:\MRI\MCC68K\68020\mcc68kab.lib

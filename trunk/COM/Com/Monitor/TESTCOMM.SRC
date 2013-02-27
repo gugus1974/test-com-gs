@@ -1,0 +1,692 @@
+*	%W%	%G%
+*
+*	testcomm.src
+*
+* Copyright (c) 1991-1996  Microtec Research, Inc.
+* All rights reserved
+*
+*	Rev 5.3		G. Boehm, MRI, July 31, 1991
+*			Implement 68040
+*
+*	Rev 5.2		G. Boehm, MRI, July 22, 1991
+*			Implement 68070
+*
+*	Rev 4.2		G. Boehm, MRI, April 18, 1991
+*			Add support for 68332
+*
+* 	New rev #1.1	G. Boehm, MRI, October 30, 1990
+*			Put under SCCS
+*
+
+INTERRUPT_TEST  equ	1
+
+* Define the above as 1 only if you need to check on interrupts on the board
+* or verifying interrupt I/O causes real interrupt.
+
+
+INT_START	equ	0	; first vector to test
+INT_END		equ	255	; last vector to test
+INT_MASK	equ	$F8FF	; mask to enable interrupts. Set to a 
+				; different value if you want to find what 
+				; level your interrupts operate at
+INT_VECT	equ	0	; 1 if you want to vector to the interrupt
+				; handler after the message, 0 for RTE
+*-============================================================
+*
+* File:    TESTCOMM.SRC
+* Created: 02-26-90
+*
+*-============================================================
+*
+*              XRAYMON Communications test jig
+*
+*  This file can be linked to the XRAYMON drivers to test the
+* I/O prior to connection to the real monitor. It runs a set of
+* tests to verify output, input, abort switches, interrupts,
+* input overruns and character ranges.
+*  It is built by assembling and linking to monbase.o and your
+* driver board.o.
+*  It is self running and guides the user through each test.
+* 
+* Note: the code style is a little strange, but it gets the job
+*       done.
+*-============================================================
+*
+*  Sections used:
+*
+*   9	Code
+*  13	ROMable data
+*  14	Normal data
+*
+*-============================================================
+
+MONBUG idnt
+
+	opt	E,case
+
+*-============================================================
+* include files
+*-============================================================
+	nolist
+	include monvisi.inc	; XRAYMON definitions
+	include	boardset.inc	; def of equates for board setup
+	list
+
+	ifne	TARGET&(CPU68000+CPU68070)	; GRB 7/22/91
+	 chip	68000
+	endc
+	ifne	TARGET&CPU68010
+	 chip	68010
+	endc
+	ifne	TARGET&CPU68020
+	 chip	68020
+	endc
+	ifne	TARGET&CPU68030
+	 chip	68030
+	endc
+	ifne	TARGET&CPU68040
+	 chip	68040
+	endc
+	ifne	TARGET&CPU68332
+	 chip	68332
+	endc
+	ifne	TARGET&CPU68360
+	 chip	68360
+	endc
+
+*-============================================================
+* Externals
+*-============================================================
+	xref	CON_INIT	; init for console code (hook for init)
+      ifne CONIO&POLLED
+	xref	CON_IN		; read input
+      endc
+	xref	CON_OUT		; write output
+	xref	MO_CONFIG
+
+*-============================================================
+* Section: Code
+*-============================================================
+	section 9,4,C
+
+mon_init:			; start up, testing, etc
+	bsr	CON_INIT	; call user's code
+	cmp.w	#RET_OK,D0
+	beq	init_ok
+;
+	move.l	#INIT_ERR,A0
+	bsr	prn_msg
+;
+* OK, the user's init has completed. Now, let's output the tests.
+* Read the output messages to see how the tests work. There is a
+* split between interrupt I/O tests and polled I/O tests below.
+init_ok:
+      ifne	INTERRUPT_TEST
+	bsr	inter_test		; special case for interrupt test
+      endc
+	clr.l	D0
+	move.w	#INTLEVEL,D0
+      ifne CONIO&POLLED
+	cmp.w	0,D0
+	bne	set_level
+;
+	move.w	#7,D0		; 0 means no ints in polled mode
+set_level:
+      endc
+	cmp.w	#8,D0
+	bcs	normal_level
+;
+	clr.w	D0
+normal_level:
+	lsl.w	#8,D0
+	move.w	SR,D1
+	and.w	#$F8FF,D1
+	or.w	D0,D1
+	move.w	D1,SR		; store back
+
+	move.l	#INIT_MSG,A0
+	bsr	prn_msg
+	move.l	#INIT_MSG2,A0
+	bsr	prn_msg
+;
+jig_entry:
+	move.l	#0,D7			; D7 is # input flag (for interrupt I/O)
+	move.l	#0,D6			; D6 is used for ABORT switch pressed.
+	move.l	#0,D5			; D5 is set if hex output for int i/o
+	move.l	#0,D4			; D4 is set when int input gets a char
+      ifne CONIO&POLLED
+wait_in_reset:
+	move.l	#$40000,D3
+wait_in:
+	sub.l	#1,D3
+	bsr	CON_IN
+	cmp.w	#RET_OK,D0
+	beq	echo_in
+;
+	cmp.w	#ER_NCA,D0
+	bne	rec_err
+;
+	cmp.l	#0,D3
+	bne	wait_in
+;
+	move.b	#'@',D1
+echo_in:
+	cmp.b	#'#',D1
+	beq	phase_3
+;
+	bsr	echo_d1
+	bra	wait_in_reset
+;;
+rec_err:
+	move.l	#RECERR_MSG,A0
+	bsr	prn_msg
+;
+	bra	wait_in_reset
+;;
+      elsec
+wait_in_reset:
+	move.l	#$80000,D3
+wait_in:
+	cmp.l	#-1,D7
+	beq	phase_3
+;
+	sub.l	#1,D3
+	cmp.l	#0,D3
+	bne	wait_in
+;
+	move.b	#'@',D1
+	bsr	echo_d1
+	bra	wait_in_reset
+      endc
+
+phase_3:
+      ifne CONIO&POLLED
+	move.l	#DELAY_MSG,A0
+	bsr	prn_msg
+	bsr	wait_char
+	move.l	#PHASE3_MSG,A0
+	bsr	prn_msg
+delay:
+	move.l	#$100000,D0
+delay_2:
+	bra	around
+	nop
+around:
+	cmp.l	#0,D0
+	beq	end_test
+	sub.l 	#1,D0
+	bra	delay_2
+;;
+end_test:
+	move.b	#'=',D1
+	bsr	echo_d1
+clear_buf:
+	bsr	CON_IN
+	cmp.w	#RET_OK,D0
+	bne	clear_no_chr
+;
+	bsr	echo_d1
+	bra	clear_buf
+;;
+clear_no_chr:
+	cmp.w	#ER_NCA,D0
+	beq	delay_done
+;
+	move.l	#DELERR_MSG,A0
+	bsr	prn_msg
+;
+	bra	clear_buf
+;;
+delay_done:
+	move.l	#ENDDEL_MSG,A0
+	bsr	prn_msg
+	bsr	wait_char
+      endc			; only polled i/o uses delay test
+
+	move.l	#ABRTST_MSG,A0
+	bsr	prn_msg
+	bsr	wait_char
+	move.l	#ABRTST2_MSG,A0
+	bsr	prn_msg
+delay_reset:
+	move.l	#0,D6
+	move.l	#$400000,D0
+delay_3:
+	bra	around_2
+	nop
+around_2:
+	cmp	#0,D6
+	bne	delay_reset
+;
+	cmp.l	#0,D0
+	beq	end_test2
+	sub.l 	#1,D0
+	bra	delay_3
+;;
+end_test2:
+	move.l	#ABREND_MSG,A0
+	bsr	prn_msg
+	move.l	#0,D7
+hex_echo:
+      ifne CONIO&POLLED
+	bsr	CON_IN
+	cmp.w	#ER_NCA,D0
+	beq	hex_echo
+;
+	cmp.w	#RET_OK,D0
+	beq	hex_echo_ok
+;
+	move.l	#INVIN_ERR,A0
+	bsr	prn_msg
+	bra	hex_echo
+;;
+hex_echo_ok:
+	cmp.b	#'#',D1
+	beq	illegal_instr
+;
+	cmp.b	#'$',D1
+	bne	normal_hex
+;
+	bsr	ctrl_out
+normal_hex:
+	bsr	echo_d1_hex
+	bra	hex_echo
+;;
+      elsec			; int i/o
+	move.l	#1,D5
+wait_for_sharp:
+	cmp.w	#0,D7
+	beq	wait_for_sharp
+      endc
+
+illegal_instr:
+	dc.w	$04149
+;	If that fails, we just go into a spin loop
+yourself:
+	bra	yourself
+;;
+mon_rxchr:			; interrupt input: D0 is code, D1 is char
+	movem.l	D0/D1/A0,-(SP)
+
+	and.l	#$07FFF,D0
+	cmp.w	#RET_OK,D0
+	bne	err_in
+;
+	cmp.l	#0,D5
+	beq	normal_echo
+;
+	bsr	echo_d1_hex
+	bra	common_echo
+normal_echo:
+	bsr	echo_d1
+common_echo:
+	move.l	#1,D4		; we took a char in
+	cmp.b	#'$',D1		; $ in hex mode dumps control chars
+	bne	check_sharp
+	cmp.l	#0,D5
+	beq	check_sharp
+;
+	bsr	ctrl_out
+        bra	rxchr_done
+;
+check_sharp:
+	cmp.b	#'#',D1		; signal end of input test
+	bne	normal_in
+;
+	move.l	#-1,D7		; signal # entry
+normal_in:
+	cmp.b	#3,D1		; ^C??
+	bne	rxchr_done	; no - finished
+;
+	move.l	#HALT_MSG,A0	; yes, print ^C message
+	bsr	prn_msg
+;
+	move	#ER_HLT,D0
+rxchr_done:
+        MOVEM.L (SP)+,D0/D1/A0  ; restore regs we clobbered
+	rts
+;;
+err_in:
+	move.l	#ERRIN_MSG,A0
+	bsr	prn_msg
+;
+	bra	rxchr_done
+;;
+mon_halt:			; interrupt from abort switch
+	movem.l	D0/D1/A0,-(SP)
+	move.l	#ABORT_MSG,A0
+	bsr	prn_msg
+	move.l	#-1,D6
+	movem.l	(SP)+,D0/D1/A0
+	rte
+;;
+mon_spbrk:
+mon_spexcp:
+mon_break:
+	move.l	#UNEX_ENTRY,A0
+	bsr	prn_msg
+;
+	bra	jig_entry
+;;
+* PRN_MSG - print the message in A0 up to the 0
+prn_msg:
+	movem.l	D1,-(SP)
+prn_loop:
+	cmp.b	#0,(A0)
+	beq	prn_done
+;
+	move.b	(A0)+,D1
+	bsr	echo_d1
+;
+	bra	prn_loop
+;;
+prn_done:
+        MOVEM.L (SP)+,D1  ; restore regs we clobbered
+	rts
+;;
+* ECHO_D1 - print the char in D1 as is
+echo_d1:
+	move.l	D0,-(SP)
+	and.l	#$0FF,D1
+echo_rep:
+	bsr	CON_OUT
+	cmp.w	#RET_OK,D0
+	beq	echo_done
+;
+	bra	echo_rep
+echo_done:
+	move.l	(SP)+,D0
+	rts
+;;
+* ECHO_D1_HEX - print the char in D1 in hex with a trailing space
+echo_d1_hex:
+	movem.l	D0/D2,-(SP)
+	move.b	D1,D2
+	lsr.b	#4,D1
+	and.l	#$0F,D1
+	bsr	echo_nibble
+	move.b	D2,D1
+	and.l	#$0F,D1
+	bsr	echo_nibble
+	move.b	#' ',D1
+	bsr	echo_d1
+	movem.l	(SP)+,D0/D2
+	rts
+;;
+echo_nibble:
+	cmp.b	#9,D1
+	bls	num_part
+;
+	add.b	#55,D1			; 'A'-10 = 55
+	bra	common_out
+;;
+num_part:
+	add.b	#'0',D1
+common_out:
+	bsr	CON_OUT
+	cmp.w	#RET_OK,D0
+	bne	common_out
+;
+	rts
+;;
+* CTRL_OUT - test output of control chars
+ctrl_out:
+	move.l	#CTRL_MSG,A0
+	bsr	prn_msg
+	move.l	#3,D1			; ^C
+	bsr	ctrl_char
+	move.l	#19,D1			; ^S
+	bsr	ctrl_char
+	move.l	#17,D1			; ^Q
+	bsr	ctrl_char
+	move.l	#25,D1			; ^Y
+	bsr	ctrl_char
+	move.l	#CTRLEND_MSG,A0
+	bsr	prn_msg
+	rts
+;;
+ctrl_char:
+	movem.l	D0/D1/D2,-(SP)
+	move.l	D1,D2
+	move.b	#'^',D1
+	bsr	echo_d1
+	move.b	D2,D1
+	add.b	#'@',D1
+	bsr	echo_d1
+	move.b	#'-',D1
+	bsr	echo_d1
+	move.b	#'>',D1
+	bsr	echo_d1
+	move.b	D2,D1
+	bsr	echo_d1
+	move.b	#'<',D1
+	bsr	echo_d1
+	move.b	#'-',D1
+	bsr	echo_d1
+	move.b	#' ',D1
+	bsr	echo_d1
+	movem.l	(SP)+,D0/D1/D2
+	rts
+;;
+* WAIT_CHAR - wait for a character to be entered and then echo it
+wait_char:
+      ifne CONIO&POLLED
+	bsr	CON_IN
+	cmp.w	#ER_NCA,D0
+	beq	wait_char
+;
+	cmp.w	#RET_OK,D0
+	beq	prompt_echo
+;
+	move.l	#PROMPT_ERR,A0
+	bsr	prn_msg
+	bra	prompt_done
+;
+prompt_echo:
+	bsr	echo_d1
+;
+prompt_done:
+      elsec
+  	move.l	#0,D4
+wait_d4:
+	cmp.w	#0,d4
+	beq	wait_d4
+      endc
+	rts
+;;
+	page
+*-============================================================
+* Section: ROMable Data
+*-============================================================
+
+        xdef    MO_START
+* fake monitor branch table
+MO_START:
+	dc.l	MO_CONFIG
+        bra.w   mon_init                * 0x04  initialize
+        bra.w   mon_rxchr               * 0x08  receive char ready
+        bra.w   mon_halt                * 0x0C  user halt
+        bra.w   mon_spbrk               * 0x10  report special breakpoint
+        bra.w   mon_spexcp              * 0x14  report special exception
+        bra.w   mon_break               * 0x18  stop after breakpt/exception
+
+* Messages for test jig.
+
+INIT_MSG dc.b	'<- TEST HARNESS FOR XRAY MONITOR DRIVERS',13,10,13,10,0
+	dc.b	'',0
+INIT_MSG2 dc.b	13,10,'OUTPUT TEST: This test works in phases. The first part'
+	dc.b	13,10,'has been completed if you can read this (output).',13,10
+	dc.b	13,10,'INPUT TEST: The input test (which is started already)'
+	dc.b	13,10,'will emit an @ (at) char every few seconds. You'
+	dc.b	13,10,'may enter characters, which should be echoed. The @'
+	dc.b	13,10,'chars indicate that input has not hung. You may press'
+	dc.b    13,10,'an abort switch (if you have one) to verify it works'
+	dc.b	13,10,'when taking input or writing output. When you type'
+	dc.b	13,10,'# the next test will start.',13,10,0
+DELAY_MSG dc.b	13,10,'DELAY TEST: This test will wait for a while doing '
+	dc.b	13,10,'nothing with the I/O, allowing a data overrun to'
+	dc.b	13,10,'occur. You may type a few characters to cause the'
+	dc.b	13,10,'overrun. This test checks for overrun clearing'
+	dc.b	13,10,'and recovery. If the handler goes bad continuous'
+	dc.b	13,10,'messages will be printed. Otherwise a confirm'
+	dc.b	13,10,'test will be run. Press a key to start test: ',0
+ABRTST_MSG dc.b	13,10,'ABORT TEST: this test delays a while to allow testing'
+	dc.b	13,10,'of an abort switch when I/O is off. The counter is'
+	dc.b	13,10,'reset after each abort to allow multiple presses'
+	dc.b	13,10,'for debounce/reset control. Press any key to start:',0
+ABRTST2_MSG dc.b 13,10,'Delaying ->',0
+ABREND_MSG dc.b	'<-',13,10,'CHAR TEST: This last test is allows testing'
+	dc.b	13,10,'of legal character ranges. You are prompted to enter'
+	dc.b	13,10,'characters and they are echoed in hex. You can try'
+	dc.b	13,10,'both sign bit set and control chars. When you type'
+	dc.b	13,10,'a # the test program will execute an illegal'
+	dc.b	13,10,'instruction to take you back to an axiliary monitor'
+	dc.b	13,10,'if you have one. If you type a $ a test of output'
+	dc.b	13,10,'control chars will be run for host testing.',13,10,'> ',0
+INIT_ERR dc.b	'Error: user init failed!',13,10,0
+PHASE3_MSG dc.b	13,10,'Starting delay test ->',0
+DELERR_MSG dc.b	13,10,'Error: overrun occurred - this message should NOT be'
+	dc.b	'repeated.',13,10,0
+ENDDEL_MSG dc.b	'<-',13,10,'Now enter a character to confirm input ok:',0
+PROMPT_ERR dc.b	13,10,'Frame/overrun error still pending - must clear',13,10,0
+HALT_MSG dc.b	'Halt (^C) receieved on interrupt line',13,10,0
+ERRIN_MSG dc.b	'Error on input',13,10,0
+ABORT_MSG dc.b	'Abort recieved from switch',13,10,0
+UNEX_ENTRY dc.b	'Unexpected entry to monitor',13,10,0
+RECERR_MSG dc.b 'Recieve error on input',13,10,0
+INVIN_ERR dc.b	13,10,'Error: invalid input reported',13,10,0
+CTRL_MSG dc.b	13,10,'CONTROL OUT TEST: This test emits the following control'
+	dc.b	13,10,'characters enclosed in -><- markers. This allows testing'
+	dc.b	13,10,'for host interpretation. The chars are ^C, ^S, ^Q, ^Y'
+CRLF_MSG dc.b	13,10,'(make sure you see all of them announced)',13,10,0
+CTRLEND_MSG dc.b 13,10,'Test done. Make sure the line above looks like:',13,10
+	dc.b	'^C-><- ^S-><- ^Q-><- ^Y-><-',13,10
+	dc.b	'Especially make sure that ^S did not stop the chars before ^Q'
+	dc.b	13,10,0
+
+      ifne	INTERRUPT_TEST
+* This tst is only used if needed. It tests for interrupts and displays them
+* on the console. This is used if you do not know what interrupts you need
+* to handle.
+inter_test:
+	or.w	#$0700,SR	; mask off all interrupts until ready
+	move.l	#0,D5		; gets set when first interrupt fires.
+	move.l	#INT_MAP,A0
+      ifeq TARGET&(CPU68000+CPU68070)
+	movec.l	VBR,A1		; Use VBR for IVT
+      elsec
+	move.l	#0,A1		; assumes IVT at 0 (else use VBR)
+      endc
+	move.l	#255,D0
+copy_loop:			; first copy IVT into data table
+	move.l	(A1)+,D1
+	move.l	D1,(A0)+
+	sub.w	#1,D0
+	cmp.w	#0,D0
+	bne	copy_loop
+;
+* Now we make a branch table that looks like "bsr.w int_enter \n dc.l	int_#"
+	move.l	#BRA_MAP,A0
+      ifeq TARGET&(CPU68000+CPU68070)
+	movec.l	VBR,A1		; Use VBR for IVT
+      elsec
+	move.l	#0,A1		; assumes IVT at 0 (else use VBR)
+      endc
+	add.l	#INT_START*4,A1	; adjust by starting vector
+	add.l	#INT_START*8,A0
+	move.l	#INT_START,D0
+bra_loop:
+	move.l	A0,D2
+	move.l	#inter_enter-2,D1 ; -2 becase distance based on after instr
+	sub.l	A0,D1		; distance to inter_enter
+	move.w	#$6100,(A0)+	; bsr.w instruction
+	move.w	D1,(A0)+
+	move.l	D0,(A0)+	; interrupt number
+	move.l	D2,(A1)+	; write address into IVT
+	add.w	#1,D0
+	cmp.w	#INT_END+1,D0	; end of table
+	bne	bra_loop
+;
+	movea.l	#inter_enter,a0		; copy the instruction 
+					; jmp.l inter9_enter into data space
+					; sect 14 at address inter_enter
+	move.w	#$4ef9,(a0)+		; jump.l opcode
+	move.l	#inter9_enter,(a0)	; address of interrupt entry routine
+
+* now write a message out. If using interrupt output, disable this.
+	move.l	#INTTST_MSG,A0
+	bsr	prn_msg		; print message telling them what is happening
+;
+	and.w	#INT_MASK,SR	; reenable interrupts
+* we react to 1 only. You may want to have it process more than one.
+wait_for_int:
+	cmp.w	#0,D5
+	beq	wait_for_int
+;
+	move.l	#INTRESP_MSG,A0
+	bsr	prn_msg
+	move.l	D5,D1
+	bsr	echo_d1_hex	; display in hex
+	move.l	#INTEND_MSG,A0
+	bsr	prn_msg	
+	rts
+;;
+inter9_enter:
+	movem.l	D0/D1/A0/A1,-(SP)
+	move.l	SP,A0
+	add.l	#16,A0
+	move.l	(A0),A0		; return address is data which is int number
+	move.l	(A0),D5		; interrupt number
+	add.l	#$10000,D5	; now enabled
+* now restore IVT
+	or.w	#$0700,SR	; disable interrupts again
+	move.l	#INT_MAP,A1
+      ifeq TARGET&(CPU68000+CPU68070)
+	movec.l	VBR,A0		; Use VBR for IVT
+      elsec
+	move.l	#0,A0		; assumes IVT at 0 (else use VBR)
+      endc
+	move.l	#255,D0		; just replace whole table
+rest_loop:			; copy data table back to IVT
+	move.l	(A1)+,D1
+	move.l	D1,(A0)+
+	sub.w	#1,D0
+	cmp.w	#0,D0
+	bne	rest_loop
+;
+      ifeq INT_VECT
+	movem.l	(SP)+,D0/D1/A0/A1
+	add.l	#4,SP		; pop return off stack from bsr we caused
+	rte			; return from exception
+      elsec
+	clr.l	D0
+	move.b	D5,D0		; get vector number
+	lsl.l	#2,D0
+      ifeq TARGET&(CPU68000+CPU68070)
+	movec.l	VBR,A1		; Use VBR for IVT
+      elsec
+	move.l	#0,A1		; assumes IVT at 0 (else use VBR)
+      endc
+	add.l	D0,A1
+	move.l	(A1),D0
+	move.l	SP,A0
+	add.l	#16,A0
+	move.l	D0,(A0)		; stuff addr of ISR into return addr slot
+	movem.l	(SP)+,D0/D1/A0/A1
+	rts			; return to daisy chained ISR
+      endc
+;;
+INTTST_MSG dc.b 13,10,'INTERRUPT TEST: this test will stop when an interrupt'
+	dc.b	13,10,'fires. It will then display the interrupt number',13,10,0
+INTRESP_MSG dc.b 13,10,'Interrupt fired: 0x',0
+INTEND_MSG dc.b	13,10,'Test completed',13,10,0
+
+	section 14,4,D
+INT_MAP:
+	ds.l	255
+BRA_MAP:
+	ds.l	512
+inter_enter:
+	ds.w	3		; space for jmp up to inter9_enter
+;;
+      endc

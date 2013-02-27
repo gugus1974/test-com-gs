@@ -1,0 +1,103 @@
+Microtec Research 68K Linker  Version 7.1J    Thu Jul 16 15:59:18 1998    Page   1
+
+Command line: C:\MRI\ASM68K\LNK68K.exe  -m -o testcomm.abs -c testcomm.cmd 
+
+*	%W%	%G%
+*
+*	testcomm.lnk
+*
+* Copyright (c) 1991-1996  Microtec Research, Inc.
+* All rights reserved
+*
+*	Rev 4.2		G. Boehm, MRI, April 30, 1991
+*			Add "format s" cause 6.7e linker
+*			defaults to IEEE format
+*
+* 	New rev #1.1	G. Boehm, MRI, October 30, 1990
+*			Put under SCCS
+*
+* This is the generic loader command file for the xdm68k monitor
+* The strings in $$ are replaced with information required for loading
+* the specific monitor.
+* No chip specification, so picked based on input
+* format s
+list x
+listabs nointernals
+* monbase is the base monitor user routines
+load monbase
+* board is the board drivers (I/O) and startup
+load board
+* xmon68k is the core monitor
+* load xmon68k <- replaced by testcomm
+load testcomm
+* The base is specified based on code start
+sect 9,$000000
+* The section base for data can be specified or not.
+* If not, SECT14 must be order 13,14
+order 9,13,14,15,0
+end
+Microtec Research 68K Linker  Version 7.1J    Thu Jul 16 15:59:18 1998
+    Page   2
+
+
+
+OUTPUT MODULE NAME:    testcomm
+OUTPUT MODULE FORMAT:  IEEE
+
+
+SECTION SUMMARY
+---------------
+
+SECTION    ATTRIBUTE                     START      END        LENGTH     ALIGN
+
+9          NORMAL CODE                   00000000   00001040   00001041   4 (LONG)  
+13         NORMAL ROM                    00001044   000010A3   00000060   4 (LONG)  
+14         NORMAL DATA                   000010A4   000022B1   0000120E   4 (LONG)  
+15                                       000022B2   000022B2   00000000   0 (BYTE)  
+0          NORMAL                        000022B2   000022B2   00000000   2 (WORD)  
+monitor_evt
+           NORMAL DATA                   000022B4   000026B3   00000400   4 (LONG)  
+
+
+MODULE SUMMARY
+--------------
+
+MODULE         SECTION:START        SECTION:END       FILE
+
+MONBUG               9:00000000           9:0000002D  C:\SW\Com\Monitor\monbase.obj   
+                    13:00001044          13:000010A3      
+                    14:000010A4          14:000016A3      
+BOARDSUP    monitor_ev:000022B4  monitor_ev:000026B3  C:\SW\Com\Monitor\board.obj   
+                     9:0000002E           9:000002BB      
+                    14:000016A4          14:000016AD      
+MONBUG               0:000022B2           0:000022B2  C:\SW\Com\Monitor\testcomm.obj   
+                     9:000002BC           9:00001040      
+                    14:000016B0          14:000022B1      
+
+
+
+PUBLIC SYMBOL TABLE
+-------------------
+
+SYMBOL                                    SECTION          ADDRESS     MODULE
+
+BOARD_START                               9                0000002E    BOARDSUP
+COLD_PC                                   9                00000008    MONBUG
+CON_IN                                    9                00000286    BOARDSUP
+CON_INIT                                  9                0000010C    BOARDSUP
+CON_OUT                                   9                0000025A    BOARDSUP
+CON_TERM                                  9                00000116    BOARDSUP
+EVT_BASE                                  monitor_ev       000022B4    BOARDSUP
+MO_CONFIG                                 13               00001044    MONBUG
+MO_SAVE                                   14               000010A4    MONBUG
+MO_START                                  9                00000604    MONBUG
+MO_WSP                                    14               000010A4    MONBUG
+end_board_start                           9                00000016    MONBUG
+
+Microtec Research 68K Linker  Version 7.1J    Thu Jul 16 15:59:18 1998
+    Page   3
+
+
+START ADDRESS:   00000008
+
+Link Completed 

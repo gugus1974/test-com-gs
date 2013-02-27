@@ -1,0 +1,181 @@
+#---------------------------------------------------------------------------
+#-
+#-              Copyright (c) 1992 READY SYSTEMS CORPORATION.
+#-
+#-      All rights reserved. READY SYSTEMS' source code is an unpublished
+#-      work and the use of a copyright notice does not imply otherwise.
+#-      This source code contains confidential, trade secret material of
+#-      READY SYSTEMS. Any attempt or participation in deciphering, decoding,
+#-      reverse engineering or in any way altering the source code is
+#-      strictly prohibited, unless the prior written consent of
+#-      READY SYSTEMS is obtained.
+#-
+#-
+#-      Module Name:            makeall.tpl
+#-
+#-      Identification:          6.45 makeall.tpl
+#-
+#-      Date:                   10/28/94  10:28:33
+#-
+#---------------------------------------------------------------------------
+
+
+
+
+
+
+TOPDIR	= $(SPECTRA)
+
+.SUFFIXES:
+.SUFFIXES: .o .cc $(SUFFIXES)
+
+
+RM	= -del
+COPY	= copy
+CHMOD	= echo >nul
+
+PROC	= 68010
+BOARD	= atrcom
+FORMAT	= microtec
+
+LIBSDIRSMALL = $(TOPDIR)\target\lib\$(PROC)_s\$(FORMAT)
+LIBSDIR = $(TOPDIR)\target\lib\$(PROC)\$(FORMAT)
+BOARDDIR = \sw\com\bsp
+DEVCNFGFILE = devcnfg.c
+DEVCNFGDIR = \sw\com\bsp
+
+INCDIRS = -J$(TOPDIR)\target\include -J$(TOPDIR)\target\xsp\$(BOARD)\include -J$(TOPDIR)\target\device\include
+
+CC	= mcc68k
+CCC	= ccc68k
+AS	= asm68k
+LD	= lnk68k
+
+CFLAGS = -p68010 -g -Xp -Za2 -c -U_SIZE_T -DMC68010 -DM68K     $(INCDIRS)
+CCFLAGS = -p68010 -g -Za2 -c -Dsize_t=_SIZE_T -DMC68010 -DM68K  $(INCDIRS)  
+
+boot.hex: boot.het 
+	sutil -S 3 -r -008000 boot.het  >boot.hex
+
+# boot_LIBS and boot_OBJS are used in command lines
+# boot_LIBS_DEPEND and boot_OBJS_DEPEND are used for dependencies
+
+boot_LIBS = $(BOARDDIR)\atrcom.lib \
+	$(LIBSDIR)\vtdm.lib \
+	$(LIBSDIR)\router.lib \
+	$(LIBSDIR)\logio.lib \
+	$(LIBSDIR)\boot.lib \
+	$(LIBSDIR)\cpu.lib \
+	$(LIBSDIR)\rtcore.lib \
+	$(LIBSDIR)\packt.lib
+
+boot_LIBS_DEPEND = $(BOARDDIR)\atrcom.lib \
+	$(LIBSDIR)\vtdm.lib \
+	$(LIBSDIR)\router.lib \
+	$(LIBSDIR)\logio.lib \
+	$(LIBSDIR)\boot.lib \
+	$(LIBSDIR)\cpu.lib \
+	$(LIBSDIR)\rtcore.lib \
+	$(LIBSDIR)\packt.lib
+
+
+boot_OBJS = $(BOARDDIR)\crt0.o \
+	bootcnfg.o \
+	devices.o \
+	devcnfg.o
+
+boot_OBJS_DEPEND = $(BOARDDIR)\crt0.o \
+	bootcnfg.o \
+	devices.o \
+	devcnfg.o
+
+
+boot.het boot.map:		makefile cflags boot.lnk $(boot_OBJS_DEPEND) $(boot_LIBS_DEPEND) boot_.cmd
+	$(RM) boot.het 
+	$(RM) boot.o
+	$(LD) -o boot.o -c boot.lnk -f i,c,x,t -m > boot.map
+	$(LD) -o boot.het -c boot_.cmd -Fs boot.o
+
+boot.lnk:		boot.cmd makefile
+	@type boot.cmd > $@
+	@echo >> $@ LOAD $(BOARDDIR)\crt0.o
+	@echo >> $@ LOAD bootcnfg.o
+	@echo >> $@ LOAD devices.o
+	@echo >> $@ LOAD devcnfg.o
+	@echo >> $@ LOAD $(BOARDDIR)\atrcom.lib
+	@echo >> $@ LOAD $(LIBSDIR)\vtdm.lib
+	@echo >> $@ LOAD $(LIBSDIR)\router.lib
+	@echo >> $@ LOAD $(LIBSDIR)\logio.lib
+	@echo >> $@ LOAD $(LIBSDIR)\boot.lib
+	@echo >> $@ LOAD $(LIBSDIR)\cpu.lib
+	@echo >> $@ LOAD $(LIBSDIR)\rtcore.lib
+	@echo >> $@ LOAD $(LIBSDIR)\packt.lib
+
+
+$(DEVCNFGFILE):	$(DEVCNFGDIR)\$(DEVCNFGFILE)
+	$(COPY) $(DEVCNFGDIR)\$(DEVCNFGFILE) $@
+	$(CHMOD) +w $@
+
+
+
+
+
+
+
+.s.o :
+	$(RM) $@
+	$(AS) -o $@ $<
+
+.c.o :
+	$(RM) $@
+	$(CC) -o $@ -dcflags $<
+
+cflags : makefile
+	$(RM) $@
+	@echo >> $@ -p68010
+	@echo >> $@ -g
+	@echo >> $@ -Xp
+	@echo >> $@ -Za2
+	@echo >> $@ -c
+	@echo >> $@ -U_SIZE_T
+	@echo >> $@ -DMC68010
+	@echo >> $@ -DM68K
+	@echo >> $@ -J$(TOPDIR)\target\include
+	@echo >> $@ -J$(TOPDIR)\target\xsp\$(BOARD)\include
+	@echo >> $@ -J$(TOPDIR)\target\device\include
+
+.cc.o :
+	$(RM) $@
+	$(CCC) -o $@ -dcxxflags $<
+
+cxxflags : makefile
+	$(RM) $@
+	@echo >> $@ -p68010
+	@echo >> $@ -g
+	@echo >> $@ -Za2
+	@echo >> $@ -c
+	@echo >> $@ -Dsize_t=_SIZE_T
+	@echo >> $@ -J$(TOPDIR)\target\include
+	@echo >> $@ -J$(TOPDIR)\target\xsp\$(BOARD)\include
+	@echo >> $@ -J$(TOPDIR)\target\device\include
+
+mostlycl :
+	$(RM) *.o 
+	$(RM) *.x
+	$(RM) *.abs 
+	$(RM) *.tmp
+	$(RM) *.het
+	$(RM) *.lnk
+	$(RM) cflags
+	$(RM) cxxflags
+
+clean : mostlycl
+	$(RM) *.hex 
+	$(RM) *.map
+
+distclea : clean
+	$(RM) boot_.cmd
+	$(RM) boot.cmd
+	$(RM) devices.c
+	$(RM) bootcnfg.c
+	$(RM) makefile
