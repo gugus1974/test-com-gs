@@ -30,7 +30,7 @@ void prn_report(void);
 
 /* variabili per dimensione flash impostati ad 1 MB */
 unsigned int  * sctstr    = (unsigned int  *)0x400000;  /*  limite inferiore indirizzi settore (unsigned int  *)0x400000; */
-unsigned int  * sectlimit = (unsigned int  *)0xFE000;   /*  limite superiore indirizzi settore (unsigned int  *)0xBE0000; */
+unsigned int  * sectlimit = (unsigned int  *)0x4FE000;   /*  limite superiore indirizzi settore (unsigned int  *)0xBE0000; */
 unsigned long sctdelta          = 0x010000;             /*  delta incremento indirizzi settore (unsigned int  *)0x010000; */
 unsigned long dimsct            = 0x00FFFF;             /*  dimensione settore settore (unsigned int  *)0x00FFFF; */
 unsigned int  * flashlimit = (unsigned int  *)0x4FFFFE; /*  limite superiore indirizzi (unsigned int  *)0xBFFFFE; */
@@ -217,28 +217,38 @@ int chip_erasesect(unsigned int  * addr)
 	unsigned int data3,data1,i,a,tim1,tim2,ok1,ok2,seg,off;
 	int er;
 	unsigned long app;	
-
+	unsigned long base;	
+    char c;
 	er = 0;
+	 
 	app = (unsigned long) addr ;
 	off = (unsigned int)(app & 0x00FFFF);
 	app = app >> 16;
 	seg = (unsigned int)(app & 0x0000FF);
 	printf("ERASE SECTOR %02x%04x\r\n",seg,off);
 	/***    procedura di start erase sector         ***/
-	*flash1 = 0xAAAA;
-	*flash2 = 0x5555;
-	*flash1 = 0x8080;
-	*flash1 = 0xAAAA;
-	*flash2 = 0x5555;
+    am29f040(sctstr, 0)       = 0xF0F0;
+    am29f040(sctstr, KEY1)    = 0xAAAA;//5555
+    am29f040(sctstr, KEY2)    = 0x5555;//2AAA
+    am29f040(sctstr, KEY1)    = 0x8080;
+    am29f040(sctstr, KEY1)    = 0xAAAA;
+    am29f040(sctstr, KEY2)    = 0x5555;
 	*addr   = 0x3030;
+//	*flash1 = 0xF0F0;
+//	*flash1 = 0xAAAA;
+//	*flash2 = 0x5555;
+//	*flash1 = 0x8080;
+//	*flash1 = 0xAAAA;
+//	*flash2 = 0x5555;
+//	*addr   = 0x3030;
 	/***    verifica del fine erase chip     ***/
-	data3 = *addr;
 	i = 0;
 	a = 0;
 	ok1 = 0;
 	ok2 = 0;
 	tim1 = 0;
 	tim2 = 0;
+	data3 = *addr;
 	while (!(ok1 && ok2)) {
 		if (!(ok1 || tim1)) {
 			if ((data3 & 0x8000) == 0x8000){
@@ -273,17 +283,17 @@ int chip_erasesect(unsigned int  * addr)
 		if (tim1 || tim2) break;
 		data3 = *addr;
 		if((i==0) || (i==32000)) {
-			printf("%05d data=%04x\r",a,data3);
+			printf("1 %05d data=%04lX\r",a,data3);
 			a++;
 		}
 		i++;
-                if ( _getkey()  == '\t' ) 
+        if ((c=_getkey())  == '\t' ) 
 	        {
 			er = 8;
 			break;
 		}				
 	}
-	printf("%05d data=%04x\r\n",a,data3);
+	printf("2   %05d data=%04lX\r\n",a,data3);
 	data3 = *addr;
 	return er;
 }
@@ -485,13 +495,14 @@ void tstflash (void )
 		//* test di ersa sectore: verifica che sia riuscita la cancellazione a settori , verificando che ogni locazione sia a FFFF*//
 		
 		
-		if (!error5555) {	
+		if (error5555==0 || error5555==9) {	
             printf("TEST SECTOR ERASING ...\n ");
 			for ( sectstart = sctstr; sectstart <= sectlimit; sectstart += sctdelta){
+				printf("ERASING ...@%04lX\n",sectstart);
 				if (!(errorSECT = chip_erasesect(sectstart)))
 				{
 					sectend = sectstart + dimsct;
-					printf("ERASING SECTOR 0x%06lX\n",sectstart);
+					printf("ERASING SECTOR start @%06lX -> end @%06lX  sector number %d\n",sectstart,sectend,((sectend-sectstart)>>16));
 					for ( sectaddr = sectstart; sectaddr <= sectend; sectaddr++)
 					{
 						k = 10000;
@@ -519,12 +530,15 @@ void tstflash (void )
 						if ( exit ) break;	
 					}	
 				}
-				else break;
+				else {
+				    printf("errorSECT = %d\n",errorSECT);
+				    break;   
+				}
 				if ( exit ) break;	
 			}
 	 	}
-	 	if(!errorSECT) 
-	 	    errorAAAA = wr_vrf(0xAAAA);
+//	 	if(!errorSECT) 
+//	 	    errorAAAA = wr_vrf(0xAAAA);
 	 	 
 	 	
 	} 
