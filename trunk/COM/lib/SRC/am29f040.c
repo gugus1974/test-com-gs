@@ -144,6 +144,10 @@ short am29f040_chip_erase(void *base)
 /* Sectore erase */
 short am29f040_sector_erase(void *base, short sector)
 {
+/*sector =0..7 
+se sector= 7 => base + offset= 470000h
+*/
+
     short   err;                            /* error code */
     long    offset  = ((long)sector) << 16;
 

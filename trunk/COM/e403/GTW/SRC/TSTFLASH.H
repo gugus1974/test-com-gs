@@ -9,6 +9,8 @@
 
 void tstflash(void );
 
+void tstflash_vel(void );
+
 void save_stato (unsigned int stato);
 void prn_stato (unsigned int prg, unsigned int cod);
 void prn_report(void);
