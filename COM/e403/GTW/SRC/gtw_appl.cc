@@ -157,24 +157,24 @@ static char				wtb_master_flag;			/* this board is the WTB master         */
 //static GtwIO			sw_io;						/* signals considered by the software */
 
 //static char				no_mvb_refresh_flag;		/* if TRUE the MVB refresh cnt are ignored */
-static unsigned int DO_forced = 0;
-static Type_Topography	wtb_topo;			        /* current WTB topography        */
-static unsigned char    old_gtw_dsi_vid;            /* Vehicle ID previous values           */
-static unsigned short   vid_bcd;
+//static unsigned int DO_forced = 0;
+//static Type_Topography	wtb_topo;			        /* current WTB topography        */
+//static unsigned char    old_gtw_dsi_vid;            /* Vehicle ID previous values           */
+//static unsigned short   vid_bcd;
 //static unsigned short   vid_bin;
 /*---------------------------------------------------------------------------------------------*/
 /* Used only when GTWM */
 
-static char					master_conflict_flag;	/* TRUE if there is a master conflict */
-static map_TrainTopography	map_topo;				/* current Mapping Server topography  */
-static map_VehicleDescr		*veh_desc_p;		/* pointer to our vehicle descriptor      */
-static unsigned char ind_mt = 0;
-static unsigned char tab_rem[MAX_MOT];
-static unsigned char locv_mt[MAX_MOT];
-static unsigned char r3loc_logico[MAX_MOT];
-static unsigned char r3loc_chk[MAX_MOT];
+//static char					master_conflict_flag;	/* TRUE if there is a master conflict */
+//static map_TrainTopography	map_topo;				/* current Mapping Server topography  */
+//static map_VehicleDescr		*veh_desc_p;		/* pointer to our vehicle descriptor      */
+//static unsigned char ind_mt = 0;
+//static unsigned char tab_rem[MAX_MOT];
+//static unsigned char locv_mt[MAX_MOT];
+//static unsigned char r3loc_logico[MAX_MOT];
+//static unsigned char r3loc_chk[MAX_MOT];
 //  static unsigned char cont, new_key =0;
-static const unsigned char mask1 [] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+//static const unsigned char mask1 [] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 //static unsigned char nadi_reverse = FALSE;  // rel 1.21
 
 //static char  err_maubusy; /*if true it means the maubusy signal is active SVN_454_a*/
@@ -626,12 +626,12 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 /*---------------------------------------------------------------------------------------------*/
 /* WTB LL Report function */
 
-void user_ls_report(unsigned short r)
-{
-	/* update the master_conflict_flag */
-	if (r == LR_MASTER_CONFLICT) master_conflict_flag = TRUE;
-	else master_conflict_flag = FALSE;
-}
+//void user_ls_report(unsigned short r)
+//{
+//	/* update the master_conflict_flag */
+//	if (r == LR_MASTER_CONFLICT) master_conflict_flag = TRUE;
+//	else master_conflict_flag = FALSE;
+//}
 
 
 /*---------------------------------------------------------------------------------------------*/
@@ -807,7 +807,7 @@ static short TestCOM_cmd(short argc, char *argv[])
          default:
          case 0 :
             printf("\n******* TEST COM v1.0 ********\n");       
-    //        printf("    1 - test RAM\n");       
+            printf("    1 - test FLASH 5555/AAAA\n");       
             printf("    2 - test FLASH\n");       
             printf("    3 - test IO digitali\n");       
             printf("    4 - test MVBC\n");       
@@ -822,16 +822,16 @@ static short TestCOM_cmd(short argc, char *argv[])
     		if (!get_line(s, sizeof(s), FALSE))
     		    stsTest = 0;
     		
-    		if(strcmp(s,"1") == 0)
-    		{		
-    	        printf("Test non disponibile\n");
-    	        stsTest = 0;
-    	    }
     		if(strcmp(s,"0") == 0)
     		{		
     	        
     	        printf("bye bye!!\n");
     	        exit= 1;
+    	    }
+    		else if(strcmp(s,"1") == 0)
+    		{		
+    	        printf("AVVIO TEST FLASH 5555/AAAA\n");
+    	        tstflash_vel();
     	    }
     		else if (strcmp(s,"2") == 0)
     		{		
@@ -875,9 +875,10 @@ static short TestCOM_cmd(short argc, char *argv[])
            }
        }
        while (!exit);
-    
-     
-    return 0;
+        
+       exit = 0;
+       stsTest=0;
+       return 0;
 }
 /*---------------------------------------------------------------------------------------------*/
 /* Main loop when GTWM */
