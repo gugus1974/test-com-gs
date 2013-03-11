@@ -75,6 +75,7 @@ OBJECTS = \
 	gtw_util.obj \
 	gtw_ncap.obj \
 	tstflash.obj \
+	tstmvb.obj \
 	strt_tcn.obj
 
 HEADERS = \
@@ -84,6 +85,7 @@ HEADERS = \
 	$(DIR_SRCS)\gtw_ncap.h \
 	$(DIR_SRCS)\strt_usr.h \
 	$(DIR_SRCS)\cod_st.h \
+	$(DIR_SRCS)\tstmvb.h \
 	$(DIR_SRCS)\tstflash.h
 
 #	$(DIR_SRCS)\shd_var.h \

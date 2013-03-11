@@ -7,19 +7,74 @@
 *****************************************************************************/
 
 #include "stdio.h"
-#include "serbuf.h"
-#include "consolle.h"
-#include <reg167.h>
-#include <bitfield.h>
-#include <shd_var.h>
+//#include "shd_var.h"
 #include "tstflash.h"   
-#include <cod_st.h>
-#pragma ot(3,SPEED)
+#include "cod_st.h"
+#include "hw_com.h"
+//#pragma ot(3,SPEED)
 
+
+unsigned int  * saddmvb;      	 /* indirizzo di partenza dello spazio di memoria dell'MVBC */   
+unsigned int  * eaddmvb;      	 /* indirizzo di fine dello spazio di memoria dell'MVBC     */ 
 unsigned int  * saeaddmvb1;
+/************** definizioni registri MVB ****************************/
+unsigned int  * regscr  = (unsigned int  *)0xC03F80;     /* indirizzo del registro SCR dell'MVB     */ 
+unsigned int  * regscr1 = (unsigned int  *)0xC0FF80;     /* indirizzo del registro SCR dell'MVB nel mode 'funmode'     */ 
+unsigned int  * regmcr  = (unsigned int  *)0xC03F84;     /* indirizzo del registro MCR dell'MVB     */ 
+unsigned int  * regmcr1 = (unsigned int  *)0xC0FF84;     /* indirizzo del registro MCR dell'MVB nel mode 'funmode'     */ 
+unsigned int  * regdr   = (unsigned int  *)0xC0FF88;     /* indirizzo del registro DR dell'MVB     */ 
+unsigned int  * regstsr = (unsigned int  *)0xC0FF8C;     /* indirizzo del registro STSR dell'MVB    */ 
+unsigned int  * regfc   = (unsigned int  *)0xC0FF90;     /* indirizzo del registro FC dell'MVB      */ 
+unsigned int  * regec   = (unsigned int  *)0xC0FF94;     /* indirizzo del registro EC dell'MVB      */ 
+unsigned int  * regmfr  = (unsigned int  *)0xC0FF98;     /* indirizzo del registro MFR dell'MVB     */ 
+unsigned int  * regmfre = (unsigned int  *)0xC0FF9C;     /* indirizzo del registro MFRE dell'MVB    */ 
+unsigned int  * regmr   = (unsigned int  *)0xC0FFA0;     /* indirizzo del registro MR dell'MVB      */ 
+unsigned int  * regmr2  = (unsigned int  *)0xC0FFA4;     /* indirizzo del registro MR2 dell'MVB     */ 
+unsigned int  * regdpr1 = (unsigned int  *)0xC0FFA8;     /* indirizzo del registro DPR dell'MVB     */ 
+unsigned int  * regdpr2 = (unsigned int  *)0xC0FFAC;     /* indirizzo del registro DPR2 dell'MVB    */ 
+unsigned int  * regipr0 = (unsigned int  *)0xC0FFB0;     /* indirizzo del registro IPR0 dell'MVB    */ 
+unsigned int  * regipr1 = (unsigned int  *)0xC0FFB4;     /* indirizzo del registro IPR1 dell'MVB    */ 
+unsigned int  * regimr0 = (unsigned int  *)0xC0FFB8;     /* indirizzo del registro IMR0 dell'MVB    */ 
+unsigned int  * regimr1 = (unsigned int  *)0xC0FFBC;     /* indirizzo del registro IMR1 dell'MVB    */ 
+unsigned int  * regisr0 = (unsigned int  *)0xC0FFC0;     /* indirizzo del registro ISR0 dell'MVB    */ 
+unsigned int  * regisr1 = (unsigned int  *)0xC0FFC4;     /* indirizzo del registro ISR1 dell'MVB    */ 
+unsigned int  * regivr0 = (unsigned int  *)0xC0FFC8;     /* indirizzo del registro IVR0 dell'MVB    */ 
+unsigned int  * regivr1 = (unsigned int  *)0xC0FFCC;     /* indirizzo del registro IVR1 dell'MVB    */ 
+unsigned int  * regdaor = (unsigned int  *)0xC03FD8;     /* indirizzo del registro DAOR dell'MVB     */ 
+unsigned int  * regdaor1= (unsigned int  *)0xC0FFD8;     /* indirizzo del registro DAOR dell'MVB nel mode 'funmode'     */ 
+unsigned int  * regdaok = (unsigned int  *)0xC0FFDC;     /* indirizzo del registro DAOK dell'MVB    */ 
+unsigned int  * regtcr  = (unsigned int  *)0xC0FFE0;     /* indirizzo del registro TCR dell'MVB     */ 
+unsigned int  * regtr1  = (unsigned int  *)0xC0FFF0;     /* indirizzo del registro TR1 dell'MVB     */ 
+unsigned int  * regtr2  = (unsigned int  *)0xC0FFF4;     /* indirizzo del registro TR2 dell'MVB     */ 
+unsigned int  * regtc1  = (unsigned int  *)0xC0FFF8;     /* indirizzo del registro TC1 dell'MVB     */ 
+unsigned int  * regtc2  = (unsigned int  *)0xC0FFFC;     /* indirizzo del registro TC2 dell'MVB     */ 
+unsigned int  * regmfs  = (unsigned int  *)0xC0FF00;     /* indirizzo del registro MFS dell'MVB     */ 
+unsigned long st_DA_PIT       = (unsigned long) 0xC02000;            /* indirizzo di partenza dei DA_PIT        */ 
+unsigned long st_DA_PCS       = (unsigned long) 0xC38000;            /* indirizzo di partenza dei DA_PCS        */ 
+unsigned long st_DA_DATA      = (unsigned long) 0xC40000;            /* indirizzo di partenza dei DA_DATA       */ 
+unsigned long end_DA_PIT      = (unsigned long) 0xC03FFE;            /* indirizzo di fine della DA_PIT          */ 
+unsigned long end_DA_PCS      = (unsigned long) 0xC3FFFE;            /* indirizzo di fine dei DA_PCS            */ 
+unsigned long st_LA_PIT       = (unsigned long) 0xC00000;            /* indirizzo di partenza dei LA_PIT        */ 
+unsigned long st_LA_PCS       = (unsigned long) 0xC30000;            /* indirizzo di partenza dei LA_PCS        */ 
+unsigned long end_LA_PIT      = (unsigned long) 0xC01FFE;            /* indirizzo di fine della LA_PIT          */ 
+unsigned long end_LA_PCS      = (unsigned long) 0xC37FFE;            /* indirizzo di fine dei LA_PCS            */ 
+unsigned long st_FC15_PCS     = (unsigned long) 0xC0FE38;            /* indirizzo di partenza dei FC15_PCS      */ 
+unsigned long st_FC15_DATA0   = (unsigned long) 0xC0FC58;            /* indirizzo FC15_DATA in pg0              */ 
+unsigned long st_FC15_DATA1   = (unsigned long) 0xC0FC78;            /* indirizzo FC15_DATA in pg1              */ 
+unsigned int funmode = 4;   					   /* Mode che determina la dimensione della TM dell'MVBC (4=1MB)*/     
+unsigned int  * st_DA_PITptr;
+unsigned int  * st_DA_PCSptr;
+unsigned int  * st_DA_DATA0ptr;
+unsigned int  * st_DA_DATA1ptr;
+unsigned int  * st_DA_PCSptr1;
+unsigned int  * st_DA_DATA0ptr1;
+unsigned int  * st_DA_DATA1ptr1;
+unsigned int  * FC15_PCSptr;
+unsigned int  * FC15_DATAptr;
+unsigned int  * sasaddmvb = (unsigned int *)0xC0FC00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
+unsigned int  * saeaddmvb = (unsigned int *)0xC0FFFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
 
-sbit	ODP3_2= ODP3^2;
-sbit	ODP3_3= ODP3^3;
+
 
 
 /**********************************************************/
@@ -1010,8 +1065,6 @@ int t_mvbel (void)
 	unsigned int  * FC15_PCSptr;
 	unsigned int  * FC15_DATAptr;
 
-	DP3_2 = 1;
-	DP3_3 = 1;
 	er = 0;
 
 
@@ -1065,34 +1118,43 @@ int t_mvbel (void)
 	
 	*regmfs = data1 | 0xF000; 			        /* master frame di richiesta proprio stato*/ 
 	*regmr = 0;
-	
-	p2val = (P2 & 0x0600);
-	if (p2val != 0x0600)
-	{
-		printf("KO!!!    P2=%04x\r\n",p2val);
-		er = 1;	
-	}
-	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
-	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+/* GUGU da verificare*/	
+//	p2val = (P2 & 0x0600);
+//	if (p2val != 0x0600)
+//	{
+//		printf("KO!!!    P2=%04x\r\n",p2val);
+//		er = 1;	
+//	}
+
+//	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
+//	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+	/* connect to the MVB line */
+	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
 	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
 
-/*
+
 	while  ((c=_getkey()) != '\r') {
 	switch (c) {
 	case '1':
-		 P3_2 = 1;
+//		 P3_2 = 1;
+    	/* connect to the MVB line */
+//    	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
+    	set_out_port(0, DOP0_KMA, DOP0_KMA);
 		 printf("%c",c);	
 		 break;
 	case '2':
-		 P3_2 = 0;
+//		 P3_2 = 0;
+    	set_out_port(0, DOP0_KMA, 0);
 		 printf("%c",c);	
 		 break;
 	case '3':
-		 P3_3 = 1;
+//		 P3_3 = 1;
+    	set_out_port(0, DOP0_KMB, DOP0_KMB);
 		 printf("%c",c);	
 		 break;
 	case '4':
-		 P3_3 = 0;
+//		 P3_3 = 0;
+    	set_out_port(0, DOP0_KMB, 0);
 		 printf("%c",c);	
 		 break;
 	}
@@ -1134,7 +1196,7 @@ int t_mvbel (void)
 	seg = (unsigned int)(app & 0x0000FF);
 	printf("DA_DATA11=%02x%04x\r\n",seg,off);
 
-	printf("P2=%04x ",P2);
+//GUGU	printf("P2=%04x ",P2);
 	printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",*regisr0,*regisr1,*regfc,*regec);
 	printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 	printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1142,7 +1204,7 @@ int t_mvbel (void)
 	printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
 	printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
 	printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
-*/
+
 	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
 
         *regisr0=0;
@@ -1190,7 +1252,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
+//GUGU	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1203,7 +1265,8 @@ int t_mvbel (void)
 	*regec=0;
 	if ( (p2val != 0x0400) | (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
 	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
+// gugu		printf("KO!!!!!!    P2=%04x ",p2val);
+		printf("KO!!!!!!    ");
 		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1230,16 +1293,17 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
 
+/*gugu 
 	p2val = (P2 & 0x0600);
 	if (p2val != 0x0600)
 	{
 		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
 		er = 1;	
 	}
-	
+*/	
+	/* open to the MVB line */
+	set_out_port(0, DOP0_KMA|DOP0_KMB, 0);
 
-	P3_2 = 0;                                                      /* apre relay KMA linea 1 MVB           */
-	P3_3 = 0;                                                      /* apre relay KMB linea 2 MVB           */
 /*	while ( _getkey() != '\r' );  */
 /* test del loop interno con interrogazione del proprio stato e KMA e KMB aperti */
 	printf("test del loop interno con interrogazione del proprio stato e KMA e KMB aperti\r\n");
@@ -1262,7 +1326,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
+//gugu	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1275,7 +1339,8 @@ int t_mvbel (void)
 	*regec=0;
 	if ( (p2val != 0x0400) | (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0))
 	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
+		printf("KO!!!!!!   ");
+//gugu		printf("KO!!!!!!    P2=%04x ",p2val);
 		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1301,17 +1366,18 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+1)=0;
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
+////gugu
+//	p2val = (P2 & 0x0600);
+//	if (p2val != 0x0600)
+//	{
+//		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
+//		er = 1;	
+//	}
 
-	p2val = (P2 & 0x0600);
-	if (p2val != 0x0600)
-	{
-		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
-		er = 1;	
-	}
 
-
-	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
-	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+//	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
+//	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+    	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
 	*regmfs = 0xF00D;   		                               /* master frame di richiesta stato della stim*/
 /*	while ( _getkey() != '\r' );    */
 /* test esterno KMA=1 e KMB=1  */
@@ -1334,7 +1400,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
+//gugu	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1347,7 +1413,8 @@ int t_mvbel (void)
 	*regec=0;
 	if ( (p2val != 0x0400) | (isr0val != 0x0682) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr != 0) | ( *st_DA_DATA1ptr != 0) | (*st_DA_DATA0ptr1 != 0xAAAA) | (*st_DA_DATA1ptr1 != 0xAAAA))
 	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
+//gugu		printf("KO!!!!!!    P2=%04x ",p2val);
+        printf("KO!!!!!!    ");
 		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1373,16 +1440,20 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+1)=0;
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
-
+/*gugu
 	p2val = (P2 & 0x0600);
 	if (p2val != 0x0600)
 	{
 		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
 		er = 1;	
 	}
+*/
+//	P3_2 = 0;                                                      /* apre relay KMA linea 1 MVB           */
+//	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+   	/* connect to the MVB line */
+   	set_out_port(0, DOP0_KMA, 0);
+   	set_out_port(0, DOP0_KMB, DOP0_KMB);
 
-	P3_2 = 0;                                                      /* apre relay KMA linea 1 MVB           */
-	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
 /*	while ( _getkey() != '\r' ); */
 /* test esterno KMA=0 e KMB=1  */
 	printf("test esterno linea 1 KMA=0 e KMB=1\r\n");
@@ -1404,7 +1475,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
+//gugu	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1444,20 +1515,23 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
 
+/*  gugu
 	p2val = (P2 & 0x0600);
 	if (p2val != 0x0600)
 	{
 		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
 		er = 1;	
 	}
-
+*/
 	*regdr = 0x0002;                                                /* forza il line switch		*/
 	while ( (*regdr & 0x0008) != 0); 						
 	*regdr = 0x0001;						/* blocca il line switch		*/
 /*	printf ( "DR = %04x\r\n",*regdr);  */
 
-	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
-	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+//	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
+//	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+    set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
+
 	*regmfs = 0xF00D;   		                               /* master frame di richiesta stato della stim*/
 /*	while ( _getkey() != '\r' );    */
 /* test esterno KMA=1 e KMB=1  */
@@ -1480,7 +1554,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
+//gugu	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1493,7 +1567,8 @@ int t_mvbel (void)
 	*regec=0;
 	if ( (p2val != 0x0400) | (isr0val != 0x0682) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr != 0) | ( *st_DA_DATA1ptr != 0) | (*st_DA_DATA0ptr1 != 0xAAAA) | (*st_DA_DATA1ptr1 != 0xAAAA))
 	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
+//gugu		printf("KO!!!!!!    P2=%04x ",p2val);
+		printf("KO!!!!!!    ");
 		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1520,16 +1595,22 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
 
+/*gugu
 	p2val = (P2 & 0x0600);
 	if (p2val != 0x0600)
 	{
 		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
 		er = 1;	
 	}
+*/
+
+//	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
+//	P3_3 = 0;                                                      /* apre relay KMB linea 2 MVB           */
+   	/* connect to the MVB line */
+   	set_out_port(0, DOP0_KMA, DOP0_KMA);
+   	set_out_port(0, DOP0_KMB, 0);
 
 
-	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
-	P3_3 = 0;                                                      /* apre relay KMB linea 2 MVB           */
 /*	while ( _getkey() != '\r' ); */
 /* test esterno KMA=0 e KMB=1  */
 	printf("test esterno linea 2 KMA=1 e KMB=0\r\n");
@@ -1551,7 +1632,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-    	p2val = (P2 & 0x0600);
+//gugu    	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1564,7 +1645,8 @@ int t_mvbel (void)
 	*regec=0;
 	if ( (p2val != 0x0400) | (isr0val != 0x0580) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval < 0x1FFE) | (*st_DA_DATA0ptr != 0) | ( *st_DA_DATA1ptr != 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0))
 	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
+		printf("KO!!!!!!    ");
+//		printf("KO!!!!!!    P2=%04x ",p2val);
 		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1590,16 +1672,19 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+1)=0;
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
+// gugu
+//	p2val = (P2 & 0x0600);
+//	if (p2val != 0x0600)
+//	{
+//		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
+//		er = 1;	
+//	}
 
-	p2val = (P2 & 0x0600);
-	if (p2val != 0x0600)
-	{
-		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
-		er = 1;	
-	}
+//	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
+//	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
+	/* connect to the MVB line */
+	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
 
-	P3_2 = 1;                                                      /* chiude relay KMA linea 1 MVB           */
-	P3_3 = 1;                                                      /* chiude relay KMB linea 2 MVB           */
 	*regmfs = 0xF00D;   		                               /* master frame di richiesta stato della stim*/
 /*	while ( _getkey() != '\r' );    */
 /* test FEV interrupt  */
@@ -1622,7 +1707,7 @@ int t_mvbel (void)
 	}
 	printf("\r\n");
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
+//gugu	p2val = (P2 & 0x0600);
 	isr0val = *regisr0;
 	isr1val = *regisr1;
 	fcval = *regfc;
@@ -1635,7 +1720,8 @@ int t_mvbel (void)
 	*regec=0;
 	if ( (p2val != 0x0000) | (isr0val != 0x0682) | (isr1val != 0x0080) | (fcval != 0xFFFF))
 	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
+//gugu		printf("KO!!!!!!    P2=%04x ",p2val);
+//		printf("KO!!!!!!   ");
 		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
 		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
@@ -1654,270 +1740,270 @@ int t_mvbel (void)
 /**********************************************************/
 /* Funzione di test  del  mvb bus ottico                  */
 /**********************************************************/
-int t_mvbot (void)
-{
-	unsigned int data1,i,er,vp;
-	unsigned long j;
-	char c;
-	unsigned int  off,seg,p2val,fcval,ecval,isr0val,isr1val;
-	unsigned long app; 
-	unsigned int  * st_DA_PITptr;
-	unsigned int  * st_DA_PCSptr;
-	unsigned int  * st_DA_DATA0ptr;
-	unsigned int  * st_DA_DATA1ptr;
-	unsigned int  * st_DA_PCSptr1;
-	unsigned int  * st_DA_DATA0ptr1;
-	unsigned int  * st_DA_DATA1ptr1;
-	unsigned int  * FC15_PCSptr;
-	unsigned int  * FC15_DATAptr;
-
-	er = 0;
-
-
-						 
-	*regscr1 = 0x0000; 						/* reset software				*/
-	*regscr = 0x0000;
-	for (i = 0; i<20; i++);								/* istruzione di attesa				*/
-	*regscr = 0x0001;						/* predispone per l'inizializzazione dei reg.	*/
-	*regmcr = funmode;						/* setta size della TM				*/
-	for (i = 0; i<20; i++);								/* istruzione di attesa				*/
-	/* azzera la LA port index table così tutti i LA port puntano al port 0 */
-        for (st_DA_PITptr=(unsigned int  *) st_LA_PIT; st_DA_PITptr<=(unsigned int  *) end_LA_PIT; st_DA_PITptr++) *st_DA_PITptr = 0;	
-	/* azzera tutti gli LA PCS per disattivare tutti gli LA port  */
-        for (st_DA_PITptr=(unsigned int  *) st_LA_PCS; st_DA_PITptr<=(unsigned int  *) end_LA_PCS; st_DA_PITptr++) *st_DA_PITptr = 0;	
-	/* azzera la DA port index table così tutti i DA port puntano al port 0 */
-        for (st_DA_PITptr=(unsigned int  *) st_DA_PIT; st_DA_PITptr<=(unsigned int  *) end_DA_PIT; st_DA_PITptr++) *st_DA_PITptr = 0;	
-	/* azzera tutti i DA PCS per disattivare tutti i DA port  */
-        for (st_DA_PITptr=(unsigned int  *) st_DA_PCS; st_DA_PITptr<=(unsigned int  *) end_DA_PCS; st_DA_PITptr++) *st_DA_PITptr = 0;	
-	data1 = *regdaor1;						/* legge il Device Address			*/ 
-	*regdr = 0x0009;						/* blocca lo switch tra le linee		*/
-	printf ( "DR = %04x DA=%04x\r\n",*regdr,data1);  
-	*regdaor1 = 0x000E;
-	*regdaok = 0x0094;						/* sovrascrive indirizzo hardware               */
-	data1 = *regdaor1;						/* legge il Device Address			*/ 
-	printf ( "DA=%04x\r\n",data1);
-	*regimr0 = 0xFFFF;						/* abilita tutte le interrupt			*/
-	*regimr1 = 0xFFFF;
-	*regivr0 = 0;
-	*regivr1 = 0;
-        st_DA_PITptr = (unsigned int  *)(st_DA_PIT + data1*2);
-	*st_DA_PITptr = 0x0001;						/* utilizza il DA port n°1 per il proprio device add.*/
-        st_DA_PITptr = (unsigned int  *)(st_DA_PIT + 0x000D*2);
-	*st_DA_PITptr = 0x0002;						/* utilizza il DA port n°2 per il device add. della stim*/
-        st_DA_PCSptr = (unsigned int  *)(st_DA_PCS + (0x0001<<3));
-        *st_DA_PCSptr = 0xF420;		/* FC=15, sink port, no check seq., no write always, DTI1, no queue, no num data, no forcing data*/
-	*(st_DA_PCSptr + 1) = 0x0000;
-        st_DA_PCSptr1 = (unsigned int  *)(st_DA_PCS + (0x0002<<3));
-        *st_DA_PCSptr1 = 0xF440;		/* FC=15, sink port, no check seq., no write always, DTI2, no queue, no num data, no forcing data*/
-	*(st_DA_PCSptr1 + 1) = 0x0000;
-	vp = 0;
-	st_DA_DATA0ptr =  (unsigned int  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
-	st_DA_DATA0ptr1 =  (unsigned int  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
-	vp = 1;
-	st_DA_DATA1ptr =  (unsigned int  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
-	st_DA_DATA1ptr1 =  (unsigned int  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
-	FC15_PCSptr = (unsigned int  *)st_FC15_PCS; 
-	FC15_DATAptr = (unsigned int  *)st_FC15_DATA0;
-        *FC15_PCSptr = 0xF860;		/* FC=15, source port, no check seq., no write always, DTI3, no queue, no num data, no forcing data*/
-	*(FC15_PCSptr + 1) = 0x0000;
-        *FC15_DATAptr = 0x0001;
-	
-	*regmfs = data1 | 0xF000; 			        /* master frame di richiesta proprio stato*/ 
-	*regmr = 0;
-	
-	p2val = (P2 & 0x0600);
-	if (p2val != 0x0600)
-	{
-		printf("KO!!!    P2=%04x\r\n",p2val);
-		er = 1;	
-	}
-
-	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
-
-	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
-
-        *regisr0=0;
-	*regivr0=0;
-	*regisr1=0;
-	*regivr1=0;
-	*regfc=0;
-	*regec=0;
-	*st_DA_DATA0ptr=0;
-	*(st_DA_DATA0ptr+1)=0;
-	*(st_DA_DATA0ptr+2)=0;
-	*(st_DA_DATA0ptr+3)=0;
-	*st_DA_DATA1ptr=0;
-	*(st_DA_DATA1ptr+1)=0;
-	*(st_DA_DATA1ptr+2)=0;
-	*(st_DA_DATA1ptr+3)=0;
-	*st_DA_DATA0ptr1=0;
-	*(st_DA_DATA0ptr1+1)=0;
-	*(st_DA_DATA0ptr1+2)=0;
-	*(st_DA_DATA0ptr1+3)=0;
-	*st_DA_DATA1ptr1=0;
-	*(st_DA_DATA1ptr1+1)=0;
-	*(st_DA_DATA1ptr1+2)=0;
-	*(st_DA_DATA1ptr1+3)=0;
-
-
-/* test del loop interno con interrogazione del proprio stato */
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	printf("test del loop interno con interrogazione del proprio stato\r\n");
-	for (off=0; off != 0x1FFE; off++)	
-	{
-		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){
-		} 
-		if ( c == '\t') break; 
-	        *FC15_DATAptr = *FC15_DATAptr + 1;
-		*regmr=0x0020;					/* invia master frame manualmente */
-	}
-	printf("\r\n");
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
-	isr0val = *regisr0;
-	isr1val = *regisr1;
-	fcval = *regfc;
-	ecval = *regec;
-        *regisr0=0;
-	*regivr0=0;
-	*regisr1=0;
-	*regivr1=0;
-	*regfc=0;
-	*regec=0;
-	if ( (p2val != 0x0400) | (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
-	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
-		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
-		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
-		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
-    	printf("DATA1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr,*(st_DA_DATA1ptr+1),*(st_DA_DATA1ptr+2),*(st_DA_DATA1ptr+3));
-		printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
-		printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
-		printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
-		er = 1;
-	}
-	*st_DA_DATA0ptr=0;
-	*(st_DA_DATA0ptr+1)=0;
-	*(st_DA_DATA0ptr+2)=0;
-	*(st_DA_DATA0ptr+3)=0;
-	*st_DA_DATA1ptr=0;
-	*(st_DA_DATA1ptr+1)=0;
-	*(st_DA_DATA1ptr+2)=0;
-	*(st_DA_DATA1ptr+3)=0;
-	*st_DA_DATA0ptr1=0;
-	*(st_DA_DATA0ptr1+1)=0;
-	*(st_DA_DATA0ptr1+2)=0;
-	*(st_DA_DATA0ptr1+3)=0;
-	*st_DA_DATA1ptr1=0;
-	*(st_DA_DATA1ptr1+1)=0;
-	*(st_DA_DATA1ptr1+2)=0;
-	*(st_DA_DATA1ptr1+3)=0;
-
-	p2val = (P2 & 0x0600);
-	if (p2val != 0x0600)
-	{
-		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
-		er = 1;	
-	}
-	
-	*regmfs = 0xF00D;   		                               /* master frame di richiesta stato della stim*/
-/* test esterno   */
-	printf("test esterno\r\n");
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	for (off=0; off != 0x1FFE; off++)	
-	{
-		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){
-		}
-		if ( c == '\t') break; 
-		*regmr=0x0020;					/* invia master frame manualmente */
-	}
-	printf("\r\n");
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
-	isr0val = *regisr0;
-	isr1val = *regisr1;
-	fcval = *regfc;
-	ecval = *regec;
-        *regisr0=0;
-	*regivr0=0;
-	*regisr1=0;
-	*regivr1=0;
-	*regfc=0;
-	*regec=0;
-	if ( (p2val != 0x0400) | (isr0val != 0x0682) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr != 0) | ( *st_DA_DATA1ptr != 0) | (*st_DA_DATA0ptr1 != 0xAAAA) | (*st_DA_DATA1ptr1 != 0xAAAA))
-	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
-		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
-		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
-		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
-    		printf("DATA1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr,*(st_DA_DATA1ptr+1),*(st_DA_DATA1ptr+2),*(st_DA_DATA1ptr+3));
-		printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
-		printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
-		printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
-		er = 1;
-	}
-	*st_DA_DATA0ptr=0;
-	*(st_DA_DATA0ptr+1)=0;
-	*(st_DA_DATA0ptr+2)=0;
-	*(st_DA_DATA0ptr+3)=0;
-	*st_DA_DATA1ptr=0;
-	*(st_DA_DATA1ptr+1)=0;
-	*(st_DA_DATA1ptr+2)=0;
-	*(st_DA_DATA1ptr+3)=0;
-	*st_DA_DATA0ptr1=0;
-	*(st_DA_DATA0ptr1+1)=0;
-	*(st_DA_DATA0ptr1+2)=0;
-	*(st_DA_DATA0ptr1+3)=0;
-	*st_DA_DATA1ptr1=0;
-	*(st_DA_DATA1ptr1+1)=0;
-	*(st_DA_DATA1ptr1+2)=0;
-	*(st_DA_DATA1ptr1+3)=0;
-
-	p2val = (P2 & 0x0600);
-	if (p2val != 0x0600)
-	{
-		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
-		er = 1;	
-	}
-
-/* test FEV interrupt  */
-	printf("test FEV interrupt\r\n");
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	for (off=0; off != 0x8000; off++)	
-	{
-		while (((*regmr & 0x0200) != 0) && ((c = _getkey())!= '\t')){
-		} 
-		if ( c == '\t') break;
-		*regmr=0x0020;					/* invia master frame manualmente */
-	}
-	printf("\r\n");
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	p2val = (P2 & 0x0600);
-	isr0val = *regisr0;
-	isr1val = *regisr1;
-	fcval = *regfc;
-	ecval = *regec;
-    *regisr0=0;
-	*regivr0=0;
-	*regisr1=0;
-	*regivr1=0;
-	*regfc=0;
-	*regec=0;
-	if ( (p2val != 0x0000) | (isr0val != 0x0682) | (isr1val != 0x0080) | (fcval != 0xFFFF))
-	{
-		printf("KO!!!!!!    P2=%04x ",p2val);
-		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
-		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
-		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
-    	printf("DATA1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr,*(st_DA_DATA1ptr+1),*(st_DA_DATA1ptr+2),*(st_DA_DATA1ptr+3));
-		printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
-		printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
-		printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
-		er = 1;
-	}
-
-	return er;
-}
+//int t_mvbot (void)
+//{
+//	unsigned int data1,i,er,vp;
+//	unsigned long j;
+//	char c;
+//	unsigned int  off,seg,p2val,fcval,ecval,isr0val,isr1val;
+//	unsigned long app; 
+//	unsigned int  * st_DA_PITptr;
+//	unsigned int  * st_DA_PCSptr;
+//	unsigned int  * st_DA_DATA0ptr;
+//	unsigned int  * st_DA_DATA1ptr;
+//	unsigned int  * st_DA_PCSptr1;
+//	unsigned int  * st_DA_DATA0ptr1;
+//	unsigned int  * st_DA_DATA1ptr1;
+//	unsigned int  * FC15_PCSptr;
+//	unsigned int  * FC15_DATAptr;
+//
+//	er = 0;
+//
+//
+//						 
+//	*regscr1 = 0x0000; 						/* reset software				*/
+//	*regscr = 0x0000;
+//	for (i = 0; i<20; i++);								/* istruzione di attesa				*/
+//	*regscr = 0x0001;						/* predispone per l'inizializzazione dei reg.	*/
+//	*regmcr = funmode;						/* setta size della TM				*/
+//	for (i = 0; i<20; i++);								/* istruzione di attesa				*/
+//	/* azzera la LA port index table così tutti i LA port puntano al port 0 */
+//        for (st_DA_PITptr=(unsigned int  *) st_LA_PIT; st_DA_PITptr<=(unsigned int  *) end_LA_PIT; st_DA_PITptr++) *st_DA_PITptr = 0;	
+//	/* azzera tutti gli LA PCS per disattivare tutti gli LA port  */
+//        for (st_DA_PITptr=(unsigned int  *) st_LA_PCS; st_DA_PITptr<=(unsigned int  *) end_LA_PCS; st_DA_PITptr++) *st_DA_PITptr = 0;	
+//	/* azzera la DA port index table così tutti i DA port puntano al port 0 */
+//        for (st_DA_PITptr=(unsigned int  *) st_DA_PIT; st_DA_PITptr<=(unsigned int  *) end_DA_PIT; st_DA_PITptr++) *st_DA_PITptr = 0;	
+//	/* azzera tutti i DA PCS per disattivare tutti i DA port  */
+//        for (st_DA_PITptr=(unsigned int  *) st_DA_PCS; st_DA_PITptr<=(unsigned int  *) end_DA_PCS; st_DA_PITptr++) *st_DA_PITptr = 0;	
+//	data1 = *regdaor1;						/* legge il Device Address			*/ 
+//	*regdr = 0x0009;						/* blocca lo switch tra le linee		*/
+//	printf ( "DR = %04x DA=%04x\r\n",*regdr,data1);  
+//	*regdaor1 = 0x000E;
+//	*regdaok = 0x0094;						/* sovrascrive indirizzo hardware               */
+//	data1 = *regdaor1;						/* legge il Device Address			*/ 
+//	printf ( "DA=%04x\r\n",data1);
+//	*regimr0 = 0xFFFF;						/* abilita tutte le interrupt			*/
+//	*regimr1 = 0xFFFF;
+//	*regivr0 = 0;
+//	*regivr1 = 0;
+//        st_DA_PITptr = (unsigned int  *)(st_DA_PIT + data1*2);
+//	*st_DA_PITptr = 0x0001;						/* utilizza il DA port n°1 per il proprio device add.*/
+//        st_DA_PITptr = (unsigned int  *)(st_DA_PIT + 0x000D*2);
+//	*st_DA_PITptr = 0x0002;						/* utilizza il DA port n°2 per il device add. della stim*/
+//        st_DA_PCSptr = (unsigned int  *)(st_DA_PCS + (0x0001<<3));
+//        *st_DA_PCSptr = 0xF420;		/* FC=15, sink port, no check seq., no write always, DTI1, no queue, no num data, no forcing data*/
+//	*(st_DA_PCSptr + 1) = 0x0000;
+//        st_DA_PCSptr1 = (unsigned int  *)(st_DA_PCS + (0x0002<<3));
+//        *st_DA_PCSptr1 = 0xF440;		/* FC=15, sink port, no check seq., no write always, DTI2, no queue, no num data, no forcing data*/
+//	*(st_DA_PCSptr1 + 1) = 0x0000;
+//	vp = 0;
+//	st_DA_DATA0ptr =  (unsigned int  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
+//	st_DA_DATA0ptr1 =  (unsigned int  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
+//	vp = 1;
+//	st_DA_DATA1ptr =  (unsigned int  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
+//	st_DA_DATA1ptr1 =  (unsigned int  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
+//	FC15_PCSptr = (unsigned int  *)st_FC15_PCS; 
+//	FC15_DATAptr = (unsigned int  *)st_FC15_DATA0;
+//        *FC15_PCSptr = 0xF860;		/* FC=15, source port, no check seq., no write always, DTI3, no queue, no num data, no forcing data*/
+//	*(FC15_PCSptr + 1) = 0x0000;
+//        *FC15_DATAptr = 0x0001;
+//	
+//	*regmfs = data1 | 0xF000; 			        /* master frame di richiesta proprio stato*/ 
+//	*regmr = 0;
+//	
+//	p2val = (P2 & 0x0600);
+//	if (p2val != 0x0600)
+//	{
+//		printf("KO!!!    P2=%04x\r\n",p2val);
+//		er = 1;	
+//	}
+//
+//	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
+//
+//	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
+//
+//        *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+//	*st_DA_DATA0ptr=0;
+//	*(st_DA_DATA0ptr+1)=0;
+//	*(st_DA_DATA0ptr+2)=0;
+//	*(st_DA_DATA0ptr+3)=0;
+//	*st_DA_DATA1ptr=0;
+//	*(st_DA_DATA1ptr+1)=0;
+//	*(st_DA_DATA1ptr+2)=0;
+//	*(st_DA_DATA1ptr+3)=0;
+//	*st_DA_DATA0ptr1=0;
+//	*(st_DA_DATA0ptr1+1)=0;
+//	*(st_DA_DATA0ptr1+2)=0;
+//	*(st_DA_DATA0ptr1+3)=0;
+//	*st_DA_DATA1ptr1=0;
+//	*(st_DA_DATA1ptr1+1)=0;
+//	*(st_DA_DATA1ptr1+2)=0;
+//	*(st_DA_DATA1ptr1+3)=0;
+//
+//
+///* test del loop interno con interrogazione del proprio stato */
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	printf("test del loop interno con interrogazione del proprio stato\r\n");
+//	for (off=0; off != 0x1FFE; off++)	
+//	{
+//		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){
+//		} 
+//		if ( c == '\t') break; 
+//	        *FC15_DATAptr = *FC15_DATAptr + 1;
+//		*regmr=0x0020;					/* invia master frame manualmente */
+//	}
+//	printf("\r\n");
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	p2val = (P2 & 0x0600);
+//	isr0val = *regisr0;
+//	isr1val = *regisr1;
+//	fcval = *regfc;
+//	ecval = *regec;
+//        *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+//	if ( (p2val != 0x0400) | (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
+//	{
+//		printf("KO!!!!!!    P2=%04x ",p2val);
+//		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+//		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
+//		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
+//    	printf("DATA1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr,*(st_DA_DATA1ptr+1),*(st_DA_DATA1ptr+2),*(st_DA_DATA1ptr+3));
+//		printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
+//		printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
+//		printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
+//		er = 1;
+//	}
+//	*st_DA_DATA0ptr=0;
+//	*(st_DA_DATA0ptr+1)=0;
+//	*(st_DA_DATA0ptr+2)=0;
+//	*(st_DA_DATA0ptr+3)=0;
+//	*st_DA_DATA1ptr=0;
+//	*(st_DA_DATA1ptr+1)=0;
+//	*(st_DA_DATA1ptr+2)=0;
+//	*(st_DA_DATA1ptr+3)=0;
+//	*st_DA_DATA0ptr1=0;
+//	*(st_DA_DATA0ptr1+1)=0;
+//	*(st_DA_DATA0ptr1+2)=0;
+//	*(st_DA_DATA0ptr1+3)=0;
+//	*st_DA_DATA1ptr1=0;
+//	*(st_DA_DATA1ptr1+1)=0;
+//	*(st_DA_DATA1ptr1+2)=0;
+//	*(st_DA_DATA1ptr1+3)=0;
+//
+//	p2val = (P2 & 0x0600);
+//	if (p2val != 0x0600)
+//	{
+//		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
+//		er = 1;	
+//	}
+//	
+//	*regmfs = 0xF00D;   		                               /* master frame di richiesta stato della stim*/
+///* test esterno   */
+//	printf("test esterno\r\n");
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	for (off=0; off != 0x1FFE; off++)	
+//	{
+//		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){
+//		}
+//		if ( c == '\t') break; 
+//		*regmr=0x0020;					/* invia master frame manualmente */
+//	}
+//	printf("\r\n");
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	p2val = (P2 & 0x0600);
+//	isr0val = *regisr0;
+//	isr1val = *regisr1;
+//	fcval = *regfc;
+//	ecval = *regec;
+//        *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+//	if ( (p2val != 0x0400) | (isr0val != 0x0682) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr != 0) | ( *st_DA_DATA1ptr != 0) | (*st_DA_DATA0ptr1 != 0xAAAA) | (*st_DA_DATA1ptr1 != 0xAAAA))
+//	{
+//		printf("KO!!!!!!    P2=%04x ",p2val);
+//		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+//		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
+//		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
+//    		printf("DATA1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr,*(st_DA_DATA1ptr+1),*(st_DA_DATA1ptr+2),*(st_DA_DATA1ptr+3));
+//		printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
+//		printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
+//		printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
+//		er = 1;
+//	}
+//	*st_DA_DATA0ptr=0;
+//	*(st_DA_DATA0ptr+1)=0;
+//	*(st_DA_DATA0ptr+2)=0;
+//	*(st_DA_DATA0ptr+3)=0;
+//	*st_DA_DATA1ptr=0;
+//	*(st_DA_DATA1ptr+1)=0;
+//	*(st_DA_DATA1ptr+2)=0;
+//	*(st_DA_DATA1ptr+3)=0;
+//	*st_DA_DATA0ptr1=0;
+//	*(st_DA_DATA0ptr1+1)=0;
+//	*(st_DA_DATA0ptr1+2)=0;
+//	*(st_DA_DATA0ptr1+3)=0;
+//	*st_DA_DATA1ptr1=0;
+//	*(st_DA_DATA1ptr1+1)=0;
+//	*(st_DA_DATA1ptr1+2)=0;
+//	*(st_DA_DATA1ptr1+3)=0;
+//
+//	p2val = (P2 & 0x0600);
+//	if (p2val != 0x0600)
+//	{
+//		printf("KO!!!    P2=%04x\r\n",(P2 & 0x0600));
+//		er = 1;	
+//	}
+//
+///* test FEV interrupt  */
+//	printf("test FEV interrupt\r\n");
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	for (off=0; off != 0x8000; off++)	
+//	{
+//		while (((*regmr & 0x0200) != 0) && ((c = _getkey())!= '\t')){
+//		} 
+//		if ( c == '\t') break;
+//		*regmr=0x0020;					/* invia master frame manualmente */
+//	}
+//	printf("\r\n");
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	p2val = (P2 & 0x0600);
+//	isr0val = *regisr0;
+//	isr1val = *regisr1;
+//	fcval = *regfc;
+//	ecval = *regec;
+//    *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+//	if ( (p2val != 0x0000) | (isr0val != 0x0682) | (isr1val != 0x0080) | (fcval != 0xFFFF))
+//	{
+//		printf("KO!!!!!!    P2=%04x ",p2val);
+//		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+//		printf("PCSW0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr,*(st_DA_PCSptr+1),*(st_DA_PCSptr+2),*(st_DA_PCSptr+3));
+//		printf("DATA0W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr,*(st_DA_DATA0ptr+1),*(st_DA_DATA0ptr+2),*(st_DA_DATA0ptr+3));
+//    	printf("DATA1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr,*(st_DA_DATA1ptr+1),*(st_DA_DATA1ptr+2),*(st_DA_DATA1ptr+3));
+//		printf("PCS1W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_PCSptr1,*(st_DA_PCSptr1+1),*(st_DA_PCSptr1+2),*(st_DA_PCSptr1+3));
+//		printf("DATA10W0-W1-W2-W3=%04x-%04x-%04x-%04x ",*st_DA_DATA0ptr1,*(st_DA_DATA0ptr1+1),*(st_DA_DATA0ptr1+2),*(st_DA_DATA0ptr1+3));
+//		printf("DATA11W0-W1-W2-W3=%04x-%04x-%04x-%04x\r\n",*st_DA_DATA1ptr1,*(st_DA_DATA1ptr1+1),*(st_DA_DATA1ptr1+2),*(st_DA_DATA1ptr1+3));
+//		er = 1;
+//	}
+//
+//	return er;
+//}
 
 
 
@@ -1936,10 +2022,10 @@ void test_mvb (void)
 	printf("********** TEST MVBC *************\r\n");
 
 	printf("Test del selettore d'indirizzo\r\n");
-	*regmcr1 = *regmcr1 & 0xFFF8;
-	*regscr = *regscr | 0x0001;
+	*regmcr1 = *regmcr1 & 0xFFF8;// set MCM=000 
+	*regscr = *regscr | 0x0001;  // set IL=01  configuration mode
 	er = 0;
-	data1 = *regdaor;
+	data1 = *regdaor;  // legge il DA per l'indirizzamento hw
 	if (data1 != 1) save_stato(TMVBSELKO);
 	else save_stato(TMVBSELOK);
 
@@ -1982,13 +2068,10 @@ saddmvb = (unsigned int  *)0x203f80;
 
 
         
-    if (sktype == 3) er = t_mvbot();
-    else { 
-		if (!(er = t_mvbel())) {
+	if (!(er = t_mvbel())) {
 			printf("Scambiare i connettori dell'MVB BUS e premere invio per proseguire\r\n");
 			while ( _getkey() != '\r' );
 			er = t_mvbel();
-		}
 	}
 
 	if (er) save_stato(TMVBBUSKO);
