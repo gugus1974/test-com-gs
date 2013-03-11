@@ -556,6 +556,7 @@ short _lc_m_config( unsigned short  ts_id,
         if ( ((unsigned short) mcm) > lci_tm_size_code[ts_id])
         {
             ret_val = LC_REJECT;
+        printf("MVBC 2: %d\n",ret_val);
         }
 
         if (ret_val == LC_OK)

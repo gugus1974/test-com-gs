@@ -24,7 +24,7 @@
 
 //#define flash2 ((unsigned int  *)(0x405554))
 
-void save_stato (unsigned int stato);
+void save_stato (unsigned short stato);
 void prn_stato (unsigned int prg, unsigned int cod);
 void prn_report(void);
 //void (*f_gest)(void);
@@ -1186,23 +1186,23 @@ void prn_stato (unsigned int prg, unsigned int cod)
 	
 }
 
-void save_stato (unsigned int stato)
+void save_stato (unsigned short stato)
 {
-	unsigned int i,dt,dat,data1;
-	unsigned int  * pt_flash;
+	unsigned short i,dt,dat,data1;
+	unsigned short  * pt_flash;
 		
 	i=0;
-	pt_flash = (unsigned int  *)(0x40F000);
-	while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned int  *)(0x40FFFE))){
+	pt_flash = (unsigned short  *)(0x40F000);
+	while ( ((dt = (*pt_flash)) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x40FFFE))){
 		pt_flash++;
 		i++;
 	}
 	/***    procedura di start write     ***/
-	*flash1 = 0xAAAA;
-	*flash2 = 0x5555;
-	*flash1 = 0xA0A0;
+    am29f040(sctstr, KEY1)    = 0xAAAA;
+    am29f040(sctstr, KEY2)    = 0x5555;
+    am29f040(sctstr, KEY1)    = 0xA0A0;
 	/***   scrittura della flash         ***/
-	*pt_flash = stato;
+	am29f040(pt_flash ,0)     = stato;
 	/***  attesa fine scrittura           ***/
 	dat = *pt_flash;
 	data1 = *pt_flash;
@@ -1210,18 +1210,19 @@ void save_stato (unsigned int stato)
 		dat = *pt_flash;
 		data1 = *pt_flash;
 	}
+    printf("\n salvo @%06lX codice @%04X ",pt_flash, (*pt_flash) );
 	prn_stato(i,stato);
 }
 
 void prn_report(void)
 {
-	unsigned int i,dt,dat,data1;
-	unsigned int  * pt_flash;
+	unsigned short i,dt,dat,data1;
+	unsigned short  * pt_flash;
 		
 	printf("PROG.  COD.                    DESCRIZIONE DEL TEST                       ESITO\r\n");
 	i=0;
-	pt_flash = (unsigned int  *)(0x80F000);
-	while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned int  *)(0x80FFFE))){
+	pt_flash = (unsigned short  *)(0x40F000);
+	while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x40FFFE))){
 		prn_stato(i,dt);
 		pt_flash++;
 		i++;

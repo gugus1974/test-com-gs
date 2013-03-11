@@ -403,35 +403,35 @@ static void strt(void)
         pi_free((void*)mvb_ts_cfg->p_prt_cfg);
         pi_free((void*)mvb_ts_cfg);
 
-#ifdef ATR_WTB
-        /* configure the WTB traffic store */
-        Check(nc_wtb_ts_cfg(&wtb_ts_cfg));
-        Check(lp_create(WTB_TS_ID, LP_HW_TYPE_HDLC, wtb_ts_cfg, 0));
-        Check(lp_enquiry(WTB_TS_ID, &wtb_cb));
-        wtb_ts_cfg->pb_pit = wtb_cb.pb_pit;
-        wtb_ts_cfg->pb_pcs = wtb_cb.pb_pcs;
-        wtb_ts_cfg->pb_prt = wtb_cb.pb_prt;
-        wtb_ts_cfg->pb_frc = wtb_cb.pb_frc;
-        pi_free((void*)wtb_ts_cfg->p_prt_cfg);
-        wtb_ts_cfg->p_prt_cfg = 0;
-
-        /* initialize the WTB link layer */
-        ls_t_Init();
-        Check(ls_t_Reset());
-
-#ifdef UMS
-        /* initialize the UMS */
-        li_t_IDTSInit((void*)id_ts);
-        uwtm_init();
-#endif
-#endif
+//#ifdef ATR_WTB
+//        /* configure the WTB traffic store */
+//        Check(nc_wtb_ts_cfg(&wtb_ts_cfg));
+//        Check(lp_create(WTB_TS_ID, LP_HW_TYPE_HDLC, wtb_ts_cfg, 0));
+//        Check(lp_enquiry(WTB_TS_ID, &wtb_cb));
+//        wtb_ts_cfg->pb_pit = wtb_cb.pb_pit;
+//        wtb_ts_cfg->pb_pcs = wtb_cb.pb_pcs;
+//        wtb_ts_cfg->pb_prt = wtb_cb.pb_prt;
+//        wtb_ts_cfg->pb_frc = wtb_cb.pb_frc;
+//        pi_free((void*)wtb_ts_cfg->p_prt_cfg);
+//        wtb_ts_cfg->p_prt_cfg = 0;
+//
+//        /* initialize the WTB link layer */
+//        ls_t_Init();
+//        Check(ls_t_Reset());
+//
+//#ifdef UMS
+//        /* initialize the UMS */
+//        li_t_IDTSInit((void*)id_ts);
+//        uwtm_init();
+//#endif
+//#endif
 
         /* configure the datasets (PD) */
         Check(nc_mvb_ds_cfg());
 
         /* start the sink timeout supervision */
 #ifdef ATR_WTB
-        Check(nc_tmo_cfg(&tmo_cfg, 33, 32));
+//        Check(nc_tmo_cfg(&tmo_cfg, 33, 32));
 #else
         Check(nc_tmo_cfg(&tmo_cfg, 0, 0));
 #endif
@@ -457,49 +457,49 @@ static void strt(void)
         }
 
 #ifdef ATR_WTB
-        /* get the PDM configuration (NULL if the gateway interface is disabled) */
-        Check(nc_pdm_cfg(&pdm_cfg, &pdm_ftf_size));
-
-        if (pdm_cfg) {
-            /* initialize the PDM */
-            Check(pdm_init());
-            Check(pi_task_create(pdm_task, STRT_PDM_TASK_ID, STRT_PDM_TASK_PRIO));
-            Check(pdm_config(pdm_cfg, PDM_DO_NOT_MARSH, PDM_DO_NOT_MARSH, PDM_DO_NOT_MARSH));
-            pdm_wtb_ts_crea_ind(WTB_TS_ID);
-        }
+//        /* get the PDM configuration (NULL if the gateway interface is disabled) */
+//        Check(nc_pdm_cfg(&pdm_cfg, &pdm_ftf_size));
+//
+//        if (pdm_cfg) {
+//            /* initialize the PDM */
+//            Check(pdm_init());
+//            Check(pi_task_create(pdm_task, STRT_PDM_TASK_ID, STRT_PDM_TASK_PRIO));
+//            Check(pdm_config(pdm_cfg, PDM_DO_NOT_MARSH, PDM_DO_NOT_MARSH, PDM_DO_NOT_MARSH));
+//            pdm_wtb_ts_crea_ind(WTB_TS_ID);
+//        }
 #endif
 
 #ifdef STRT_MAP
 #ifdef ATR_WTB
         /* initialize the UIC Mapping Server */
-        if (pdm_cfg) {
+//        if (pdm_cfg) {
 #ifdef UMS
-            Check(nc_ums_cfg(&ums_cfg, &uwtm_cfg, &uimcs_cfg));
-            uwtm_cfg.wtb_config.p_traffic_store = (void*)wtb_ts_cfg;
-            uwtm_cfg.wtb_config.Report          = wtbll_Report;
-            li_t_IDTSConfig(&ums_cfg);
-            Check(utbc_init(&ums_cfg, NULL));
-            Check(ungs_init(&ums_cfg));
-            Check(uagt_init(5, &ums_cfg));
-            Check(uwtm_configure(&uwtm_cfg, uwtm_Report));
-            Check(uimcs_init(&uimcs_cfg));
+//            Check(nc_ums_cfg(&ums_cfg, &uwtm_cfg, &uimcs_cfg));
+//            uwtm_cfg.wtb_config.p_traffic_store = (void*)wtb_ts_cfg;
+//            uwtm_cfg.wtb_config.Report          = wtbll_Report;
+//            li_t_IDTSConfig(&ums_cfg);
+//            Check(utbc_init(&ums_cfg, NULL));
+//            Check(ungs_init(&ums_cfg));
+//            Check(uagt_init(5, &ums_cfg));
+//            Check(uwtm_configure(&uwtm_cfg, uwtm_Report));
+//            Check(uimcs_init(&uimcs_cfg));
 #else
-            Check(map_init());
-            Check(map_install(map_Report, &old_map_Report, 0, 0));
-            Check(pi_task_create(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO));
-            map_user_ls_Report = wtbll_Report;
-            Check(nc_map_cfg(&map_cfg));
-            Check(nc_node_cfg(pdm_node_mode_mask(node_mode_from_vhdes(&map_cfg.vehicle_descriptor)),
-                              &map_cfg.configuration.node_descriptor));
-            map_cfg.configuration.ts_descriptor = (void*)wtb_ts_cfg;
-            Check(map_configure(&map_cfg));
+//            Check(map_init());
+//            Check(map_install(map_Report, &old_map_Report, 0, 0));
+//            Check(pi_task_create(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO));
+//            map_user_ls_Report = wtbll_Report;
+//            Check(nc_map_cfg(&map_cfg));
+//            Check(nc_node_cfg(pdm_node_mode_mask(node_mode_from_vhdes(&map_cfg.vehicle_descriptor)),
+//                              &map_cfg.configuration.node_descriptor));
+//            map_cfg.configuration.ts_descriptor = (void*)wtb_ts_cfg;
+//            Check(map_configure(&map_cfg));
 #endif
-        }
-        /* start the WTB report task */
-        Check(pi_task_create(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO));
+//        }
+//        /* start the WTB report task */
+//        Check(pi_task_create(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO));
 #else
-        if (nc_mvb_map_cfg())
-            Check(pi_task_create(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO));
+//        if (nc_mvb_map_cfg())
+//            Check(pi_task_create(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO));
 #endif
 #endif
 
