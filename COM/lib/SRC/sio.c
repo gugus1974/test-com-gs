@@ -99,7 +99,7 @@ char sio_poll_key(short timeout)
 char sio_get_key(void)
 {
 //    return sio_poll_key(PI_FOREVER);
-    return sio_poll_key(10);
+    return sio_poll_key(1);
 }
 
 /*--------------------------------------------------------------*/
