@@ -12,6 +12,7 @@
 //#include <shd_var.h>
 #include "cod_st.h"
 #include "atr_hw.h"
+#include "am29f040.h"
 //#pragma ot(3,SPEED)
 
 /* la flash viene vista come un array di interi */
@@ -34,6 +35,49 @@ unsigned short  * sectlimit = (unsigned short  *)0x4FE000L;  /*  limite superior
 unsigned long sctdelta                     = 0x10000L;  /*  delta incremento indirizzi settore (unsigned int  *)0x010000; */
 unsigned long dimsct                       = 0xFFFE;  /*  dimensione settore settore (unsigned int  *)0x00FFFF; */
 unsigned short  * flashlimit =(unsigned short  *)0x48FFFE; /*  limite superiore indirizzi (unsigned int  *)0xBFFFFE; */
+
+static short am29f040_wait(void *base, long offset, short value)
+{
+    short t;
+//    err = am29f040_wait(base, 0, 0xFFFF);
+
+    do
+    {
+        t   = am29f040(base, offset);
+        if ((t & 0x0080) == (value & 0x0080))
+        {
+            goto pass1;                                 /* CLAMOROSO !!!!!!!!   */
+        }
+    } while ((t & 0x0020) != 0x0020);
+
+    if ((t & 0x0080) == (value & 0x0080))
+    {
+        goto pass1;                                     /* CLAMOROSO !!!!!!!!   */
+    }
+
+    return AM29F040_FAILURE_ERR;
+
+pass1:
+    do
+    {
+        t   = am29f040(base, offset);
+
+        if ((t & 0x8000) == (value & 0x8000))
+        {
+            goto pass2;                                 /* CLAMOROSO !!!!!!!!   */
+        }
+    } while ((t & 0x2000) != 0x2000);
+
+    if ((t & 0x8000) == (value & 0x8000))
+    {
+        goto pass2;                                     /* CLAMOROSO !!!!!!!!   */
+    }
+
+    return AM29F040_FAILURE_ERR;
+
+pass2:
+    return AM29F040_OK;
+}
 
  
 /**********************************************************/
@@ -464,9 +508,12 @@ int wr_vrf_fast(unsigned short data)
 	unsigned short  * pt_flash;
 	unsigned int  off,seg;
 	unsigned long app; 
+    unsigned long offset;
 	char c;
+    unsigned short num_cicli;
     
-    printf("VERIFY FLASH FFFFh\n");
+    
+    printf(" step 1 - VERIFY FLASH FFFFh\n");
 	er = 0;
 	i=60000;
 	
@@ -477,9 +524,9 @@ int wr_vrf_fast(unsigned short data)
        
 	    k = 1000;
 	    tim1 = 0;
-   	    
+   	    printf("  @%06lx... verifica  atteso FFFFh   letto %04Xh\r",pt_flash,data3);
        /*legge  e verifica fino a max tentativi o '\r'*/
-	    while( (((data3 = *pt_flash)  & 0xFFFF) != 0xFFFF)/* && ((c=_getkey())  != '\r') */)
+	    while( (((data3 = *pt_flash)  & 0xFFFF) != 0xFFFF) && ((c=_getkey())  != '\r') )
 	    {
 //           printf("\nKO @%06lx data=%04x data3:%04x  data2:%04x\r",pt_flash,*pt_flash,data3,data2);
     	     if ( k > 1000) //1000 tentativi
@@ -500,109 +547,182 @@ int wr_vrf_fast(unsigned short data)
     	     }				
 	    }
     }
- 
-    		
-	for ( pt_flash = sctstr; pt_flash <= flashlimit; pt_flash=pt_flash+1)
-	{
+    
+    if (er==0){
+        printf(" step 1 - OK\n");
+    } else {
+        printf(" step 1 - KO\n");
+    }
 
-        am29f040(sctstr, KEY1)    = 0xAAAA;//KEY1= 5555
-        am29f040(sctstr, KEY2)    = 0x5555;//KEY2= 2AAA
+    printf(" step 2 - TEST WRITE/READ FLASH %04Xh SU OGNI INDIRIZZO\n", data);
+    /* reset */
+    am29f040(sctstr, 0)       = 0xF0F0;
+    
+    pt_flash = sctstr;
+    offset = 0;
+    num_cicli = 0;
+    while (num_cicli<16)
+    {
+        /* start the byte program */
+        am29f040(sctstr, KEY1)    = 0xAAAA;
+        am29f040(sctstr, KEY2)    = 0x5555;
         am29f040(sctstr, KEY1)    = 0xA0A0;
-		/***   scrittura della flash         ***/
-		*pt_flash = data;
-		/***  attesa fine scrittura           ***/
-        printf("@%06lx SCRITTO dato=%04xh  ",pt_flash,data);
-		ok1 = 0;     
-		ok2 = 0;
-		tim1 = 0;
-		tim2 = 0;
-		data3 = *pt_flash;
-		while (!(ok1 && ok2)) {
-			if (!(ok1 || tim1)) {
-				if ((data3 & 0x8000) == (data2 & 0x8000)){//scrittura terminata
-					ok1 = 1;
-				}
-				else {
-					if ((data3 & 0x2000) == 0x2000){
-						data1 = *pt_flash;
-						if ((data1 & 0x8000) != (data2 & 0x8000)){
-							er = 11;
-							tim1 = 1;
-						}
-						else ok1 = 1;
-					}
-				}
-			}    
-			if (!(ok2 || tim2)) {
-				if ((data3 & 0x0080) == (data2 & 0x0080)){
-					ok2 = 1;
-				}
-				else {
-					if ((data3 & 0x0020) == 0x0020)
-					{
-						data1 = *pt_flash;
-						if ((data1 & 0x0080) != (data2 & 0x0080)){
-							er = 12;
-							tim2 = 1;
-						}	
-						else ok2 = 1;
-					}
-				}
-			}
-			
-			if (tim1 || tim2)
-			{
-			     printf("\nerrore di timeout in scrittura in flash address @%06lx\n",pt_flash);
-			     break;
-			}
+        am29f040(sctstr, offset)  = data;
 
-			data3 = *pt_flash;
-	    
-		    if ( (c=_getkey())   == '\t' ) 
-		    {
-			   er = 9;	
-			   break;
-		    }
-		    
-		    printf("sono bloccato\n");				
-		}
+        /* wait for write completion */
+        er = am29f040_wait(sctstr, offset, data);
+        if (er)
+        {
+            am29f040(sctstr, 0)   = 0xF0F0;
+            er= 11;
+        }
+   	    printf("  ... @%06lx   WRITE DATO =%04x  \r",(sctstr+offset),data);
 
-		if ( er == 9 ) break;
-		i++;
-		if (i==60000)
-		{
-			printf(".");
-			i = 0;
-		}
-		k = 10000;
-		tim1 = 0;
-        printf(" .. VERIFICA  *pt=%04x data3=%04x\r",(*pt_flash),data3);
-		while( ((data3 = *pt_flash)  ^ ) != data /*&& ((c = _getkey())  != '\r') */) 
-		{    
-		    if ( k > 10000) 
-		    {	   
-    			app = (unsigned long) pt_flash;
-    			off = (unsigned int)(app & 0x00FFFF);
-    			app = app >> 16;
-    			seg = (unsigned int)(app & 0x0000FF);
-    			printf("KO!!! Ad Address %02x%04x  atteso %Xh letto %04Xh\r",seg,off,data,data3);
-    			k = 0;
-    			tim1 = 1;
-    			er = 13;
-            }
-		    k++;		
-		    if (( c = _getkey()) == '\t' )
-		    {
-			    er = 9;
-			    break;
-		    }				
-		}
-		if ( tim1 ) printf("\r\n");
-		if ( er == 9 ) break;	
-		j++;
-//	    }
-//        if ( er == 9 ) break;
-	}
+        
+	    k = 1000;
+	    tim1 = 0;
+   	    pt_flash = sctstr + offset;
+   	    
+   	    printf("  -> READ  dato =%04x riletture %04Xh\r",(*pt_flash),data3);
+       /*legge  e verifica fino a max tentativi o '\r'*/
+	    while( (((data3 = *pt_flash)  & 0xFFFF) != (data & 0xFFFF))/* && ((c=_getkey())  != '\r') */)
+	    {
+    	     if ( k > 1000) //1000 tentativi
+    	     {	   
+       			app = (unsigned long) pt_flash;
+       			off = (unsigned int)(app & 0x00FFFF);
+       			app = app >> 16;
+       			seg = (unsigned int)(app & 0x0000FF);
+       			printf("\nKO!!! Ad Address %02x%04x  atteso %04xh letto %04x",seg,off,data, data3);
+       			k = 0;
+       			tim1 = 1;
+       			er = 10;
+    	     }
+    	     k++;
+    	     if ( (c=_getkey()) == '\t' ){
+    		    er = 9;
+    		    break;
+    	     }				
+	    }
+
+        /* go to the next address */
+        num_cicli++;
+        offset =  (1<<num_cicli);
+    
+    
+    
+    }
+    
+    if (er==0){
+        printf(" step 1 - OK\n");
+        printf(" step 2 - TEST WRITE/READ FLASH %04Xh SU OGNI INDIRIZZO\n", data);
+            /* reset */
+        am29f040(sctstr, 0)       = 0xF0F0;
+
+    }
+    
+    		
+//	for ( pt_flash = sctstr; pt_flash <= flashlimit; pt_flash=pt_flash+1)
+//	{
+//
+//        am29f040(sctstr, KEY1)    = 0xAAAA;//KEY1= 5555
+//        am29f040(sctstr, KEY2)    = 0x5555;//KEY2= 2AAA
+//        am29f040(sctstr, KEY1)    = 0xA0A0;
+//		/***   scrittura della flash         ***/
+//		*pt_flash = data;
+//		/***  attesa fine scrittura           ***/
+//		ok1 = 0;     
+//		ok2 = 0;
+//		tim1 = 0;
+//		tim2 = 0;
+//		data3 = *pt_flash;
+//        printf("@%06lx SCRITTO dato %04xh  ",pt_flash,data);
+//		while (!(ok1 && ok2)) {
+//			if (!(ok1 || tim1)) {
+//				if ((data3 & 0x8000) == (data2 & 0x8000)){//scrittura terminata
+//					ok1 = 1;
+//				}
+//				else {
+//					if ((data3 & 0x2000) == 0x2000){
+//						data1 = *pt_flash;
+//						if ((data1 & 0x8000) != (data2 & 0x8000)){
+//							er = 11;
+//							tim1 = 1;
+//						}
+//						else ok1 = 1;
+//					}
+//				}
+//			}    
+//			if (!(ok2 || tim2)) {
+//				if ((data3 & 0x0080) == (data2 & 0x0080)){
+//					ok2 = 1;
+//				}
+//				else {
+//					if ((data3 & 0x0020) == 0x0020)
+//					{
+//						data1 = *pt_flash;
+//						if ((data1 & 0x0080) != (data2 & 0x0080)){
+//							er = 12;
+//							tim2 = 1;
+//						}	
+//						else ok2 = 1;
+//					}
+//				}
+//			}
+//			
+//			if (tim1 || tim2)
+//			{
+//			     printf("\nerrore di timeout in scrittura in flash address @%06lx\n",pt_flash);
+//			     break;
+//			}
+//
+//			data3 = *pt_flash;
+//	    
+//		    if ( (c=_getkey())   == '\t' ) 
+//		    {
+//			   er = 9;	
+//			   break;
+//		    }
+//		    
+//		    printf("sono bloccato\n");				
+//		}
+//
+//		if ( er == 9 ) break;
+//		i++;
+//		if (i==60000)
+//		{
+//			printf(".");
+//			i = 0;
+//		}
+//		k = 10000;
+//		tim1 = 0;
+//        printf(" .. VERIFICA  *pt=%04x data3=%04x\r",(*pt_flash),data3);
+//		while( ((data3 = *pt_flash)  ^ ) != data /*&& ((c = _getkey())  != '\r') */) 
+//		{    
+//		    if ( k > 10000) 
+//		    {	   
+//    			app = (unsigned long) pt_flash;
+//    			off = (unsigned int)(app & 0x00FFFF);
+//    			app = app >> 16;
+//    			seg = (unsigned int)(app & 0x0000FF);
+//    			printf("KO!!! Ad Address %02x%04x  atteso %Xh letto %04Xh\r",seg,off,data,data3);
+//    			k = 0;
+//    			tim1 = 1;
+//    			er = 13;
+//            }
+//		    k++;		
+//		    if (( c = _getkey()) == '\t' )
+//		    {
+//			    er = 9;
+//			    break;
+//		    }				
+//		}
+//		if ( tim1 ) printf("\r\n");
+//		if ( er == 9 ) break;	
+//		j++;
+////	    }
+////        if ( er == 9 ) break;
+//	}
 	printf("\r\n");
 	return er;
 }
@@ -835,7 +955,7 @@ void tstflash_vel (void )
 			}
 	 	}
     	printf("\n RESET FLASH CHIP\n");
-	    *flash1 = 0xF0F0;
+        am29f040(sctstr, 0)       = 0xF0F0;//reset
 
 		for(i=0;i<1000;i++);
 

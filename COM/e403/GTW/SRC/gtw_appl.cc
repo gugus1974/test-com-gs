@@ -39,6 +39,7 @@ extern "C" {
 #include "strt_tcn.h"
 #include "tcn_mon.h"
 #include "tstflash.h"
+#include "tstmvb.h"
 
 }
 
@@ -587,7 +588,7 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 
 		/* the GTWS unit is not configured; the redundancy is disabled */
 		standby_status = GTW_STANDBY_ABSENT;
-		return station_id = GTWM_ST_ID;
+//		return station_id = GTWM_ST_ID;
 	}
 
 	/* check that the GTWS communication datasets are configured */
@@ -619,7 +620,8 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 		while (!get_unim() && !get_unis() && tick > pi_ticks_elapsed());
 	}
 
-	return station_id = red_check();
+//	return station_id = red_check();
+	return station_id = 0;
 }
 
 
@@ -846,7 +848,8 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    }
     		else if (strcmp(s,"4") == 0)
     		{		
-    	        printf("Test MVBC\n");
+    	        printf("Test MVB\n");
+    	        test_mvb();
     	    
     	    }
     		else if (strcmp(s,"5") == 0)

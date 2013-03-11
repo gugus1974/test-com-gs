@@ -10,7 +10,7 @@
 extern unsigned int sktype;
 
 /* variabili per dimensione flash  definite in sta03ini.c */
-extern unsigned int  * sctstr; 		 /*  limite inferiore indirizzi settore */
+extern unsigned int XHUGE * sctstr; 		 /*  limite inferiore indirizzi settore */
 extern unsigned int  * sectlimit; 		 /*  limite superiore indirizzi settore */
 extern unsigned long sctdelta;                   /*  delta incremento indirizzi settore */
 extern unsigned long dimsct;                     /*  dimensione settore                 */

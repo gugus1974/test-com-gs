@@ -83,9 +83,10 @@ HEADERS = \
 	$(DIR_DBS)\gtw_ncdb.h \
 	$(DIR_SRCS)\gtw_ncap.h \
 	$(DIR_SRCS)\strt_usr.h \
-	$(DIR_SRCS)\shd_var.h \
 	$(DIR_SRCS)\cod_st.h \
 	$(DIR_SRCS)\tstflash.h
+
+#	$(DIR_SRCS)\shd_var.h \
 
 all: $(PROJECT).x
 
