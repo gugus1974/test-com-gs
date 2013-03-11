@@ -295,7 +295,7 @@ PI_TASK(vrtx_strt, 0, STRT_BA_TASK_PRIO)
 error:
     strt_error(err, errl, errs);
 }
-
+/* MAIN called from S.O.*/
 void STRT_ROUTINE_NAME (void)
 {
     /* start our entry point as a task (we cannot do much now) */

@@ -1,25 +1,23 @@
 [Open Files]
 Active File Display Mode=3
-Active File Index=3
-Open File Line0=0
-Open File Line1=13771
-Open File Line2=4817
-Open File Line3=6756
-Open File Pos0=0
-Open File Pos1=14002
-Open File Pos2=4743
-Open File Pos3=0
-Open File Window Pos0=0,1,-1,-1,-4,-30,66,87,907,396
-Open File Window Pos1=0,1,-1,-1,-4,-30,88,116,863,592
-Open File Window Pos2=0,1,-1,-1,-4,-30,110,145,951,456
-Open File Window Pos3=2,3,-1,-1,-4,-30,176,232,928,703
-Open File0=C:\SW\e403\GTW\SRC\testFlash.c
-Open File1=C:\SW\tcns\A\COM\SRC\hw_com.c
-Open File2=C:\SW\lib\SRC\am29f040.c
-Open File3=C:\SW GTW\Com\LIBs\INC\REGS360.H
-Open File4=
+Active File Index=0
+Open File Line0=16596
+Open File Line1=4344
+Open File Line2=0
+Open File Pos0=15889
+Open File Pos1=4882
+Open File Pos2=0
+Open File Window Pos0=2,3,-1,-1,-4,-30,88,116,863,592
+Open File Window Pos1=0,1,-1,-1,-4,-30,110,145,951,456
+Open File Window Pos2=0,1,-1,-1,-4,-30,176,232,928,703
+Open File0=C:\SW\tcns\A\COM\SRC\hw_com.c
+Open File1=C:\SW\lib\SRC\am29f040.c
+Open File2=C:\SW GTW\Com\LIBs\INC\REGS360.H
+Open File3=
 Remember Files=1
 
 [Project Information]
-Project Start=DD07020004000E0000000D001A0000001F
-Working Time=1086
+Project Start=DD07020003001B0003000400210000002C
+Working Time=1482
+[Folders]
+C:\SW\=1

@@ -68,12 +68,12 @@ typedef struct {
 			   sizeof(name##_event.code), (unsigned char *)&name##_event.code, pi_ticks_elapsed(), \
 			   (char *)name##_event.text)
 
-ErrorEvent  (wrong_ncdb,      0x0001, "Wrong NCDB configuration");
-ErrorEvent  (inhibit_fail,    0x0002, "INHIBIT failure");
-ErrorEvent  (mvb_fail,        0x0003, "MVB connection failure");
-WarningEvent(mvb_ok,          0x0004, "MVB connection OK");
-ErrorEvent  (mvbd_shd_fail,   0x0005, "MVBD SHD error");
-WarningEvent(mvbd_shd_ok,     0x0006, "MVBD SHD OK");
+//ErrorEvent  (wrong_ncdb,      0x0001, "Wrong NCDB configuration");
+//ErrorEvent  (inhibit_fail,    0x0002, "INHIBIT failure");
+//ErrorEvent  (mvb_fail,        0x0003, "MVB connection failure");
+//WarningEvent(mvb_ok,          0x0004, "MVB connection OK");
+//ErrorEvent  (mvbd_shd_fail,   0x0005, "MVBD SHD error");
+//WarningEvent(mvbd_shd_ok,     0x0006, "MVBD SHD OK");
 //ErrorEvent  (comm_fail,       0x0007, "COMM signal failure");
 //ErrorEvent  (sleout_fail,     0x0008, "SLEOUT signal failure");
 //ErrorEvent  (mvbon_fail,      0x0009, "MVBON signal failure");
@@ -117,9 +117,9 @@ char mvbon_flag;   /**** compatibilità libreria TCN */
 unsigned long			start_ticks;				/* ticks value at the application start */
 unsigned long			ticks;						/* current time in ticks                */
 
-static GtwApplConf		gtw_conf;					/* gateway configuration structure */
-static char				is_A_flag;							/* TRUE if we are the "A" unit     */
-static unsigned char	standby_status = GTW_STANDBY_READY;	/* status of the standby unit      */
+//static GtwApplConf		gtw_conf;					/* gateway configuration structure */
+//static char				is_A_flag;							/* TRUE if we are the "A" unit     */
+//static unsigned char	standby_status = GTW_STANDBY_READY;	/* status of the standby unit      */
 static NcEleID			station_id;							/* station ID value                */
 static char				mvb_failure_flag;					/* the MVB is not working properly */
 
@@ -128,7 +128,7 @@ static char				mvb_a_failure_flag;			/* the MVB signals a failure on line A */
 static char				mvb_b_failure_flag;			/* the MVB signals a failure on line B */
 static char				wtb_failure_flag;			/* the WTB is not working properly     */
 //static char				hw_failure_flag;			/* some hardware not working properly  */
-static char				failure_flag;				/* this board is in failure (latched)  */
+//static char				failure_flag;				/* this board is in failure (latched)  */
 //
 static char				mvb_activity_flag;			/* we are communicating over the MVB    */
 static char				wtb_inaugurated_flag;		/* the WTB is inaugurated               */
@@ -372,119 +372,119 @@ t_teleout teleout;
 /*---------------------------------------------------------------------------------------------*/
 /* Inhibit the other board */
 
-static void inhibit(void)
-{
-	unsigned long tick;		/* timeout tick time ;*/
-
-/*	 shut down the other unit */
-	set_inb(1);
-
-/*	 wait for the shutdown of the other unit   */
-	tick = pi_ticks_elapsed() + ms2tick(50);
-	while ( (get_fault() || get_unim() || get_unis()) &&
-		   !(get_fault() && get_unim() && get_unis()) &&
-		   tick > pi_ticks_elapsed());
-
-/*	 signal error if the other unit is not off */
-	if ( (get_fault() || get_unim() || get_unis()) &&
-	    !(get_fault() && get_unim() && get_unis())) log_event(inhibit_fail);
-}
+//static void inhibit(void)
+//{
+//	unsigned long tick;		/* timeout tick time ;*/
+//
+///*	 shut down the other unit */
+//	set_inb(1);
+//
+///*	 wait for the shutdown of the other unit   */
+//	tick = pi_ticks_elapsed() + ms2tick(50);
+//	while ( (get_fault() || get_unim() || get_unis()) &&
+//		   !(get_fault() && get_unim() && get_unis()) &&
+//		   tick > pi_ticks_elapsed());
+//
+///*	 signal error if the other unit is not off */
+//	if ( (get_fault() || get_unim() || get_unis()) &&
+//	    !(get_fault() && get_unim() && get_unis())) log_event(inhibit_fail);
+//}
 
 
 /*---------------------------------------------------------------------------------------------*/
 /* Redundancy check */
 
-static unsigned long red_check(void)
-{
-	static char         red_started;			/* if TRUE the redundant unit started */
-	static char         old_mvb_failure;		/* previous MVB failure status        */
-	char		mvb_failure;			/* MVB failure status                 */
-	static int ticks_fault;
-	static char fault_flag;
-	char		fault = get_fault();	/* FAULT signal status                */
-	char		unim = get_unim();		/* UNIM signal status                 */
-	char		unis = get_unis();		/* UNIS signal status                 */
-
-	/* we are always the GTWM if the GTWS unit is not configured */
-	if (standby_status == GTW_STANDBY_ABSENT) return GTWM_ST_ID;
-
-	/* we are not allowed to change our status if in failure */
-	if (failure_flag) {
-		set_unis(0); set_unim(0);
-		return station_id;
-	}
-
-	/* before killing the other gateway wait some time */
-	if (!red_started && (fault || (!unim && !unis)) &&
-		ticks - start_ticks < ms2tick(20000)) {
-		set_unis(0); set_unim(1);
-		return GTWM_ST_ID;
-	}
-	red_started = TRUE;
-
-	/* adjust the MVB fail signal timings considering the communication times */
-	if (station_id == GTWM_ST_ID)
-		C_sig_lo2hi_delay(MVB_DELAY_TICKS, ticks, mvb_failure_flag && standby_status == GTW_STANDBY_READY,
-						  mvb_failure);
-	else if (station_id == GTWS_ST_ID)
-		C_sig_hi2lo_delay(MVB_DELAY_TICKS, ticks, mvb_failure_flag && standby_status == GTW_STANDBY_READY,
-						  mvb_failure);
-	else mvb_failure = FALSE;
-	if (mvb_failure && !old_mvb_failure) log_event(mvb_fail);
-	if (!mvb_failure && old_mvb_failure) log_event(mvb_ok);
-	old_mvb_failure = mvb_failure;
-
-	/* follow the master in the sleep if required */
-//	if (station_id == GTWS_ST_ID && !fault && !unim && !unis) d_sleep();
-
-
-    /* Modifica per inserire un ritardo sull'inhibit all'altro nodo */
-    /*  if FAULT is high or UNIM and UNIS are both high or low the other board failed */
-        if (!fault_flag || standby_status != GTW_STANDBY_READY)
- 	  ticks_fault = ticks;
-
- 	if (fault || (!unim && !unis) || (unim && unis && !mvb_failure))
-	{
-		if ( (standby_status == GTW_STANDBY_READY) &&
-		     ((ticks - ticks_fault) > ms2tick(3000))
-		   )
-		{
-			standby_status = is_A_flag ? GTW_STANDBY_FAILURE_B : GTW_STANDBY_FAILURE_A;
-			inhibit();
-     		//printf("killed con ticks %d ticks_fault %d",ticks,ticks_fault);
-		}
-
-        fault_flag = TRUE;
-  		set_unis(0); set_unim(1);
-		return GTWM_ST_ID;
-	}
-	else
-		fault_flag = FALSE;
-
-    /* Se l'altra unita' e' in fault non si spegne ma questa unita'diventa master */
-    /* si elimina perche provoca problemi come bus admin. rimanendo GTWM su MVB    */
-    /*
- 	if (fault || (!unim && !unis) || (unim && unis && !mvb_failure))
-	{
-  		set_unis(0); set_unim(1);
-		return GTWM_ST_ID;
-	}
-    */
-
-
-    	/* the other unit is ready */
-	standby_status = GTW_STANDBY_READY;
-
-	/* if UNIM is high we are a slave unit */
-	if (unim) {
-		set_unim(0); set_unis(1);
-		return GTWS_ST_ID;
-	}
-
-	/* if only UNIS is high we are a master unit */
-	set_unis(standby_status == GTW_STANDBY_READY && mvb_failure); set_unim(1);
-	return GTWM_ST_ID;
-}
+//static unsigned long red_check(void)
+//{
+//	static char         red_started;			/* if TRUE the redundant unit started */
+//	static char         old_mvb_failure;		/* previous MVB failure status        */
+//	char		mvb_failure;			/* MVB failure status                 */
+//	static int ticks_fault;
+//	static char fault_flag;
+//	char		fault = get_fault();	/* FAULT signal status                */
+//	char		unim = get_unim();		/* UNIM signal status                 */
+//	char		unis = get_unis();		/* UNIS signal status                 */
+//
+//	/* we are always the GTWM if the GTWS unit is not configured */
+//	if (standby_status == GTW_STANDBY_ABSENT) return GTWM_ST_ID;
+//
+//	/* we are not allowed to change our status if in failure */
+//	if (failure_flag) {
+//		set_unis(0); set_unim(0);
+//		return station_id;
+//	}
+//
+//	/* before killing the other gateway wait some time */
+//	if (!red_started && (fault || (!unim && !unis)) &&
+//		ticks - start_ticks < ms2tick(20000)) {
+//		set_unis(0); set_unim(1);
+//		return GTWM_ST_ID;
+//	}
+//	red_started = TRUE;
+//
+//	/* adjust the MVB fail signal timings considering the communication times */
+//	if (station_id == GTWM_ST_ID)
+//		C_sig_lo2hi_delay(MVB_DELAY_TICKS, ticks, mvb_failure_flag && standby_status == GTW_STANDBY_READY,
+//						  mvb_failure);
+//	else if (station_id == GTWS_ST_ID)
+//		C_sig_hi2lo_delay(MVB_DELAY_TICKS, ticks, mvb_failure_flag && standby_status == GTW_STANDBY_READY,
+//						  mvb_failure);
+//	else mvb_failure = FALSE;
+//	if (mvb_failure && !old_mvb_failure) log_event(mvb_fail);
+//	if (!mvb_failure && old_mvb_failure) log_event(mvb_ok);
+//	old_mvb_failure = mvb_failure;
+//
+//	/* follow the master in the sleep if required */
+////	if (station_id == GTWS_ST_ID && !fault && !unim && !unis) d_sleep();
+//
+//
+//    /* Modifica per inserire un ritardo sull'inhibit all'altro nodo */
+//    /*  if FAULT is high or UNIM and UNIS are both high or low the other board failed */
+//        if (!fault_flag || standby_status != GTW_STANDBY_READY)
+// 	  ticks_fault = ticks;
+//
+// 	if (fault || (!unim && !unis) || (unim && unis && !mvb_failure))
+//	{
+//		if ( (standby_status == GTW_STANDBY_READY) &&
+//		     ((ticks - ticks_fault) > ms2tick(3000))
+//		   )
+//		{
+//			standby_status = is_A_flag ? GTW_STANDBY_FAILURE_B : GTW_STANDBY_FAILURE_A;
+//			inhibit();
+//     		//printf("killed con ticks %d ticks_fault %d",ticks,ticks_fault);
+//		}
+//
+//        fault_flag = TRUE;
+//  		set_unis(0); set_unim(1);
+//		return GTWM_ST_ID;
+//	}
+//	else
+//		fault_flag = FALSE;
+//
+//    /* Se l'altra unita' e' in fault non si spegne ma questa unita'diventa master */
+//    /* si elimina perche provoca problemi come bus admin. rimanendo GTWM su MVB    */
+//    /*
+// 	if (fault || (!unim && !unis) || (unim && unis && !mvb_failure))
+//	{
+//  		set_unis(0); set_unim(1);
+//		return GTWM_ST_ID;
+//	}
+//    */
+//
+//
+//    	/* the other unit is ready */
+//	standby_status = GTW_STANDBY_READY;
+//
+//	/* if UNIM is high we are a slave unit */
+//	if (unim) {
+//		set_unim(0); set_unis(1);
+//		return GTWS_ST_ID;
+//	}
+//
+//	/* if only UNIS is high we are a master unit */
+//	set_unis(standby_status == GTW_STANDBY_READY && mvb_failure); set_unim(1);
+//	return GTWM_ST_ID;
+//}
 
 
 /*=============================================================================================*/
@@ -493,13 +493,13 @@ static unsigned long red_check(void)
 /*---------------------------------------------------------------------------------------------*/
 /* MVBD shutdown report function */
 
-static void mvbd_shd_report(void)
-{
-	mvb_shd_failure_flag = shd_counter & 1;
-
-	if (mvb_shd_failure_flag) log_event(mvbd_shd_fail);
-	else log_event(mvbd_shd_ok);
-}
+//static void mvbd_shd_report(void)
+//{
+//	mvb_shd_failure_flag = shd_counter & 1;
+//
+//	if (mvb_shd_failure_flag) log_event(mvbd_shd_fail);
+//	else log_event(mvbd_shd_ok);
+//}
 
 
 /*---------------------------------------------------------------------------------------------*/
@@ -517,7 +517,7 @@ static void mvb_ba_led(int status)
 
 NcEleID get_station_id(unsigned short mvb_hw_address)
 {
-	unsigned long tick;								/* timeout tick time */
+//	unsigned long tick;								/* timeout tick time */
 
 	/* initialize the time base */
 	start_ticks = ticks = pi_ticks_elapsed();
@@ -532,64 +532,64 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 //	if (get_conf(&gtw_conf, 0)) log_event(conf_read_fail);
 
 	/* install the MVBD shutdown handler */
-	shd_handler = mvbd_shd_report;
+//	shd_handler = mvbd_shd_report;
 
 	/* fix the vehicle number if required */
-	if (gtw_conf.veh_serial[0] || gtw_conf.veh_serial[1] ||
-		gtw_conf.veh_serial[2] || gtw_conf.veh_serial[3])
-	{
-		const void		*obj;		/* ptr to the object  */
-		unsigned short	obj_size;	/* size of the object */
-
-		/* get the TCN root configuration object */
-		if (nc_get_db_element(NC_TCN_CONF_OBJ_ID, &obj, &obj_size) || obj_size < sizeof(NcTcnConf)) {
-			log_event(wrong_ncdb);
-			return station_id = 0;
-		}
-
-		/* patch the vehicle ID */
-		((NcTcnConf*)obj)->vehicle_desc[42-1] |= gtw_conf.veh_serial[0];
-		((NcTcnConf*)obj)->vehicle_desc[43-1] |= gtw_conf.veh_serial[1];
-		((NcTcnConf*)obj)->vehicle_desc[44-1] |= gtw_conf.veh_serial[2];
-		((NcTcnConf*)obj)->vehicle_desc[45-1] |= gtw_conf.veh_serial[3];
-	}
+//	if (gtw_conf.veh_serial[0] || gtw_conf.veh_serial[1] ||
+//		gtw_conf.veh_serial[2] || gtw_conf.veh_serial[3])
+//	{
+//		const void		*obj;		/* ptr to the object  */
+//		unsigned short	obj_size;	/* size of the object */
+//
+//		/* get the TCN root configuration object */
+//		if (nc_get_db_element(NC_TCN_CONF_OBJ_ID, &obj, &obj_size) || obj_size < sizeof(NcTcnConf)) {
+////			log_event(wrong_ncdb);
+//			return station_id = 0;
+//		}
+//
+//		/* patch the vehicle ID */
+//		((NcTcnConf*)obj)->vehicle_desc[42-1] |= gtw_conf.veh_serial[0];
+//		((NcTcnConf*)obj)->vehicle_desc[43-1] |= gtw_conf.veh_serial[1];
+//		((NcTcnConf*)obj)->vehicle_desc[44-1] |= gtw_conf.veh_serial[2];
+//		((NcTcnConf*)obj)->vehicle_desc[45-1] |= gtw_conf.veh_serial[3];
+//	}
 
 	/* configure the WTB driver */
 //	    comm_flag = get_comm();
 //        comm_flag = 1;
-        mvbon_flag = get_mvbon();
+//        mvbon_flag = get_mvbon();
 //    	mvbon_flag = 0;
 
 
-	    if ((mvb_hw_address & 0xF) == 0xF) {
-		    printf("\n+++ WARNING: MAU compatibility mode enabled +++\n");
-//		    d_configure(D_MODE_MAU_UNK, 1000000, D_LINE_A | D_LINE_B);
-	    }
-	    else
-	    {
-//		    if (comm_flag) d_configure(D_MODE_MAU_ATR, 1000000, D_LINE_A | D_LINE_B);
-//		    else d_configure(D_MODE_MAU_ATR, 500000, D_LINE_A);
-	    }
+//	    if ((mvb_hw_address & 0xF) == 0xF) {
+//		    printf("\n+++ WARNING: MAU compatibility mode enabled +++\n");
+////		    d_configure(D_MODE_MAU_UNK, 1000000, D_LINE_A | D_LINE_B);
+//	    }
+//	    else
+//	    {
+////		    if (comm_flag) d_configure(D_MODE_MAU_ATR, 1000000, D_LINE_A | D_LINE_B);
+////		    else d_configure(D_MODE_MAU_ATR, 500000, D_LINE_A);
+//	    }
 
 	/* fix the PDM modes for TCN* */
 //	if (!comm_flag) pdm_set_node_mode_mask(0x00FF, 0x0100);
 //	else pdm_set_node_mode_mask(0x00FF, 0x0000);
 
 	/* check that the GTWM unit is correctly configured */
-	if (nc_mvb_address(GTWM_ST_ID, 0) ||// nc_get_mvb_el(GTW_DSI_ID, 0, 0, 0, 0, 0, 0) ||
-		nc_get_mvb_el(GTW_DSO_ID, 0, 0, 0, 0, 0, 0)) {
-		log_event(wrong_ncdb);
-		return station_id = 0;
-	}
+//	if (nc_mvb_address(GTWM_ST_ID, 0) ||// nc_get_mvb_el(GTW_DSI_ID, 0, 0, 0, 0, 0, 0) ||
+//		nc_get_mvb_el(GTW_DSO_ID, 0, 0, 0, 0, 0, 0)) {
+//		log_event(wrong_ncdb);
+//		return station_id = 0;
+//	}
 
 	/* check if the GTWS unit is configured to be present */
-	if ((nc_mvb_address(GTWS_ST_ID, 0) != NC_OK)|| gtw_conf.noRido)
-	{
-
-		/* the GTWS unit is not configured; the redundancy is disabled */
-		standby_status = GTW_STANDBY_ABSENT;
-//		return station_id = GTWM_ST_ID;
-	}
+//	if ((nc_mvb_address(GTWS_ST_ID, 0) != NC_OK)|| gtw_conf.noRido)
+//	{
+//
+//		/* the GTWS unit is not configured; the redundancy is disabled */
+//		standby_status = GTW_STANDBY_ABSENT;
+////		return station_id = GTWM_ST_ID;
+//	}
 
 	/* check that the GTWS communication datasets are configured */
 	//if (nc_get_mvb_el(GTW_DSM_ID, 0, 0, 0, 0, 0, 0) || nc_get_mvb_el(GTW_DSS_ID, 0, 0, 0, 0, 0, 0)) {
@@ -598,27 +598,27 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 	//}
 
 	/* look if we are the "A" unit */
-	is_A_flag = get_uni1();
+//	is_A_flag = get_uni1();
 
 	/* if the two boards are switched on at the same time, this waits FAULT if the other is slower */
-	pi_wait(ms2tick(4000)); /*200*/
+//	pi_wait(ms2tick(4000)); /*200*/
 
 	/* if the other node is not alive, we are the master */
-	if (get_fault()) set_unim(1);
-	else {
-
-		/* do we have do decide for first? */
-		if (is_A_flag && !get_unim() && !get_unis()) {
-
-			/* choose if we want to be the GTWM */
-			if (gtw_conf.was_gtwm) set_unis(1);
-			else set_unim(1);
-		}
-
-		/* wait for timeout or decision from the other gateway */
-		tick = pi_ticks_elapsed() + ms2tick(4000); /*200*/
-		while (!get_unim() && !get_unis() && tick > pi_ticks_elapsed());
-	}
+//	if (get_fault()) set_unim(1);
+//	else {
+//
+//		/* do we have do decide for first? */
+//		if (is_A_flag && !get_unim() && !get_unis()) {
+//
+//			/* choose if we want to be the GTWM */
+//			if (gtw_conf.was_gtwm) set_unis(1);
+//			else set_unim(1);
+//		}
+//
+//		/* wait for timeout or decision from the other gateway */
+//		tick = pi_ticks_elapsed() + ms2tick(4000); /*200*/
+//		while (!get_unim() && !get_unis() && tick > pi_ticks_elapsed());
+//	}
 
 //	return station_id = red_check();
 	return station_id = 0;
@@ -816,6 +816,7 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    5 - test MVB Traffic Store\n");       
             printf("    6 - test MVB Driver\n");       
             printf("    7 - test EEPROM\n");       
+            printf("    9 - test REPORT\n");       
             printf("    0 - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
             break;
@@ -868,6 +869,10 @@ static short TestCOM_cmd(short argc, char *argv[])
     	        printf("Test EEPROM\n");
     	    
     	    }
+    	    else if (strcmp(s,"9") == 0)
+    	    {
+                prn_report();
+            }
             else
                 stsTest = 0;
             break;

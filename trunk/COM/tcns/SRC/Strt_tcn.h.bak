@@ -58,7 +58,7 @@
 /* Defines */
 
 /* define this with the "project" name string */
-#define STRT_PROJECT_STRING			"Untitled 0.0"
+#define STRT_PROJECT_STRING			"test com 0.0"
 
 /* define this with the name to use for the strt routine ("main" if it will be the entry point) */
 #define STRT_ROUTINE_NAME			main
@@ -135,7 +135,7 @@
 #ifdef ATR_WTB
 
 /* define this to start the UIC Mapping Server; could be used in an MVB-only system */
-#define STRT_MAP
+//#define STRT_MAP
 
 /* define this if you do not want user_ls_report() to be called when a WTB LL Report occurs */
 #define STRT_NO_USER_LS_REPORT

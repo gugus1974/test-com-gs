@@ -496,7 +496,7 @@ short _lc_m_hardw_config( unsigned short  ts_id,
 * history       1   93-08-20   BG Created                                   *
 *****************************************************************************
 */
-
+//    Check(lc_m_config(MVB_TS_ID, (void*)TM0_BASE, TM0_SIZE, TM0_QO, TM0_MO));
 short _lc_m_config( unsigned short  ts_id,
                     void           *p_tm_start_addr, 
                     short           mcm,

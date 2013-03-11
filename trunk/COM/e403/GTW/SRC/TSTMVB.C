@@ -78,7 +78,7 @@ unsigned int  * saeaddmvb = (unsigned int *)0xC0FFFE;   /* indirizzo di fine del
 
 
 /**********************************************************/
-/* Funzione test ram shift degli 0                        */
+/* Funzione test ram TEST SHIFT DEGLI 1 TRA GLI 0 NEL DATO*/
 /* Variabili di ingresso:                                 */
 /*   startadd    indirizzo di start della ram             */
 /*   endadd      indirizzo di fine della ram              */
@@ -92,7 +92,7 @@ int shf0(unsigned int  * startadd, unsigned int  * endadd)
 	unsigned long app; 
 	char c;
 
-	printf("TEST SHIFT DEGLI 1 TRA GLI 0 NEL DATO\r\n");
+	printf("TEST SHIFT DEGLI 1 TRA GLI 0 NEL DATO\n");
 	er = 0;
 	i=0;
 	c = 0;
@@ -102,36 +102,37 @@ int shf0(unsigned int  * startadd, unsigned int  * endadd)
 	/***    procedura di start write     ***/
 	     for (dt = 0x0001; dt != 0x0000; dt = dt << 1)
 	     {		
-		*pt_ram = dt;
-		*(pt_ram-1)=0;
-		k = 10000;
-		tim1 = 0;
-		vrf = ((data3 = *pt_ram)  != dt);
-		while( ((c=_getkey())  != '\r') && vrf ) {
-                     er = 1;
-		     if ( k == 10000) 
-		     {	   
-			app = (unsigned long) pt_ram;
-			off = (unsigned int)(app & 0x00FFFF);
-			app = app >> 16;
-			seg = (unsigned int)(app & 0x0000FF);
-			printf("\rKO!!! Ad Address %02x%04x atteso %04x letto %04x",seg,off,dt,data3);
-			k = 0;
-			tim1 = 1;
-		     }
-		     k++;
-		     if ( c == '\t' ) break;				
-		     *pt_ram = dt;
-		     data3 = *pt_ram;	
-		}
-		if ( tim1 ) printf("\r\n");
-                if ( c == '\t' ) break;				
-		i++;
-		if (i==60000){
-			printf(".");
-			i = 0;
-		}
-	     }
+    		*pt_ram = dt;
+    		*(pt_ram-1)=0;
+    		k = 10000;
+    		tim1 = 0;
+    		vrf = ((data3 = *pt_ram)  != dt);
+    		printf("@%06lX \r",pt_ram );
+    		while( ((c=_getkey())  != '\r') &&  vrf ) {
+                         er = 1;
+    		     if ( k == 10000) 
+    		     {	   
+        			app = (unsigned long) pt_ram;
+        			off = (unsigned int)(app & 0x00FFFF);
+        			app = app >> 16;
+        			seg = (unsigned int)(app & 0x0000FF);
+        			printf("\rKO!!! Ad Address %02x%04x atteso %04x letto %04x",seg,off,dt,data3);
+        			k = 0;
+        			tim1 = 1;
+    		     }
+    		     k++;
+    		     if ( c == '\t' ) break;				
+    		     *pt_ram = dt;
+    		     data3 = *pt_ram;	
+    		}
+    		if ( tim1 ) printf("\r\n");
+                    if ( c == '\t' ) break;				
+    		i++;
+    		if (i==1024){
+    			printf(".");
+    			i = 0;
+    		}
+	    }
              if ( c == '\t' ) break;				
 	}
 	printf("\r\n");
@@ -145,7 +146,7 @@ int shf0(unsigned int  * startadd, unsigned int  * endadd)
 
 
 /**********************************************************/
-/* Funzione test ram shift degli 1                        */
+/* Funzione test ram TEST SHIFT DEGLI 0 TRA GLI 1 NEL DATO*/
 /* Variabili di ingresso:                                 */
 /*   startadd    indirizzo di start della ram             */
 /*   endadd      indirizzo di fine della ram              */
@@ -159,7 +160,7 @@ int shf1(unsigned int  * startadd, unsigned int  * endadd)
 	unsigned long app; 
 	char c;
 
-	printf("TEST SHIFT DEGLI 0 TRA GLI 1 NEL DATO\r\n");
+	printf("TEST SHIFT DEGLI 0 TRA GLI 1 NEL DATO\n");
 	er = 0;
 	i=0;
 	c = 0;
@@ -174,6 +175,7 @@ int shf1(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = *pt_ram)  != (~dt));
+   		printf("@%06lX \r",pt_ram );
 		while( ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -194,7 +196,7 @@ int shf1(unsigned int  * startadd, unsigned int  * endadd)
 		if ( tim1 ) printf("\r\n");
 		if ( c == '\t' ) break;	
 		i++;
-		if (i==60000){
+		if (i==1024){
 			printf(".");
 			i = 0;
 		}
@@ -2025,38 +2027,30 @@ void test_mvb (void)
 	*regmcr1 = *regmcr1 & 0xFFF8;// set MCM=000 
 	*regscr = *regscr | 0x0001;  // set IL=01  configuration mode
 	er = 0;
-	data1 = *regdaor;  // legge il DA per l'indirizzamento hw
-	if (data1 != 1) save_stato(TMVBSELKO);
-	else save_stato(TMVBSELOK);
-
+	data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+	if (data1 != 1){
+	     save_stato(TMVBSELKO);
+	     printf("\n !! selezionare SW1 in posizione 1  %d\n",data1);
+	}
+	else 
+    {
+	     save_stato(TMVBSELOK);
+    }
 
 	printf("Test Service Area in Traffic Memory\r\n");
 	if (shf0(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF0KO);
 	else save_stato(TMVBSASHF0OK);	
 	if (shf1(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF1KO);
 	else save_stato(TMVBSASHF1OK);	
-	if (march(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMARCHKO);
+/*	if (march(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMARCHKO);
 	else save_stato(TMVBSAMARCHOK);	
 	if (maxrum(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMXRUMKO);
 	else save_stato(TMVBSAMXRUMOK);	
 
 
-/*                   
-saddmvb = (unsigned int  *)0x203f80;
-	printf("BUSCON2=%04x BUSCON1=%04x\r\n",BUSCON2,BUSCON1);
-	printf("mcr=%04x\r\n",*regmcr);
-
-	while ( _getkey() != '\r' ) {
-		i= *regmcr;
-		i= *regmcr;
-	}
-
-
-	while ( ((*regmcr & 0x0007) != funmode) && ((*regmcr1 & 0x0007) != funmode) );
-*/
 	printf("Test della Traffic Memory\r\n");
 	*regmcr = *regmcr | funmode;
-/*	printf("mcr=%04x  mcr1=%04x  i=%04x fm=%04x\r\n",*regmcr,*regmcr1,i,funmode); */
+	printf("mcr=%04x  mcr1=%04x  i=%04x fm=%04x\r\n",*regmcr,*regmcr1,i,funmode); 
 	if (shf0_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF0KO);
 	else save_stato(TMVBTMSHF0OK);	
 	if (shf1_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF1KO);
@@ -2076,6 +2070,7 @@ saddmvb = (unsigned int  *)0x203f80;
 
 	if (er) save_stato(TMVBBUSKO);
 	else save_stato(TMVBBUSOK);	
-
+*/
+    printf("TEST MVB terminato");
 }
 
