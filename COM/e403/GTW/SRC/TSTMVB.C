@@ -14,8 +14,11 @@
 //#pragma ot(3,SPEED)
 
 
-unsigned int  * saddmvb;      	 /* indirizzo di partenza dello spazio di memoria dell'MVBC */   
-unsigned int  * eaddmvb;      	 /* indirizzo di fine dello spazio di memoria dell'MVBC     */ 
+unsigned int  * saddmvb       = (unsigned int *)0xC00000;     /* indirizzo di partenza dello spazio di memoria dell'MVBC */   
+unsigned int  * eaddmvb       = (unsigned int *)0xCFFFFE;     /* indirizzo di fine dello spazio di memoria dell'MVBC     */ 
+unsigned int  * sasaddmvb     = (unsigned int *)0xC0FC00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
+unsigned int  * saeaddmvb     = (unsigned int *)0xC0FFFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
+unsigned int funmode = 4;   					   /* Mode che determina la dimensione della TM dell'MVBC (4=1MB)*/     
 unsigned int  * saeaddmvb1;
 /************** definizioni registri MVB ****************************/
 unsigned int  * regscr  = (unsigned int  *)0xC03F80;     /* indirizzo del registro SCR dell'MVB     */ 
@@ -49,19 +52,19 @@ unsigned int  * regtr2  = (unsigned int  *)0xC0FFF4;     /* indirizzo del regist
 unsigned int  * regtc1  = (unsigned int  *)0xC0FFF8;     /* indirizzo del registro TC1 dell'MVB     */ 
 unsigned int  * regtc2  = (unsigned int  *)0xC0FFFC;     /* indirizzo del registro TC2 dell'MVB     */ 
 unsigned int  * regmfs  = (unsigned int  *)0xC0FF00;     /* indirizzo del registro MFS dell'MVB     */ 
-unsigned long st_DA_PIT       = (unsigned long) 0xC02000;            /* indirizzo di partenza dei DA_PIT        */ 
-unsigned long st_DA_PCS       = (unsigned long) 0xC38000;            /* indirizzo di partenza dei DA_PCS        */ 
-unsigned long st_DA_DATA      = (unsigned long) 0xC40000;            /* indirizzo di partenza dei DA_DATA       */ 
-unsigned long end_DA_PIT      = (unsigned long) 0xC03FFE;            /* indirizzo di fine della DA_PIT          */ 
-unsigned long end_DA_PCS      = (unsigned long) 0xC3FFFE;            /* indirizzo di fine dei DA_PCS            */ 
 unsigned long st_LA_PIT       = (unsigned long) 0xC00000;            /* indirizzo di partenza dei LA_PIT        */ 
-unsigned long st_LA_PCS       = (unsigned long) 0xC30000;            /* indirizzo di partenza dei LA_PCS        */ 
 unsigned long end_LA_PIT      = (unsigned long) 0xC01FFE;            /* indirizzo di fine della LA_PIT          */ 
-unsigned long end_LA_PCS      = (unsigned long) 0xC37FFE;            /* indirizzo di fine dei LA_PCS            */ 
+unsigned long st_DA_PIT       = (unsigned long) 0xC02000;            /* indirizzo di partenza dei DA_PIT        */ 
+unsigned long end_DA_PIT      = (unsigned long) 0xC03FFE;            /* indirizzo di fine della DA_PIT          */ 
 unsigned long st_FC15_PCS     = (unsigned long) 0xC0FE38;            /* indirizzo di partenza dei FC15_PCS      */ 
 unsigned long st_FC15_DATA0   = (unsigned long) 0xC0FC58;            /* indirizzo FC15_DATA in pg0              */ 
 unsigned long st_FC15_DATA1   = (unsigned long) 0xC0FC78;            /* indirizzo FC15_DATA in pg1              */ 
-unsigned int funmode = 4;   					   /* Mode che determina la dimensione della TM dell'MVBC (4=1MB)*/     
+unsigned long st_LA_PCS       = (unsigned long) 0xC30000;            /* indirizzo di partenza dei LA_PCS        */ 
+unsigned long end_LA_PCS      = (unsigned long) 0xC37FFE;            /* indirizzo di fine dei LA_PCS            */ 
+unsigned long st_DA_PCS       = (unsigned long) 0xC38000;            /* indirizzo di partenza dei DA_PCS        */ 
+unsigned long end_DA_PCS      = (unsigned long) 0xC3FFFE;            /* indirizzo di fine dei DA_PCS            */ 
+unsigned long st_DA_DATA      = (unsigned long) 0xC40000;            /* indirizzo di partenza dei DA_DATA       */ 
+
 unsigned int  * st_DA_PITptr;
 unsigned int  * st_DA_PCSptr;
 unsigned int  * st_DA_DATA0ptr;
@@ -71,8 +74,6 @@ unsigned int  * st_DA_DATA0ptr1;
 unsigned int  * st_DA_DATA1ptr1;
 unsigned int  * FC15_PCSptr;
 unsigned int  * FC15_DATAptr;
-unsigned int  * sasaddmvb = (unsigned int *)0xC0FC00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
-unsigned int  * saeaddmvb = (unsigned int *)0xC0FFFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
 
 
 
@@ -174,6 +175,7 @@ int shf1(unsigned int  * startadd, unsigned int  * endadd)
 		*(pt_ram-1)=0;
 		k = 10000;
 		tim1 = 0;
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		vrf = ((data3 = *pt_ram)  != (~dt));
    		printf("@%06lX \r",pt_ram );
 		while( ((c=_getkey())  != '\r') && vrf ) {
@@ -228,7 +230,7 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 	unsigned long app; 
 	char c;
 
-	printf("TEST MARCH C-\r\n");
+//	printf("TEST MARCH C-\r\n");
 	er = 0;
 	i=0;
 	c = 0;
@@ -242,37 +244,38 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 	     j = 0;	
 	     for (dt = 0x0001; dt != 0x0000; dt = dt << 1)
 	     {		
-		k = 10000;
-		tim1 = 0;
-		vrf = ((data3 = (*pt_ram & dt)) != 0);
-		while( ((c=_getkey())  != '\r') && vrf ) {
-		     er = 1;
-		     if ( k == 10000) 
-		     {	   
-			app = (unsigned long) pt_ram;
-			off = (unsigned int)(app & 0x00FFFF);
-			app = app >> 16;
-			seg = (unsigned int)(app & 0x0000FF);
-			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 0 letto %04x",seg,off,j,data3);
-			k = 0;
-			tim1 = 1;
-		     }
-		     k++;
-		     if ( c == '\t' ) break;
-		     data3 = (*pt_ram );				
-		}
-		if ( tim1 ) printf("\r\n");
-		if ( c == '\t' ) break;
-		data3 = *pt_ram;
-		*pt_ram = data3 | dt;	
-		i++;
-		if (i==60000){
-			printf(".");
-			i = 0;
-		}
-		j++;
-	     }
-             if ( c == '\t' ) break;
+    		k = 10000;
+    		tim1 = 0;
+    		vrf = ((data3 = (*pt_ram & dt)) != 0);
+    		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
+    		while( ((c=_getkey())  != '\r') && vrf ) {
+    		     er = 1;
+    		     if ( k == 10000) 
+    		     {	   
+        			app = (unsigned long) pt_ram;
+        			off = (unsigned int)(app & 0x00FFFF);
+        			app = app >> 16;
+        			seg = (unsigned int)(app & 0x0000FF);
+        			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 0 letto %04x",seg,off,j,data3);
+        			k = 0;
+        			tim1 = 1;
+        		 }
+    		     k++;
+    		     if ( c == '\t' ) break;
+    		     data3 = (*pt_ram );				
+    		}
+    		if ( tim1 ) printf("\r\n");
+    		if ( c == '\t' ) break;
+    		data3 = *pt_ram;
+    		*pt_ram = data3 | dt;	
+    		i++;
+    		if (i==60000){
+    			printf(".");
+    			i = 0;
+    		}
+    		j++;
+	    }
+        if ( c == '\t' ) break;
 	}
 	printf("\r\n");
 
@@ -285,6 +288,7 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = (*pt_ram & dt)) == 0);
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		while( ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -325,6 +329,7 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = (*pt_ram & dt)) != 0);
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		while( ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -365,6 +370,7 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = (*pt_ram & dt)) == 0);
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		while( ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -405,6 +411,7 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = (*pt_ram & dt)) != 0);
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		while(  ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -470,6 +477,7 @@ int maxrum(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = *(pt_ram-1))  != dt);
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		while( ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -506,6 +514,7 @@ int maxrum(unsigned int  * startadd, unsigned int  * endadd)
 		k = 10000;
 		tim1 = 0;
 		vrf = ((data3 = *(pt_ram-1))  != dt);
+   		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
 		while( ((c=_getkey())  != '\r') && vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
@@ -2037,37 +2046,44 @@ void test_mvb (void)
 	     save_stato(TMVBSELOK);
     }
 
-	printf("Test Service Area in Traffic Memory\r\n");
+	printf("Test Service Area in Traffic Memory (C0FC00H..C0FFFEH)\r\n");
+
 	if (shf0(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF0KO);
 	else save_stato(TMVBSASHF0OK);	
+
 	if (shf1(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF1KO);
 	else save_stato(TMVBSASHF1OK);	
-/*	if (march(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMARCHKO);
+
+	if (march(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMARCHKO);
 	else save_stato(TMVBSAMARCHOK);	
+
 	if (maxrum(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMXRUMKO);
 	else save_stato(TMVBSAMXRUMOK);	
 
 
 	printf("Test della Traffic Memory\r\n");
 	*regmcr = *regmcr | funmode;
-	printf("mcr=%04x  mcr1=%04x  i=%04x fm=%04x\r\n",*regmcr,*regmcr1,i,funmode); 
+
 	if (shf0_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF0KO);
 	else save_stato(TMVBTMSHF0OK);	
+
 	if (shf1_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF1KO);
 	else save_stato(TMVBTMSHF1OK);	
+
 	if (march_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMMARCHKO);
 	else save_stato(TMVBTMMARCHOK);	
+
 	if (maxrum_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMMXRUMKO);
 	else save_stato(TMVBTMMXRUMOK);	
 
 
-        
+/*        
 	if (!(er = t_mvbel())) {
 			printf("Scambiare i connettori dell'MVB BUS e premere invio per proseguire\r\n");
 			while ( _getkey() != '\r' );
 			er = t_mvbel();
 	}
-
+*/
 	if (er) save_stato(TMVBBUSKO);
 	else save_stato(TMVBBUSOK);	
 */
