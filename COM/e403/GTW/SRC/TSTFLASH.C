@@ -526,7 +526,7 @@ int wr_vrf_fast(unsigned short data)
 	    tim1 = 0;
    	    printf("  @%06lx... verifica  atteso FFFFh   letto %04Xh\r",pt_flash,data3);
        /*legge  e verifica fino a max tentativi o '\r'*/
-	    while( (((data3 = *pt_flash)  & 0xFFFF) != 0xFFFF) && ((c=_getkey())  != '\r') )
+	    while( (((data3 = *pt_flash)  & 0xFFFF) != 0xFFFF) /*&& ((c=_getkey())  != '\r')*/ )
 	    {
 //           printf("\nKO @%06lx data=%04x data3:%04x  data2:%04x\r",pt_flash,*pt_flash,data3,data2);
     	     if ( k > 1000) //1000 tentativi
