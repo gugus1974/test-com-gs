@@ -814,9 +814,10 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    3 - test IO digitali\n");       
             printf("    4 - test MVBC\n");       
             printf("    5 - test MVB Traffic Store\n");       
-            printf("    6 - test MVB Driver\n");       
+            printf("    6 - test SW1 MVB \n");       
             printf("    7 - test EEPROM\n");       
             printf("    9 - test REPORT\n");       
+            printf("   10 - test MVB INIT\n");       
             printf("    0 - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
             break;
@@ -830,6 +831,12 @@ static short TestCOM_cmd(short argc, char *argv[])
     	        
     	        printf("bye bye!!\n");
     	        exit= 1;
+    	    }
+    	    
+    		else if(strcmp(s,"10") == 0)
+    		{		
+    	        printf("AVVIO MVB INIT\n");
+    	        MVB_init();
     	    }
     		else if(strcmp(s,"1") == 0)
     		{		
@@ -860,8 +867,8 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    }
     		else if (strcmp(s,"6") == 0)
     		{		
-    	        printf("Test EMD\n");
-    	    
+    	        printf("Test SW1\n");
+    	        test_SW1();
     	    }
             
     		else if (strcmp(s,"7") == 0)
