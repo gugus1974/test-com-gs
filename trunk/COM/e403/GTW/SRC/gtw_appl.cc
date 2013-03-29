@@ -818,7 +818,7 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    7 - test EEPROM\n");       
             printf("    9 - test REPORT\n");       
             printf("   10 - test MVB INIT\n");       
-            printf("    0 - EXIT\n");       
+            printf("    x - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
             break;
             
@@ -826,7 +826,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     		if (!get_line(s, sizeof(s), FALSE))
     		    stsTest = 0;
     		
-    		if(strcmp(s,"0") == 0)
+    		if(strcmp(s,"x") == 0)
     		{		
     	        
     	        printf("bye bye!!\n");
@@ -841,11 +841,12 @@ static short TestCOM_cmd(short argc, char *argv[])
     		else if(strcmp(s,"1") == 0)
     		{		
     	        printf("AVVIO TEST FLASH 5555/AAAA\n");
-    	        tstflash_vel();
+//    	        tstflash_vel();
     	    }
     		else if (strcmp(s,"2") == 0)
     		{		
     	        printf("Test FLASH\n");
+//    	        testflash();
     	        tstflash();
 
     	    }
@@ -878,7 +879,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    }
     	    else if (strcmp(s,"9") == 0)
     	    {
-                prn_report();
+                //prn_report();
             }
             else
                 stsTest = 0;
@@ -1813,7 +1814,7 @@ PI_TASK(application_task, STRT_APPLICATION_TASK_ID, STRT_APPLICATION_TASK_PRIO)
 //	unsigned long new_station_id;	/* station id requested by redundancy control */
 
     ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
-
+//    testflash_init();
 	hw_watchdog_service();//addomestica il cane
 
 	if (station_id == GTWM_ST_ID || station_id == GTWS_ST_ID) {

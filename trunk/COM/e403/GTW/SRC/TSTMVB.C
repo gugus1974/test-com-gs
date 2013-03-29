@@ -1948,35 +1948,6 @@ unsigned char test_SW1 (void)
 	*regimr1 = 0xFFFF;
 	*regivr0 = 0;
 	*regivr1 = 0;
-     st_DA_PITptr = (unsigned int  *)(st_DA_PIT + 0x000E*2);
-	*st_DA_PITptr = 0x0001;						/* utilizza il DA port n°1 per il proprio device add.*/
-
-     st_DA_PITptr = (unsigned int  *)(st_DA_PIT + 0x000D*2);
-	*st_DA_PITptr = 0x0002;						/* utilizza il DA port n°2 per il device add. della stim*/
- 
-     st_DA_PCSptr = (unsigned int  *)(st_DA_PCS + (0x0001<<3));
-    *st_DA_PCSptr = 0xF420;		/* FC=15, sink port, no check seq., no write always, DTI1, no queue, no num data, no forcing data*/
-
-	*(st_DA_PCSptr + 1) = 0x0000;
-      st_DA_PCSptr1 = (unsigned int  *)(st_DA_PCS + (0x0002<<3));
-  
-     *st_DA_PCSptr1 = 0xF440;		/* FC=15, sink port, no check seq., no write always, DTI2, no queue, no num data, no forcing data*/
-	*(st_DA_PCSptr1 + 1) = 0x0000;
-
-	vp = 0;
-	st_DA_DATA0ptr =  (unsigned int  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
-	st_DA_DATA0ptr1 =  (unsigned int  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
-
-	vp = 1;
-	st_DA_DATA1ptr =  (unsigned int  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
-	st_DA_DATA1ptr1 =  (unsigned int  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
-
-	FC15_PCSptr = (unsigned int  *)st_FC15_PCS; 
-	FC15_DATAptr = (unsigned int  *)st_FC15_DATA0;
-
-    *FC15_PCSptr = 0xF860;		/* FC=15, source port, no check seq., no write always, DTI3, no queue, no num data, no forcing data*/
-	*(FC15_PCSptr + 1) = 0x0000;
-    *FC15_DATAptr = 0xAAAA;
 
    	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
 
