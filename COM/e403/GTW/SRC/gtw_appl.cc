@@ -40,6 +40,7 @@ extern "C" {
 #include "tcn_mon.h"
 #include "tstflash.h"
 #include "tstmvb.h"
+#include "tsteprom.h"
 
 }
 
@@ -511,6 +512,110 @@ static void mvb_ba_led(int status)
 	set_led_mba(status);
 }
 
+/*---------------------------------------------------------------------------------------------*/
+/* TESTCOM*/
+static short TestCOM_cmd(short argc, char *argv[])
+{
+    static unsigned char stsTest=0;
+    static unsigned char exit=0;
+    char s[32];
+    
+    do
+    {
+        switch (stsTest)
+        {
+         /* Stampa menu */
+         default:
+         case 0 :
+            printf("\n******* TEST COM v1.0 ********\n");       
+            printf("    1 - test FLASH 5555/AAAA\n");       
+            printf("    2 - test FLASH 0-shifting\n");       
+            printf("    3 - test EEPROM\n");       
+            printf("    4 - test IO digitali\n");       
+            printf("    5 - test SW1 MVB \n");       
+            printf("    6 - test MVB Traffic Memory\n");       
+            printf("    7 - test TX/RX MVB\n");       
+            printf("    8 - test LED\n");       
+            printf("    9 - test REPORT\n");       
+            printf("    x - EXIT\n");       
+            stsTest = 1;/*attesa della scelta*/
+            break;
+            
+         case 1 :
+    		if (!get_line(s, sizeof(s), FALSE))
+    		    stsTest = 0;
+    		
+    		if(strcmp(s,"x") == 0)
+    		{		
+    	        
+    	        printf("bye bye!!\n");
+    	        exit= 1;
+    	    }
+    	    
+    		else if(strcmp(s,"10") == 0)
+    		{		
+    	        printf("AVVIO MVB INIT\n");
+    	        MVB_init();
+    	    }
+    		else if(strcmp(s,"1") == 0)
+    		{		
+    	        printf("AVVIO TEST FLASH 5555/AAAA\n");
+//    	        tstflash_vel();
+    	    }
+    		else if (strcmp(s,"2") == 0)
+    		{		
+    	        printf("Test FLASH\n");
+    	        tstflash();
+    	    }
+    		else if (strcmp(s,"3") == 0)
+    		{		
+    	        printf("Test EEPROM\n");
+    	        tstEEPROM();
+    	        save_stato
+    	    }
+    		else if (strcmp(s,"4") == 0)
+    		{		
+    	        printf("Test IO\n");
+    	    }
+    		else if (strcmp(s,"5") == 0)
+    		{		
+    	        printf("Test SW1\n");
+    	        test_SW1();
+    	    }
+    		else if (strcmp(s,"6") == 0)
+    		{		
+    	        printf("test MVB Traffic Memory\n");
+    	        test_mvb();
+    	    }
+    		else if (strcmp(s,"7") == 0)
+    		{		
+    	        printf("test TX/RX MVB\n");
+    	    }
+    	    else if (strcmp(s,"8") == 0)
+    	    {
+                printf("test LED\n");
+            }
+    	    else if (strcmp(s,"9") == 0)
+    	    {
+                printf("REPORT TEST\n");
+                prn_report();
+            }
+            else
+                stsTest = 0;
+            break;
+            
+           
+           case 10 :/*exit*/
+            break;
+           }
+       }
+       while (!exit);
+        
+       exit = 0;
+       stsTest=0;
+       return 0;
+}
+/*---------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------*/
 /* Determine the station ID */
@@ -621,6 +726,8 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 //	}
 
 //	return station_id = red_check();
+ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
+
 	return station_id = 0;
 }
 
@@ -793,109 +900,7 @@ void mvb_red_check(void)
 	check_hwo_sig(risout4);			\
 } while (0)
 */
-/*---------------------------------------------------------------------------------------------*/
-/* Main loop when GTWM */
-static short TestCOM_cmd(short argc, char *argv[])
-{
-    static unsigned char stsTest=0;
-    static unsigned char exit=0;
-    char s[32];
-    
-    do
-    {
-        switch (stsTest)
-        {
-         /* Stampa menu */
-         default:
-         case 0 :
-            printf("\n******* TEST COM v1.0 ********\n");       
-            printf("    1 - test FLASH 5555/AAAA\n");       
-            printf("    2 - test FLASH\n");       
-            printf("    3 - test IO digitali\n");       
-            printf("    4 - test MVBC\n");       
-            printf("    5 - test MVB Traffic Store\n");       
-            printf("    6 - test SW1 MVB \n");       
-            printf("    7 - test EEPROM\n");       
-            printf("    9 - test REPORT\n");       
-            printf("   10 - test MVB INIT\n");       
-            printf("    x - EXIT\n");       
-            stsTest = 1;/*attesa della scelta*/
-            break;
-            
-         case 1 :
-    		if (!get_line(s, sizeof(s), FALSE))
-    		    stsTest = 0;
-    		
-    		if(strcmp(s,"x") == 0)
-    		{		
-    	        
-    	        printf("bye bye!!\n");
-    	        exit= 1;
-    	    }
-    	    
-    		else if(strcmp(s,"10") == 0)
-    		{		
-    	        printf("AVVIO MVB INIT\n");
-    	        MVB_init();
-    	    }
-    		else if(strcmp(s,"1") == 0)
-    		{		
-    	        printf("AVVIO TEST FLASH 5555/AAAA\n");
-//    	        tstflash_vel();
-    	    }
-    		else if (strcmp(s,"2") == 0)
-    		{		
-    	        printf("Test FLASH\n");
-//    	        testflash();
-    	        tstflash();
 
-    	    }
-    		else if (strcmp(s,"3") == 0)
-    		{		
-    	        printf("Test IO\n");
-    	    
-    	    }
-    		else if (strcmp(s,"4") == 0)
-    		{		
-    	        printf("Test MVB\n");
-    	        test_mvb();
-    	    
-    	    }
-    		else if (strcmp(s,"5") == 0)
-    		{		
-    	        printf("Test TRAFFIC STORE\n");
-    	    
-    	    }
-    		else if (strcmp(s,"6") == 0)
-    		{		
-    	        printf("Test SW1\n");
-    	        test_SW1();
-    	    }
-            
-    		else if (strcmp(s,"7") == 0)
-    		{		
-    	        printf("Test EEPROM\n");
-    	    
-    	    }
-    	    else if (strcmp(s,"9") == 0)
-    	    {
-                //prn_report();
-            }
-            else
-                stsTest = 0;
-            break;
-            
-           
-           case 10 :/*exit*/
-            break;
-           }
-       }
-       while (!exit);
-        
-       exit = 0;
-       stsTest=0;
-       return 0;
-}
 /*---------------------------------------------------------------------------------------------*/
 /* Main loop when GTWM */
 
@@ -1813,9 +1818,9 @@ PI_TASK(application_task, STRT_APPLICATION_TASK_ID, STRT_APPLICATION_TASK_PRIO)
 	int			  wait_ticks;		/* ticks to wait for next execution           */
 //	unsigned long new_station_id;	/* station id requested by redundancy control */
 
-    ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
+//    ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
 //    testflash_init();
-	hw_watchdog_service();//addomestica il cane
+//	hw_watchdog_service();//addomestica il cane
 
 	if (station_id == GTWM_ST_ID || station_id == GTWS_ST_ID) {
 
