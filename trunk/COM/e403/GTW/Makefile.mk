@@ -77,6 +77,7 @@ OBJECTS = \
 	tstflash.obj \
 	tstmvb.obj \
 	tsteprom.obj \
+	tstio.obj \
 	strt_tcn.obj
 
 HEADERS = \
@@ -88,6 +89,7 @@ HEADERS = \
 	$(DIR_SRCS)\cod_st.h \
 	$(DIR_SRCS)\tstmvb.h \
 	$(DIR_SRCS)\tstflash.h \
+	$(DIR_SRCS)\tstio.h \
 	$(DIR_SRCS)\tsteprom.h
 
 #	$(DIR_SRCS)\shd_var.h \

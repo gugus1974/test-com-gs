@@ -304,7 +304,7 @@ static void hw_background(void)
 		if (shd_handler) (*shd_handler)();
 	}
 	last_port0 = new_port0;
-	
+
     led_user5(toggle & 0x02);
     toggle++;
 

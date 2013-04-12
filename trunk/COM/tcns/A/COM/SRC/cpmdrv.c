@@ -645,7 +645,7 @@ void cpm_sxc_pin_conf(int sxc, int pins)
 	volatile QUICC			  *q = quicc;
 
 	switch (sxc) {
-		case CPM_SMC1:
+		case CPM_SMC1://uart
 			if (pins & CPM_TX_PIN) q->pip_pbpar |= 1 << 6;
 			if (pins & CPM_RX_PIN) q->pip_pbpar |= 1 << 7;
 			break;

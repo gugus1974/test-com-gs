@@ -549,14 +549,12 @@ short _lc_m_config( unsigned short  ts_id,
         */
 
         ret_val   = lci_mvbc_init(ts_id); /* Hard Initialization */
-        printf("MVBC 1: %d\n",ret_val);
         
         /* Check if MCM is valid according to maximum available TM size */
 
         if ( ((unsigned short) mcm) > lci_tm_size_code[ts_id])
         {
             ret_val = LC_REJECT;
-        printf("MVBC 2: %d\n",ret_val);
         }
 
         if (ret_val == LC_OK)
