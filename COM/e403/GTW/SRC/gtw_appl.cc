@@ -41,6 +41,7 @@ extern "C" {
 #include "tstflash.h"
 #include "tstmvb.h"
 #include "tsteprom.h"
+#include "tstio.h"
 
 }
 
@@ -518,10 +519,14 @@ static short TestCOM_cmd(short argc, char *argv[])
 {
     static unsigned char stsTest=0;
     static unsigned char exit=0;
+    static unsigned char toggle=0;
     char s[32];
     
     do
     {
+        led_user5(toggle & 0x02);
+        toggle++;
+
         switch (stsTest)
         {
          /* Stampa menu */
@@ -537,6 +542,7 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    7 - test TX/RX MVB\n");       
             printf("    8 - test LED\n");       
             printf("    9 - test REPORT\n");       
+            printf("   10 - COPY RAM to ROM\n");       
             printf("    x - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
             break;
@@ -552,30 +558,31 @@ static short TestCOM_cmd(short argc, char *argv[])
     	        exit= 1;
     	    }
     	    
-    		else if(strcmp(s,"10") == 0)
-    		{		
+    		else if(strcmp(s,"11") == 0)
+            {		
     	        printf("AVVIO MVB INIT\n");
     	        MVB_init();
     	    }
     		else if(strcmp(s,"1") == 0)
     		{		
     	        printf("AVVIO TEST FLASH 5555/AAAA\n");
-//    	        tstflash_vel();
+    	        tstflash_vel();
     	    }
     		else if (strcmp(s,"2") == 0)
     		{		
     	        printf("Test FLASH\n");
-    	        tstflash();
+//    	        tstflash();
     	    }
     		else if (strcmp(s,"3") == 0)
     		{		
     	        printf("Test EEPROM\n");
     	        tstEEPROM();
-    	        save_stato
+    	        
     	    }
     		else if (strcmp(s,"4") == 0)
     		{		
     	        printf("Test IO\n");
+    	        tstio();
     	    }
     		else if (strcmp(s,"5") == 0)
     		{		
@@ -594,16 +601,21 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    else if (strcmp(s,"8") == 0)
     	    {
                 printf("test LED\n");
+                tstio_led();
             }
     	    else if (strcmp(s,"9") == 0)
     	    {
                 printf("REPORT TEST\n");
                 prn_report();
             }
+    	    else if (strcmp(s,"10") == 0)
+    	    {
+                printf("COPY RAM->ROM\n");
+	            if (!chip_erase() ) ram2flash ();
+            }
             else
                 stsTest = 0;
             break;
-            
            
            case 10 :/*exit*/
             break;
@@ -727,7 +739,11 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 
 //	return station_id = red_check();
 ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
+ushell_register("di", "", "Digital Inputs", di_cmd);
+ushell_register("do", "<ch> <0|1>", "Digital Onputs", do_cmd);
+ushell_register("w", "", "copy RAM to Flash", w_cmd);   
 
+ushell_exec("testcom\n");
 	return station_id = 0;
 }
 

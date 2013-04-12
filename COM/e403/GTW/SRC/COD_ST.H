@@ -21,14 +21,27 @@
 #define  TFLASCTERSCH2KO 	0x0022
 /* Test Flash forzata exit da sector erase */ 
 #define  TFLAFZEXITSCTERS 	0x0026
-/* Test Flash forzata exit da write-verify */ 
-#define  TFLAFZEXITWRVR 	0x002A
+/* Test Flash forzata exit da write-verify55*/
+#define  TFLAFZEXITWRVR55 	0x002A
+/* Test Flash forzata exit da write-verifyAA */ 
+#define  TFLAFZEXITWRVRAA 	0x002B
 /* Test Flash write-verify OK */ 
 #define  TFLAWRVROK 		0x0029
-/* Test Flash verify 1 KO */ 
-#define  TFLAVR1KO 		0x002E
+/* Test Flash verify FF KO */ 
+#define  TFLAFVRFFKO 		0x002E
+
+/* Test Flash write 55 KO */ 
+#define  TFLAFWR55KO 		0x002F
+/* Test Flash verify 55 KO */ 
+#define  TFLAFVR55KO 		0x0030
+/* Test Flash write AA KO */ 
+#define  TFLAFWRAAKO 		0x0031
+/* Test Flash verify AA KO */ 
+#define  TFLAFVRAAKO 		0x0032
+
+
 /* Test Flash verify 0 KO */ 
-#define  TFLAVR0KO 		0x0032
+#define  TFLAVR0KO 		0x0033
 /* Test SIO OK */ 
 #define  TSIOOK 		0x0201
 /* Test SIO KO */ 
