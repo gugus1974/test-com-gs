@@ -294,16 +294,16 @@ static void hw_background(void)
 	quicc->sim_swsr = 0xAA;
 
 	/* SHD monitoring */
-	if ((new_port0 ^ last_port0) & DIN0_SHD_) {
-		/* close or re-open the MVB connection */
-		set_mvb_connection(MVB_TS_ID, 0, shd_counter&1);
-		set_mvb_connection(MVB_TS_ID, 1, shd_counter&1);
-
-		/* signal the event to the application */
-		shd_counter++;
-		if (shd_handler) (*shd_handler)();
-	}
-	last_port0 = new_port0;
+//	if ((new_port0 ^ last_port0) & DIN0_SHD_) {
+//		/* close or re-open the MVB connection */
+//		set_mvb_connection(MVB_TS_ID, 0, shd_counter&1);
+//		set_mvb_connection(MVB_TS_ID, 1, shd_counter&1);
+//
+//		/* signal the event to the application */
+//		shd_counter++;
+//		if (shd_handler) (*shd_handler)();
+//	}
+//	last_port0 = new_port0;
 
     led_user5(toggle & 0x02);
     toggle++;
