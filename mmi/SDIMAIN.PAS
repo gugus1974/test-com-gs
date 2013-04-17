@@ -1121,18 +1121,20 @@ begin
     if (txtOperator.Text = '') then
     begin
         beep;
-        MessageDlg('Inserire il nome dell''operatore per proseguire',
-                   mtError,[mbOK],0);
+        // MessageDlg('Inserire il nome dell''operatore per proseguire',
+        //           mtError,[mbOK],0);
         txtOperator.SetFocus;
+        txtOperator.Text := 'test'
     end
     else
     begin
         if (txtBoardID.Text = '') then
         begin
             beep;
-            MessageDlg('Inserire un Identificativo scheda per proseguire',
-                       mtError,[mbOK],0);
+//            MessageDlg('Inserire un Identificativo scheda per proseguire',
+//                       mtError,[mbOK],0);
             txtBoardID.SetFocus;
+            txtBoardID.Text := 'COM01';
         end
         else
         begin

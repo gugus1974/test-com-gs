@@ -2,6 +2,7 @@ CAPTURE reset.res
 reset
 reset
 reset
+
 CAPTUREOFF
 ; Map the DPRAM @ $FFFF0000
 debugger_dfc 7
@@ -20,6 +21,14 @@ mm.l FFFF1050 00400001
 mm.l FFFF1054 3FF00002
 ; Program the SYPCR to disable the watchdog (to allow Flash burning)
 mm.b FFFF1022 4C
+
+mm.l 00000000 0000ffff 
+dump.l 00000000 00000000
+
+mm.l 00000000 ffff0000 
+dump.l 00000000 00000000
+
+
 ; Carica il programma per il test della RAM a 0, ne verifica il corretto
 ; caricamento, lo esegue e visualizza i risultati:
 ; All'indirizzo 50 c'e' il risultato del test: A5 = OK
