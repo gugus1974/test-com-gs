@@ -51,6 +51,7 @@
 #include "mac.h"
 #endif
 
+#include "lib_ver.h"
 
 /*==============================================================================================*/
 /* MVBC definitions */
@@ -129,6 +130,7 @@ extern  unsigned char zas_count;        /* Lifesign of ZAS (Counter)            
 /*----------------------------------------------------------------------------------------------*/
 extern const char application_version[];
 extern const char library_version[];
+const char library_version[]     = LIB_VER;
 static short version_dump(short argc, char *argv[])
 {
 	const NcTcnConf	*obj;		/* ptr to the object  */
@@ -737,8 +739,8 @@ static short bt_cmd(short argc, char *argv[])
 
 			/* check for redundancy errors */
 			new_dr = DR;
-			if ((dr & 8) != (new_dr & 8)) ls_counter++;
-			if (new_dr & 4) rld_counter++;
+			if ((dr & 8) != (new_dr & 8)) ls_counter++; //LAA toggle(mean line switching)
+			if (new_dr & 4) rld_counter++;              //Bad data or silence detected on observed line
 			DR = 0;
 			dr = new_dr;
 

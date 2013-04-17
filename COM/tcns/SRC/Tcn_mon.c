@@ -739,14 +739,15 @@ static short bt_cmd(short argc, char *argv[])
 
 			/* check for redundancy errors */
 			new_dr = DR;
-			if ((dr & 8) != (new_dr & 8)) ls_counter++;
-			if (new_dr & 4) rld_counter++;
+			if ((dr & 8) != (new_dr & 8)) ls_counter++; //LAA toggle(mean line switching)
+			if (new_dr & 4) rld_counter++;              //Bad data or silence detected on observed line
 			DR = 0;
 			dr = new_dr;
 
 			/* check for duplicated frames */
-			if (isr0 & TM_I0_DMF) dmf_counter++;
-			if (isr0 & TM_I0_DSF) dsf_counter++;
+			if (isr0 & TM_I0_DMF) dmf_counter++;    //two duplicate Master Frames have been received within Slave Frame reply time
+			if (isr0 & TM_I0_DSF) dsf_counter++;    //two duplicate Slave Frames have been received within the time a Slave Frame has been expected
+                                                    //within Slave Frame reply time
 
 			/* check for receive frame condition */
 			if ((isr0 & (TM_I0_SFC | TM_I0_EMF | TM_I0_ESF | TM_I0_RTI | TM_I0_BTI)) ||

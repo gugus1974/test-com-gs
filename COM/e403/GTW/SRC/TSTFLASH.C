@@ -1267,5 +1267,5 @@ void prn_report(void)
 short w_cmd(short argc, char *argv[])
 {
 		
-	if (!chip_erase() ) ram2flash ();
+	if (!chip_erase() ) hw_ram2rom ();
 }

@@ -145,7 +145,7 @@ void _lc_intr_hdlr_0_k(unsigned short ts_id)
         }
         else
         {
-            lcx_hamster_continue(ivr0);
+            //lcx_hamster_continue(ivr0);
             /* $H. IVR0=0x%03x occurred while not connected */
         }
         ivr0 = p_ir->ivr0.w;

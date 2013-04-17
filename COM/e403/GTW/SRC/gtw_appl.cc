@@ -534,7 +534,7 @@ static short TestCOM_cmd(short argc, char *argv[])
          case 0 :
             printf("\n******* TEST COM v1.0 ********\n");       
             printf("    1 - test FLASH 5555/AAAA\n");       
-            printf("    2 - test FLASH 0-shifting\n");       
+//            printf("    2 - test FLASH 0-shifting\n");       
             printf("    3 - test EEPROM\n");       
             printf("    4 - test IO digitali\n");       
             printf("    5 - test SW1 MVB \n");       
@@ -542,7 +542,7 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    7 - test TX/RX MVB\n");       
             printf("    8 - test LED\n");       
             printf("    9 - test REPORT\n");       
-            printf("   10 - COPY RAM to ROM\n");       
+//            printf("   10 - COPY RAM to ROM\n");       
             printf("    x - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
             break;
@@ -586,7 +586,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    }
     		else if (strcmp(s,"5") == 0)
     		{		
-    	        printf("Test SW1\n");
+    	        printf("Test SW1 %d\n");
     	        test_SW1();
     	    }
     		else if (strcmp(s,"6") == 0)
@@ -597,6 +597,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     		else if (strcmp(s,"7") == 0)
     		{		
     	        printf("test TX/RX MVB\n");
+    	        tstmvb_txrx();
     	    }
     	    else if (strcmp(s,"8") == 0)
     	    {
@@ -611,7 +612,8 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    else if (strcmp(s,"10") == 0)
     	    {
                 printf("COPY RAM->ROM\n");
-	            if (!chip_erase() ) ram2flash ();
+	             hw_ram2rom ();
+	            //hw_reset();
             }
             else
                 stsTest = 0;

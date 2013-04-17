@@ -295,7 +295,7 @@ PI_TASK(vrtx_strt, 0, STRT_BA_TASK_PRIO)
 error:
     strt_error(err, errl, errs);
 }
-
+/* MAIN called from S.O.*/
 void STRT_ROUTINE_NAME (void)
 {
     /* start our entry point as a task (we cannot do much now) */
@@ -361,7 +361,7 @@ static void strt(void)
     Check(lc_m_config(MVB_TS_ID, (void*)TM0_BASE, TM0_SIZE, TM0_QO, TM0_MO));
 
     /* install the interrupts captured by the MVBC */
-    Check(hw_install_lc_interrupts());
+//    Check(hw_install_lc_interrupts());
 
     /* get the station configuration id from the user or from the hw address */
     Check(lc_get_device_address(&address));
