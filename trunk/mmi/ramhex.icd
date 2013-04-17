@@ -26,11 +26,11 @@ moveq.l #$1F,D4         ;numero di shift del bit
 move.l	D2,(A0)         ;scrive il dato
 cmp.l   (A0),D2         ;lo rilegge
 beq     $0000002E       ;se uguale prosegue
-move.l	#$FF,$50        ;altrimenti: posiziona il risultato su FAIL
+move.l	(A0),$50        ;altrimenti: posiziona il risultato su FAIL
 move.l  A0,$54          ;            salva l'indirizzo fallito in D4
 bgnd                    ;            esce
 rol.l   #1,D2           ;shifta il dato
-dbf D4,$00000018        ;se non ha finito gli shift ripete
+dbf     D4,$00000018    ;se non ha finito gli shift ripete
 adda.l  #4,A0           ;altrimenti incrementa l'indirizzo
 cmpa.l  #200000,A0      ;controlla se ha finito la memoria
 bne     $00000016       ;se no continua

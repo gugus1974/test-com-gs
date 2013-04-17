@@ -46,5 +46,5 @@ loadv boot.het
 ; *****  ATTENDERE CARICAMENTO APPLICATIVO DI TEST IN CORSO...  *****
 loadv comtest.hex
 captureoff
-pc 100
+pc 110
 goexit
