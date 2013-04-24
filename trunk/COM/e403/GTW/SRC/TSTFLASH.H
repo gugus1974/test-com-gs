@@ -9,12 +9,12 @@
 
 void tstflash(void );
 
-void tstflash_vel(void );
+short tstflash_vel(short argc, char *argv[] );
 
 void save_stato (unsigned short stato);
 void prn_stato (unsigned int prg, unsigned int cod);
-void prn_report(void);
+short prn_report(short argc, char *argv[]);
 short w_cmd(short argc, char *argv[]);
 int chip_erase(void);
 void ram2flash (void );
-
+short prn_report(short argc, char *argv[]);

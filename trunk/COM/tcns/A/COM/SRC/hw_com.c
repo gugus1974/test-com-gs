@@ -413,6 +413,7 @@ void hw_ram2rom(void)
 	short	err;
 	int		i;
 
+
 	/* disable any interrupt source (just to be sure) */
 	asm(void, "	move.w	#$2700,SR");
 
