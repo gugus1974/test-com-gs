@@ -1764,7 +1764,7 @@ int t_mvbel (void)
 /**********************************************************/
 /* Funzione di test  del  mvb bus                         */
 /**********************************************************/
-unsigned char test_SW1 (void)
+short test_SW1 (short argc, char *argv[] )
 {   
     static unsigned char error=0;
     static unsigned char exit=0;
@@ -1909,7 +1909,7 @@ unsigned char test_SW1 (void)
 
 
 
-void tstmvb_txrx(void)
+short tstmvb_txrx(short argc, char *argv[] )
 {
     
     
@@ -1918,7 +1918,7 @@ void tstmvb_txrx(void)
 /**********************************************************/
 /* Funzione di test  del  mvb bus                         */
 /**********************************************************/
-void test_mvb (void)
+short test_mvb (short argc, char *argv[] )
 {
 	unsigned short data1,i,er;
 	char c;

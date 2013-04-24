@@ -10,5 +10,5 @@
 #include "hw_com.h"
 short di_cmd(short argc, char *argv[]);
 short do_cmd(short argc, char *argv[]);
-void tstio_led(void);
-void tstio(void);
+short tstio_led(short argc, char *argv[]);
+short tstio(short argc, char *argv[] );

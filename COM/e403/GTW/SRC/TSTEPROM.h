@@ -18,6 +18,6 @@
        
 
 
-unsigned char tstEEPROM(void );
+short tstEEPROM(short argc, char *argv[] );
 
 

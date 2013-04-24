@@ -4,7 +4,7 @@
 * Header per Routine per test del MVB BUS                                       *
 *********************************************************************************
 ********************************************************************************/
-void tstmvb_txrx(void);
-void test_mvb (void);
-void test_SW1 (void);
+short tstmvb_txrx(short argc, char *argv[] );
+short test_mvb (short argc, char *argv[] );
+short test_SW1 (short argc, char *argv[] );
 void MVB_init (void);

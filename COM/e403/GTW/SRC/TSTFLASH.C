@@ -7,13 +7,12 @@
 *********************************************************************************/
 
 #include <stdio.h>
-
 #include <string.h>
-//#include <shd_var.h>
 #include "cod_st.h"
 #include "atr_hw.h"
 #include "am29f040.h"
-//#pragma ot(3,SPEED)
+#include "hw_com.h"
+
 
 /* la flash viene vista come un array di interi */
 #define flash1 ((unsigned int  *)(0x402AAA))
@@ -24,9 +23,14 @@
 
 //#define flash2 ((unsigned int  *)(0x405554))
 
+//extern volatile QUICC *quicc;				/* pointer to the QUICC DP-RAM structure */
+//static volatile QUICC 	* q;
+
+
+
 void save_stato (unsigned short stato);
 void prn_stato (unsigned int prg, unsigned int cod);
-void prn_report(void);
+
 //void (*f_gest)(void);
 
 /* variabili per dimensione flash impostati ad 1 MB */
@@ -35,6 +39,10 @@ unsigned short  * sectlimit = (unsigned short  *)0x4FE000L;  /*  limite superior
 unsigned long sctdelta                     = 0x10000L;  /*  delta incremento indirizzi settore (unsigned int  *)0x010000; */
 unsigned long dimsct                       = 0xFFFE;  /*  dimensione settore settore (unsigned int  *)0x00FFFF; */
 unsigned short  * flashlimit =(unsigned short  *)0x48FFFE; /*  limite superiore indirizzi (unsigned int  *)0xBFFFFE; */
+
+
+
+
 
 static short am29f040_wait(void *base, long offset, short value)
 {
@@ -90,7 +98,7 @@ int chip_erase(void)
 	int er;
     char c;
 	er = 0;//azzera errore
-	printf("ERASE FLASH\r\n");
+	printf("ERASE FLASH...");
 	/***    procedura di start erase         ***/
     am29f040(sctstr, 0)       = 0xF0F0;//reset
     am29f040(sctstr, KEY1)    = 0xAAAA;//KEY1= 5555
@@ -160,7 +168,7 @@ int chip_erase(void)
     	//printf("%05d data=%04x\r\n",a,data3);
 	}
 	data3 = *flash1;
-	printf("\n RESET FLASH CHIP\n");
+//	printf("\n RESET FLASH CHIP\n");
 	*flash1 = 0xF0F0;
 
 	return er;
@@ -277,7 +285,7 @@ int chip_erasesect(unsigned short  * addr)
 	off = (unsigned int)(app & 0x00FFFF);
 	app = app >> 16;
 	seg = (unsigned int)(app & 0x0000FF);
-	printf("ERASING SECTOR #%d @%02x%04x\n",(app & 0x000007),seg,off);
+//	printf("ERASING SECTOR #%d @%02x%04x\n",(app & 0x000007),seg,off);
 	/***    procedura di start erase sector         ***/
 //    am29f040(sctstr, 0)       = 0xF0F0;
     am29f040(sctstr, KEY1)    = 0xAAAA;//5555
@@ -646,7 +654,7 @@ int wr_vrf_fast(unsigned short data)
 	char c;
     
     er=0;
-    printf("VERIFY BLANCK FLASH (FFFF)\n");
+//    printf("VERIFY BLANCK FLASH (FFFF)\n");
 	i=60000;
 //    offset = 0;
 	
@@ -885,7 +893,7 @@ int wr_vrf_fast(unsigned short data)
 /**********************************************************/
 /* Programma test della flash VELOCE 5555 AAAA            */
 /**********************************************************/
-void tstflash_vel (void )
+short tstflash_vel (short argc, char *argv[] )
 {
 	int error,error5555,errorAAAA,errorSECT,i;
 	unsigned int k,j,seg,off,exit;
@@ -914,9 +922,9 @@ void tstflash_vel (void )
 
     /* check the manufacture code and Am29F040 device code */
     if (am29f040(sctstr, 0) != 0x0101 || am29f040(sctstr, 1) != 0xA4A4)
-        printf("\nAM29F04O NOT detected\n");
+        printf("\nAM29F04O NON RICONOSCIUTA\n");
     else
-        printf("\nAM29F04O  detected\n");
+        printf("\nAM29F04O RICONOSCIUTA\n");
 
     /* reset to read mode and return */
     am29f040(sctstr, 0)       = 0xF0F0;
@@ -935,6 +943,7 @@ void tstflash_vel (void )
 	    
      	printf("TEST FLASH SCRITTURA 5555h\n");
 		error5555 = wr_vrf_fast(0x5555);
+
 	    if (error5555!=0) printf("\nwr_vrf (error %d)\n",error5555);
 		for(i=0;i<1000;i++);
 		//* test di ersa sectore: verifica che sia riuscita la cancellazione a settori , verificando che ogni locazione sia a FFFF*//
@@ -942,12 +951,11 @@ void tstflash_vel (void )
             printf("TEST SECTOR ERASING ...\n ");
 			for ( sectstart = sctstr; sectstart <= sectlimit; sectstart += sctdelta)
 			{
-//				printf("ERASING from @%06lX\n",sectstart);
 				if (!(errorSECT = chip_erasesect(sectstart)))
 				{
-				    printf("2 ERASED from @%06lX\n",sectstart);
+//				    printf("2 ERASED from @%06lX\n",sectstart);
 					sectend = sectstart + (dimsct/2);
-					printf("3 VERIFY ERASING SECTOR start @%06lX -> end @%06lX \n",sectstart,sectend);
+					printf(" VERIFY ERASING SECTOR start @%06lX -> end @%06lX \n",sectstart,sectend);
 					for ( sectaddr = sectstart; sectaddr <= sectend; sectaddr++)
 					{
 						k = 10000;
@@ -991,6 +999,11 @@ void tstflash_vel (void )
 	 	}
 	} 
 
+	error = chip_erase();
+	if(error) 
+	    printf("ERASE FAILED (error = %d)\n",error);
+	else
+	    printf("ERASE OK\n");
 	
 	
 	if (!error && !error5555 && !errorAAAA && !errorSECT){
@@ -1019,30 +1032,8 @@ void tstflash_vel (void )
         if (errorAAAA == 12)  prn_stato (0,TFLAFWRAAKO);
     }	
 	
-//		case 6://errore sector erase chip 1 KO
-//			prn_stato (0,TFLASCTERSCH1KO);
-//			break;
-//		case 7://errore sector erase chip 2 KO
-//			prn_stato (0,TFLASCTERSCH2KO);
-//			break;
-//		case 8://exit from sector erase by user
-//			prn_stato (0,TFLAFZEXITSCTERS);
-//			break;
-//		case 9://exit from write-verify
-////			if prn_stato (0,TFLAFZEXITWRVR55);
-//			break;
-//		case 10:
-////			prn_stato (0,TFLAVR1KO);
-//			break;
-//		case 11:
-//			prn_stato (0,TFLAPRGCH1KO);
-//			break;
-//		case 12:
-//			prn_stato (0,TFLAPRGCH2KO);
-//			break;
-//		case 13:
-//			prn_stato (0,TFLAVR0KO);
-//			break;
+
+    return error;
 }
 
 
@@ -1248,7 +1239,7 @@ void save_stato (unsigned short stato)
 	prn_stato(i,stato);
 }
 
-void prn_report(void)
+short prn_report(short argc, char *argv[])
 {
 	unsigned short i,dt,dat,data1;
 	unsigned short  * pt_flash;
@@ -1266,6 +1257,32 @@ void prn_report(void)
 
 short w_cmd(short argc, char *argv[])
 {
-		
-	if (!chip_erase() ) hw_ram2rom ();
+    int i;
+	argc=argc;
+	argv=argv;
+	
+	quicc->sim_sypcr = 0x4c; /* disable wd */
+    
+	// hw_ram2rom ();
+		/* write the memory contents to flash */
+	am29f040_chip_erase((void*)0x400000);
+    
+    for(i=0;i<50000;i++)
+    if( (i % 10000)==0) printf("w");
+        	
+	asm(void, "	move.w	#$2700,SR");
+	
+	for (i = 0; i < 64; i++) {
+		led_user1(i & 1);
+		led_user2(i & 2);
+		led_user3(i & 4);
+		led_user4(i & 8);
+		led_user5(i & 16);
+		led_user6(i & 32);
+		am29f040_write((void*)0x400000, i * (0x100000 / 64), (void*)(i * (0x100000 / 64)), 0x100000 / 64);
+	}
+    for(i=0;i<50000;i++)
+    if( (i % 10000)==0) printf("w");
+	hw_reset();
+ 
 }

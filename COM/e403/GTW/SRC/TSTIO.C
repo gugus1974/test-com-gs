@@ -551,7 +551,7 @@ void tstio_getDI()
     lettura_di[4] = 0;
 }
 
-void tstio_led()
+short tstio_led(short argc, char *argv[])
 {
     unsigned int i,j;    
     
@@ -707,7 +707,7 @@ short do_cmd(short argc, char *argv[])
 }
 
 
-void tstio()
+short tstio(short argc, char *argv[] )
 {
     static  unsigned short  lettura_di_prec[4];
     static  unsigned short  result[4];

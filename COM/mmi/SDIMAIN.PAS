@@ -25,6 +25,7 @@ type
     btnRiprova: TButton;
     ToolBar1: TPanel;
     btnStop: TButton;
+    Button1: TButton;
         procedure FileExit1Execute(Sender: TObject);
         procedure HelpAbout1Execute(Sender: TObject);
         procedure FormCreate(Sender: TObject);
@@ -41,6 +42,7 @@ type
     procedure btnRiprovaClick(Sender: TObject);
     procedure btnAnnullaClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
 
     private
 
@@ -103,7 +105,7 @@ const
 
 implementation
 
-uses about;
+uses about, consolle;
 
 {$R *.dfm}
 
@@ -1037,26 +1039,26 @@ begin
     testnames[i] := 'Memoria Flash';
     FLASHTestIndex := i;
     inc(i);
+    testnames[i] := 'Input/Output digitali';
+    IOTestIndex := i;
+    inc(i);
+    testnames[i] := 'Led';
+    LEDTestIndex := i;
+    inc(i);
     testnames[i] := 'Memoria EEProm';
     EEPROMTestIndex := i;
     inc(i);
     testnames[i] := 'Memoria MVB (TS)';
     TSTestIndex := i;
     inc(i);
-    testnames[i] := 'Input/Output digitali';
-    IOTestIndex := i;
+    testnames[i] := 'Commutatore SW1';
+    SW1TestIndex := i;
     inc(i);
     testnames[i] := 'TX/RX su bus MVB';
     MVBCTestIndex := i;
     inc(i);
     testnames[i] := 'Isolamento bus MVB';
     IsolTestIndex := i;
-    inc(i);
-    testnames[i] := 'Led';
-    LEDTestIndex := i;
-    inc(i);
-    testnames[i] := 'Commutatore SW1';
-    SW1TestIndex := i;
     inc(i);
 
     NamesMaxLen := 0;
@@ -1095,15 +1097,24 @@ begin
 
     Caption := 'COM Board Tester v.'+Version;
     Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+')';
+ 
     ClearTestList;
 
     ComPortDriver.BaudRateValue := 38400;
     ComPortDriver.PortName := COMPort;
 
+
     if (Not ComPortDriver.Connect) then
     begin
         MessageDlg('Impossibile aprire la porta seriale: '+COMPort,mtError,[mbOK],0);
         Application.Terminate;
+        ConsolleForm.StatusBar1.Panels[1].Text :=  'CLOSED';
+    end
+    else
+    begin
+        ConsolleForm.StatusBar1.Panels[0].Text :=  ComPortDriver.PortName;
+        ConsolleForm.StatusBar1.Panels[1].Text :=  'OPEN';
+        ConsolleForm.StatusBar1.Panels[2].Text := (INTtoSTR)ComPortDriver.BaudRateValue;
     end;
 
     (* Lancia icd32 per sbloccare il reset della scheda COM *)
@@ -1563,6 +1574,13 @@ procedure TSDIAppForm.btnStopClick(Sender: TObject);
 begin
     UserStopTest := True;
 end;
+
+procedure TSDIAppForm.Button1Click(Sender: TObject);
+begin
+  ConsolleForm.Show;
+  ConsolleForm.StatusBar1.Panels[0].Text :=  COMPort;
+
+  end;
 
 end.
 

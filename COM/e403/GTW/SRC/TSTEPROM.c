@@ -15,7 +15,7 @@ extern volatile QUICC	*quicc;				/* pointer to the QUICC DP-RAM structure */
 
 
 
-unsigned char tstEEPROM(void )
+short tstEEPROM(short argc, char *argv[] )
 {
     unsigned char status = 0;
     unsigned char buf[256];

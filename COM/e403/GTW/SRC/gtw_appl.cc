@@ -566,7 +566,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     		else if(strcmp(s,"1") == 0)
     		{		
     	        printf("AVVIO TEST FLASH 5555/AAAA\n");
-    	        tstflash_vel();
+    	        tstflash_vel(0,0);
     	    }
     		else if (strcmp(s,"2") == 0)
     		{		
@@ -576,38 +576,38 @@ static short TestCOM_cmd(short argc, char *argv[])
     		else if (strcmp(s,"3") == 0)
     		{		
     	        printf("Test EEPROM\n");
-    	        tstEEPROM();
+    	        tstEEPROM(0,0);
     	        
     	    }
     		else if (strcmp(s,"4") == 0)
     		{		
     	        printf("Test IO\n");
-    	        tstio();
+    	        tstio(0,0);
     	    }
     		else if (strcmp(s,"5") == 0)
     		{		
     	        printf("Test SW1 %d\n");
-    	        test_SW1();
+    	        test_SW1(0,0);
     	    }
     		else if (strcmp(s,"6") == 0)
     		{		
     	        printf("test MVB Traffic Memory\n");
-    	        test_mvb();
+    	        test_mvb(0,0);
     	    }
     		else if (strcmp(s,"7") == 0)
     		{		
-    	        printf("test TX/RX MVB\n");
-    	        tstmvb_txrx();
+ //   	        printf("test TX/RX MVB\n");
+ //   	        tstmvb_txrx(0,0);
     	    }
     	    else if (strcmp(s,"8") == 0)
     	    {
                 printf("test LED\n");
-                tstio_led();
+                tstio_led(0,0);
             }
     	    else if (strcmp(s,"9") == 0)
     	    {
                 printf("REPORT TEST\n");
-                prn_report();
+                prn_report(0,0);
             }
     	    else if (strcmp(s,"10") == 0)
     	    {
@@ -647,105 +647,22 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 	/* signal no fail */
 	set_fault(0);
 
-	/* read the board configuration */
-//	if (get_conf(&gtw_conf, 0)) log_event(conf_read_fail);
+    
+    ushell_register("tstCOM", "", "esegue il Test COM",             TestCOM_cmd);
+    ushell_register("tstFLASH", "", "esegue il Test FLASH",         tstflash_vel);
+    ushell_register("tstE2PROM", "", "esegue il Test EEPROM",       tstEEPROM);
+    ushell_register("tstIO", "", "esegue il Test IO",               tstio);
+    ushell_register("tstSW1", "", "esegue il test dello switch SW1",test_SW1);
+    ushell_register("tstLED", "", "esegue il test interfaccie MVB", tstio_led);
+    ushell_register("tstMVB", "", "esegue il test della TM MVB",     test_mvb);
+    ushell_register("rpt", "", "stampa report memorizzati in flash", prn_report);
+    
+    
+    ushell_register("di", "", "Digital Inputs",                     di_cmd);
+    ushell_register("do", "<ch> <0|1>", "Digital Onputs",           do_cmd);
+    ushell_register("w", "", "copy RAM to Flash",                   w_cmd);   
 
-	/* install the MVBD shutdown handler */
-//	shd_handler = mvbd_shd_report;
-
-	/* fix the vehicle number if required */
-//	if (gtw_conf.veh_serial[0] || gtw_conf.veh_serial[1] ||
-//		gtw_conf.veh_serial[2] || gtw_conf.veh_serial[3])
-//	{
-//		const void		*obj;		/* ptr to the object  */
-//		unsigned short	obj_size;	/* size of the object */
-//
-//		/* get the TCN root configuration object */
-//		if (nc_get_db_element(NC_TCN_CONF_OBJ_ID, &obj, &obj_size) || obj_size < sizeof(NcTcnConf)) {
-////			log_event(wrong_ncdb);
-//			return station_id = 0;
-//		}
-//
-//		/* patch the vehicle ID */
-//		((NcTcnConf*)obj)->vehicle_desc[42-1] |= gtw_conf.veh_serial[0];
-//		((NcTcnConf*)obj)->vehicle_desc[43-1] |= gtw_conf.veh_serial[1];
-//		((NcTcnConf*)obj)->vehicle_desc[44-1] |= gtw_conf.veh_serial[2];
-//		((NcTcnConf*)obj)->vehicle_desc[45-1] |= gtw_conf.veh_serial[3];
-//	}
-
-	/* configure the WTB driver */
-//	    comm_flag = get_comm();
-//        comm_flag = 1;
-//        mvbon_flag = get_mvbon();
-//    	mvbon_flag = 0;
-
-
-//	    if ((mvb_hw_address & 0xF) == 0xF) {
-//		    printf("\n+++ WARNING: MAU compatibility mode enabled +++\n");
-////		    d_configure(D_MODE_MAU_UNK, 1000000, D_LINE_A | D_LINE_B);
-//	    }
-//	    else
-//	    {
-////		    if (comm_flag) d_configure(D_MODE_MAU_ATR, 1000000, D_LINE_A | D_LINE_B);
-////		    else d_configure(D_MODE_MAU_ATR, 500000, D_LINE_A);
-//	    }
-
-	/* fix the PDM modes for TCN* */
-//	if (!comm_flag) pdm_set_node_mode_mask(0x00FF, 0x0100);
-//	else pdm_set_node_mode_mask(0x00FF, 0x0000);
-
-	/* check that the GTWM unit is correctly configured */
-//	if (nc_mvb_address(GTWM_ST_ID, 0) ||// nc_get_mvb_el(GTW_DSI_ID, 0, 0, 0, 0, 0, 0) ||
-//		nc_get_mvb_el(GTW_DSO_ID, 0, 0, 0, 0, 0, 0)) {
-//		log_event(wrong_ncdb);
-//		return station_id = 0;
-//	}
-
-	/* check if the GTWS unit is configured to be present */
-//	if ((nc_mvb_address(GTWS_ST_ID, 0) != NC_OK)|| gtw_conf.noRido)
-//	{
-//
-//		/* the GTWS unit is not configured; the redundancy is disabled */
-//		standby_status = GTW_STANDBY_ABSENT;
-////		return station_id = GTWM_ST_ID;
-//	}
-
-	/* check that the GTWS communication datasets are configured */
-	//if (nc_get_mvb_el(GTW_DSM_ID, 0, 0, 0, 0, 0, 0) || nc_get_mvb_el(GTW_DSS_ID, 0, 0, 0, 0, 0, 0)) {
-	//	log_event(wrong_ncdb);
-	//	return station_id = 0;
-	//}
-
-	/* look if we are the "A" unit */
-//	is_A_flag = get_uni1();
-
-	/* if the two boards are switched on at the same time, this waits FAULT if the other is slower */
-//	pi_wait(ms2tick(4000)); /*200*/
-
-	/* if the other node is not alive, we are the master */
-//	if (get_fault()) set_unim(1);
-//	else {
-//
-//		/* do we have do decide for first? */
-//		if (is_A_flag && !get_unim() && !get_unis()) {
-//
-//			/* choose if we want to be the GTWM */
-//			if (gtw_conf.was_gtwm) set_unis(1);
-//			else set_unim(1);
-//		}
-//
-//		/* wait for timeout or decision from the other gateway */
-//		tick = pi_ticks_elapsed() + ms2tick(4000); /*200*/
-//		while (!get_unim() && !get_unis() && tick > pi_ticks_elapsed());
-//	}
-
-//	return station_id = red_check();
-ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
-ushell_register("di", "", "Digital Inputs", di_cmd);
-ushell_register("do", "<ch> <0|1>", "Digital Onputs", do_cmd);
-ushell_register("w", "", "copy RAM to Flash", w_cmd);   
-
-ushell_exec("testcom\n");
+    ushell_exec("testCOM\n");
 	return station_id = 0;
 }
 
