@@ -1008,7 +1008,7 @@ short tstflash_vel (short argc, char *argv[] )
 	
 	if (!error && !error5555 && !errorAAAA && !errorSECT){
 		save_stato (TFLAWRVROK);
-		ram2flash ();
+//		ram2flash ();
 	}
     else
     { 

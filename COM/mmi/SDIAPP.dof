@@ -41,7 +41,7 @@ MaxStackSize=1048576
 ImageBase=4194304
 ExeDescription=
 [Directories]
-OutputDir=C:\swdel\testcom\exe
+OutputDir=C:\sw\mmi\exe
 UnitOutputDir=
 PackageDLLOutputDir=
 PackageDCPOutputDir=
@@ -89,6 +89,7 @@ Comments=
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [HistoryLists\hlOutputDirectorry]
-Count=2
-Item0=C:\swdel\testcom\exe
-Item1=C:\swdel\com\exe
+Count=3
+Item0=C:\sw\mmi\exe
+Item1=C:\swdel\testcom\exe
+Item2=C:\swdel\com\exe
