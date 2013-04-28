@@ -3,7 +3,7 @@ unit ABOUT;
 interface
 
 uses Windows, Classes, Graphics, Forms, Controls, StdCtrls,
-  Buttons, ExtCtrls;
+  Buttons, ExtCtrls, jpeg;
 
 type
   TAboutBox = class(TForm)
@@ -14,6 +14,9 @@ type
     Version: TLabel;
     Copyright: TLabel;
     Comments: TLabel;
+    Label1: TLabel;
+    Label2: TLabel;
+    procedure OKButtonClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -26,6 +29,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TAboutBox.OKButtonClick(Sender: TObject);
+begin
+AboutBox.Close;
+end;
 
 end.
  

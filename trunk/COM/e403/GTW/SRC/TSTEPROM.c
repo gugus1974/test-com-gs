@@ -58,7 +58,7 @@ short tstEEPROM(short argc, char *argv[] )
           	/*lettura del buffer*/
             for (j=0;j<32;j++){
                 if ((x25642_read((unsigned short)(j*256), vrfbuf, 256))==X25642_OK)
-                    printf("IC18 verify ...%d\n",j); 
+                    printf("IC18 verify ...%d\r",j); 
                 else{
                     error=TSTEPROM_RDKO;
                     printf("\nKO\n"); 
@@ -86,7 +86,7 @@ short tstEEPROM(short argc, char *argv[] )
     if (!error) 
         printf ("TEST OK\n");
     else
-        printf ("TEST KO ERROR %d\n",error);
+        printf ("TEST KO (%d)\n",error);
 
     return error;
 }

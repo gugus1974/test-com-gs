@@ -25,7 +25,6 @@ type
     btnRiprova: TButton;
     ToolBar1: TPanel;
     btnStop: TButton;
-    Button1: TButton;
         procedure FileExit1Execute(Sender: TObject);
         procedure HelpAbout1Execute(Sender: TObject);
         procedure FormCreate(Sender: TObject);
@@ -1027,6 +1026,9 @@ begin
     testnames[i] := 'Interfaccia BDM';
     BDMTestIndex := i;
     inc(i);
+    testnames[i] := 'Pilotaggio WE Memoria RAM';
+    RAMTestIndex := i;
+    inc(i);
     testnames[i] := 'Memoria RAM';
     RAMTestIndex := i;
     inc(i);
@@ -1098,7 +1100,7 @@ begin
     Caption := 'COM Board Tester v.'+Version;
     Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+')';
  
-    ClearTestList;
+    ClearTestList; //procedura che presetta il TMEMO1
 
     ComPortDriver.BaudRateValue := 38400;
     ComPortDriver.PortName := COMPort;
@@ -1108,13 +1110,13 @@ begin
     begin
         MessageDlg('Impossibile aprire la porta seriale: '+COMPort,mtError,[mbOK],0);
         Application.Terminate;
-        ConsolleForm.StatusBar1.Panels[1].Text :=  'CLOSED';
+        ConsolleForm.StatusBar1.Panels[1].Text := COMPort +' 38400 8N1 '+ 'CLOSED';
     end
     else
     begin
-        ConsolleForm.StatusBar1.Panels[0].Text :=  ComPortDriver.PortName;
-        ConsolleForm.StatusBar1.Panels[1].Text :=  'OPEN';
-        ConsolleForm.StatusBar1.Panels[2].Text := (INTtoSTR)ComPortDriver.BaudRateValue;
+//        ConsolleForm.StatusBar1.Panels[0].Text :=  ComPortDriver.PortName;
+//        ConsolleForm.StatusBar1.Panels[1].Text :=  'OPEN';
+//        ConsolleForm.StatusBar1.Panels[2].Text := IntToStr(ComPortDriver.BaudRateValue);
     end;
 
     (* Lancia icd32 per sbloccare il reset della scheda COM *)
@@ -1135,7 +1137,7 @@ begin
         // MessageDlg('Inserire il nome dell''operatore per proseguire',
         //           mtError,[mbOK],0);
         txtOperator.SetFocus;
-        txtOperator.Text := 'test'
+        txtOperator.Text := 'TESTER1'
     end
     else
     begin
@@ -1145,7 +1147,7 @@ begin
 //            MessageDlg('Inserire un Identificativo scheda per proseguire',
 //                       mtError,[mbOK],0);
             txtBoardID.SetFocus;
-            txtBoardID.Text := 'COM01';
+            txtBoardID.Text := 'COM-01';
         end
         else
         begin
@@ -1577,8 +1579,8 @@ end;
 
 procedure TSDIAppForm.Button1Click(Sender: TObject);
 begin
-  ConsolleForm.Show;
-  ConsolleForm.StatusBar1.Panels[0].Text :=  COMPort;
+//  ConsolleForm.Show;
+//  ConsolleForm.StatusBar1.Panels[0].Text :=  COMPort;
 
   end;
 
