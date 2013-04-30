@@ -522,6 +522,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     static unsigned char toggle=0;
     char s[32];
     
+    stsTest=0;
     do
     {
         led_user5(toggle & 0x02);
@@ -535,13 +536,13 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("\n******* TEST COM v1.0 ********\n");       
             printf("    1 - test FLASH 5555/AAAA\n");       
 //            printf("    2 - test FLASH 0-shifting\n");       
-            printf("    3 - test EEPROM\n");       
-            printf("    4 - test IO digitali\n");       
-            printf("    5 - test SW1 MVB \n");       
-            printf("    6 - test MVB Traffic Memory\n");       
-            printf("    7 - test TX/RX MVB\n");       
-            printf("    8 - test LED\n");       
-            printf("    9 - test REPORT\n");       
+            printf("    2 - test EEPROM\n");       
+            printf("    3 - test IO digitali\n");       
+            printf("    4 - test SW1 MVB \n");       
+            printf("    5 - test MVB Traffic Memory\n");       
+            printf("    6 - test TX/RX MVB\n");       
+            printf("    7 - test LED\n");       
+            printf("    8 - test REPORT\n");       
 //            printf("   10 - COPY RAM to ROM\n");       
             printf("    x - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
@@ -556,55 +557,56 @@ static short TestCOM_cmd(short argc, char *argv[])
     	        
     	        printf("bye bye!!\n");
     	        exit= 1;
+    	        break;
     	    }
     	    
     		else if(strcmp(s,"11") == 0)
             {		
-    	        printf("AVVIO MVB INIT\n");
-    	        MVB_init();
+//    	        printf("AVVIO MVB INIT\n");
+//    	        MVB_init();
     	    }
     		else if(strcmp(s,"1") == 0)
     		{		
     	        printf("AVVIO TEST FLASH 5555/AAAA\n");
     	        tstflash_vel(0,0);
     	    }
-    		else if (strcmp(s,"2") == 0)
-    		{		
-    	        printf("Test FLASH\n");
+//    		else if (strcmp(s,"2") == 0)
+//    		{		
+//    	        printf("Test FLASH\n");
 //    	        tstflash();
-    	    }
-    		else if (strcmp(s,"3") == 0)
+//    	    }
+    		else if (strcmp(s,"2") == 0)
     		{		
     	        printf("Test EEPROM\n");
     	        tstEEPROM(0,0);
     	        
     	    }
-    		else if (strcmp(s,"4") == 0)
+    		else if (strcmp(s,"3") == 0)
     		{		
     	        printf("Test IO\n");
     	        tstio(0,0);
     	    }
-    		else if (strcmp(s,"5") == 0)
+    		else if (strcmp(s,"4") == 0)
     		{		
     	        printf("Test SW1 %d\n");
     	        test_SW1(0,0);
     	    }
-    		else if (strcmp(s,"6") == 0)
+    		else if (strcmp(s,"5") == 0)
     		{		
     	        printf("test MVB Traffic Memory\n");
     	        test_mvb(0,0);
     	    }
-    		else if (strcmp(s,"7") == 0)
+    		else if (strcmp(s,"6") == 0)
     		{		
  //   	        printf("test TX/RX MVB\n");
  //   	        tstmvb_txrx(0,0);
     	    }
-    	    else if (strcmp(s,"8") == 0)
+    	    else if (strcmp(s,"7") == 0)
     	    {
                 printf("test LED\n");
                 tstio_led(0,0);
             }
-    	    else if (strcmp(s,"9") == 0)
+    	    else if (strcmp(s,"8") == 0)
     	    {
                 printf("REPORT TEST\n");
                 prn_report(0,0);
@@ -648,13 +650,14 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
 	set_fault(0);
 
     
-    ushell_register("tstCOM", "", "esegue il Test COM",             TestCOM_cmd);
-    ushell_register("tstFLASH", "", "esegue il Test FLASH",         tstflash_vel);
-    ushell_register("tstE2PROM", "", "esegue il Test EEPROM",       tstEEPROM);
-    ushell_register("tstIO", "", "esegue il Test IO",               tstio);
-    ushell_register("tstSW1", "", "esegue il test dello switch SW1",test_SW1);
-    ushell_register("tstLED", "", "esegue il test interfaccie MVB", tstio_led);
-    ushell_register("tstMVB", "", "esegue il test della TM MVB",     test_mvb);
+    ushell_register("tstcom", "", "esegue il Test COM",             TestCOM_cmd);
+    ushell_register("tstflash", "", "esegue il Test FLASH",         tstflash_vel);
+    ushell_register("tste2prom", "", "esegue il Test EEPROM",       tstEEPROM);
+    ushell_register("tstio", "", "esegue il Test IO",               tstio);
+    ushell_register("tstled", "", "esegue il test interfaccie MVB", tstio_led);
+    ushell_register("tstsw1", "", "esegue il test dello switch SW1",test_SW1);
+    ushell_register("tstmvb", "", "esegue il test della TM MVB",     test_mvb);
+    ushell_register("tstmtx", "", "esegue il test dell'interfaccia MVB",     tstmvb_txrx);
     ushell_register("rpt", "", "stampa report memorizzati in flash", prn_report);
     
     
@@ -662,7 +665,7 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
     ushell_register("do", "<ch> <0|1>", "Digital Onputs",           do_cmd);
     ushell_register("w", "", "copy RAM to Flash",                   w_cmd);   
 
-    ushell_exec("testCOM\n");
+    ushell_exec("tstcom\n");
 	return station_id = 0;
 }
 

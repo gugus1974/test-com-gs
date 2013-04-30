@@ -1936,7 +1936,7 @@ void test_mvb (void)
 	printf("********** TEST MVBC *************\r\n");
 
 	printf("Test del selettore d'indirizzo\r\n");
-	*regmcr1 = *regmcr1 & 0xFFF8;
+	*regmcr1 = *regmcr1 & 0xFFF8;   //SET MCM MODE 0
 	*regscr = *regscr | 0x0001;
 	er = 0;
 	data1 = *regdaor;
