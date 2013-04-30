@@ -1217,8 +1217,8 @@ void save_stato (unsigned short stato)
 	unsigned short  * pt_flash;
 		
 	i=0;
-	pt_flash = (unsigned short  *)(0x480000);
-	while ( ((dt = (*pt_flash)) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x48FFFE))){
+	pt_flash = (unsigned short  *)(0x4E0000);
+	while ( ((dt = (*pt_flash)) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x4EFFFE))){
 		pt_flash++;
 		i++;
 	}
@@ -1246,8 +1246,8 @@ short prn_report(short argc, char *argv[])
 		
 	printf("PROG.  COD.                    DESCRIZIONE DEL TEST                       ESITO\r\n");
 	i=0;
-	pt_flash = (unsigned short  *)(0x40F000);
-	while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x40FFFE))){
+	pt_flash = (unsigned short  *)(0x4E0000);
+	while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x4EFFFE))){
 		prn_stato(i,dt);
 		pt_flash++;
 		i++;

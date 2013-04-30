@@ -84,9 +84,9 @@ short tstEEPROM(short argc, char *argv[] )
     }    
         
     if (!error) 
-        printf ("TEST OK\n");
+        printf ("\nTEST OK\n");
     else
-        printf ("TEST KO (%d)\n",error);
+        printf ("\nTEST KO (%d)\n",error);
 
     return error;
 }

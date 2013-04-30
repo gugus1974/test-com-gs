@@ -356,7 +356,7 @@ int shf0(unsigned short  * startadd, unsigned short  * endadd)
 	unsigned long app; 
 	char c;
 
-	printf("TEST SHIFT DEGLI 1 TRA GLI 0 NEL DATO\n");
+	printf("TEST SHIFT DEGLI 1 TRA GLI 0 NEL DATO da @%06lX  a @%06lX \n",startadd,endadd);
 	er = 0;
 	i=0;
 	c = 0;
@@ -372,7 +372,7 @@ int shf0(unsigned short  * startadd, unsigned short  * endadd)
     		tim1 = 0;
     		vrf = ((data3 = *pt_ram)  != dt);
     		printf("@%06lX \r",pt_ram );
-            while(/* ((c=_getkey())  != '\r') &&  */vrf ) {
+            while( ((c=_getkey())  != '\r') &&  vrf ) {
                 er = 1;
                 if ( k == 10000)
                 {
@@ -380,7 +380,7 @@ int shf0(unsigned short  * startadd, unsigned short  * endadd)
                     off = (unsigned int)(app & 0x00FFFF);
                     app = app >> 16;
                     seg = (unsigned int)(app & 0x0000FF);
-                    printf("\KO!!! Ad Address %02x%04x atteso %04x letto %04x",seg,off,dt,data3);
+                    printf("KO!!! Ad Address %02x%04x atteso %04x letto %04x\r",seg,off,dt,data3);
                     k = 0;
                     tim1 = 1;
                 }
@@ -448,7 +448,7 @@ int shf1(unsigned short  * startadd, unsigned short  * endadd)
         			off = (unsigned int)(app & 0x00FFFF);
         			app = app >> 16;
         			seg = (unsigned int)(app & 0x0000FF);
-        			printf("\rKO!!! Ad Address %02x%04x atteso %04x letto %04x",seg,off,~dt,data3);
+        			printf("\rKO!!! Ad Address %02x%04x atteso %04x letto %04x\r",seg,off,~dt,data3);
         			k = 0;
         			tim1 = 1;
         		}
@@ -1924,8 +1924,21 @@ short test_SW1 (short argc, char *argv[] )
 
 short tstmvb_txrx(short argc, char *argv[] )
 {
-    
-    
+   char c;
+   short er;
+      printf("collegare le terminazioni MVB come da specifica e premere invio per proseguire\r\n");    
+	while ( (c=_getkey()) != '\r' );
+
+	if (!(er = t_mvbel())) {
+//			while ( _getkey() != '\r' );
+//			er = t_mvbel();
+	}
+
+	if (er) save_stato(TMVBBUSKO);
+	else save_stato(TMVBBUSOK);	
+
+  
+  return er;  
 }
 
 /**********************************************************/
@@ -1936,31 +1949,47 @@ short test_mvb (short argc, char *argv[] )
 	unsigned short data1,i,er;
 	char c;
 
-	printf("********** TEST MVBC *************\r\n");
+	printf("\nTEST Traffic Memory MVB\n");
 	printf("POSIZIONARE SW1 IN POSIZIONE 1 E PREMERE INVIO\r\n");
     while( (c=_getkey())  != '\r');
+
+	*regscr = 0x0000;
 
 	printf("VERIFICA selettore d'indirizzo IN POSIZ 1\r\n");
 	/* MCM IS 0 ->TM SIZE 16KB*/
 	*regmcr = *regmcr & 0xFFF8;// set MCM=000 
 	*regscr = *regscr | 0x8001;// set IL=01  configuration mode
+
+//	for (i = 0; i<10; i++);                 /* istruzione di attesa				*/
+//	*regscr = 0x8001;						/* predispone per l'inizializzazione dei reg.	*/
+//	for (i = 0; i<10; i++);					/* istruzione di attesa				*/
+//	*regdaok = 0x0049;						/* sovrascrive indirizzo hardware               */
+//	data1 = *regdaor;						/* legge il Device Address			*/ 
+//	*regdr = 0x0000;						/* consente lo switch tra le linee		*/
+//	*regimr0 = 0x0000;						/* abilita tutte le interrupt			*/
+//	*regimr1 = 0x0000;
+//	*regivr0 = 0;
 	
 	er = 0;
-	
+	*regdaok = 0x0049;
 	data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
 	if (data1 != 1){
 //	     save_stato(TMVBSELKO);
-	     printf("\n !! selezionare SW1 in posizione 1  %d\n",data1);
+	     printf("\n !! selezionare SW1 in posizione 1  (%x)\n",data1);
 	}
 	else 
     {
 //	     save_stato(TMVBSELOK);
     }
 
-	printf("Test Service Area in Traffic Memory (C0FC00H..C0FFFEH)\r\n");
+	printf("Test Service Area in Traffic Memory (C03C00H..C03FFEH)\r\n");
+
+	sasaddmvb1     = 0xC03C00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
+    saeaddmvb1     = 0xC03FFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
 
 	if (shf0(sasaddmvb1,saeaddmvb1)) save_stato(TMVBSASHF0KO);
 	else save_stato(TMVBSASHF0OK);	
+
 
 	if (shf1(sasaddmvb1,saeaddmvb1)) save_stato(TMVBSASHF1KO);
 	else save_stato(TMVBSASHF1OK);	
@@ -1989,17 +2018,6 @@ short test_mvb (short argc, char *argv[] )
 	else save_stato(TMVBTMMXRUMOK);	
 
 */
-    printf("collegare le terminazioni MVB come da specifica e premere invio per proseguire\r\n");    
-	while ( (c=_getkey()) != '\r' );
-
-	if (!(er = t_mvbel())) {
-//			while ( _getkey() != '\r' );
-//			er = t_mvbel();
-	}
-
-	if (er) save_stato(TMVBBUSKO);
-	else save_stato(TMVBBUSOK);	
-
     printf("TEST MVB terminato");
 }
 
