@@ -695,12 +695,12 @@ short do_cmd(short argc, char *argv[])
     	argv = argv;
         output[0] = get_out_port(0);
         output[1] = get_out_port(1);
-        printf("Digital Outputs\n");
-        for (i=0;i<32;i++)           
-            printf("OUT%d -[%-7s] -> %-7d\n",i,c_fetch_message(out1, i, ts, 0) ,((get_out_port(0) & (1<<i))!=0));        
-        ch33_48 = 0;
-        for (i=32;i<48;i++,ch33_48++)
-            printf("OUT%d -[%-7s] -> %-7d\n",i,c_fetch_message(out1, i, ts, 0),((get_out_port(1) & (1<<ch33_48))!=0));
+//        printf("Digital Outputs\n");
+//        for (i=0;i<32;i++)           
+//            printf("OUT%d -[%-7s] -> %-7d\n",i,c_fetch_message(out1, i, ts, 0) ,((get_out_port(0) & (1<<i))!=0));        
+//        ch33_48 = 0;
+//        for (i=32;i<48;i++,ch33_48++)
+//            printf("OUT%d -[%-7s] -> %-7d\n",i,c_fetch_message(out1, i, ts, 0),((get_out_port(1) & (1<<ch33_48))!=0));
     }
 
     return 0;
@@ -776,7 +776,7 @@ short tstio(short argc, char *argv[] )
 //    printf("\n      ");
 //    for (i = 1; i <= 54; i++) putchar('0' + (i % 10));
 //    printf("\n");
-    
+//    
         /*  TEST1 */
     for(i=1;i<55;i++)
     {
@@ -836,7 +836,7 @@ short tstio(short argc, char *argv[] )
                             ((i==4 || i==8) && posiz!=54)||
                             (i>8))
                          {
-//                            printf("!!! TEST 1 KO riga=%d -> letto 1 posiz=%d  (k,j,i)=(%d,%d,%d)\n",i,posiz,k,j,i);
+                            printf("!!! TEST 1  riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \n",i,posiz);
                             err[i] = 1; //error
                             break;
                          }
@@ -875,7 +875,7 @@ short tstio(short argc, char *argv[] )
            for(k = 0; k <= 15; k++){
                 posiz = k+(j*16)+1;
                 if (lettura_di[j] & (1<<k)){
-//                    printf("!!! TEST 0 KO riga=%d -> letto 1 posiz=%d  (k,j,i)=(%d,%d,%d)\n",i,posiz,k,j,i);
+                    printf("!!! TEST 0 riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \n",i,posiz);
                     err[i] = 2; //error
                     break;
                 }
@@ -902,20 +902,20 @@ short tstio(short argc, char *argv[] )
     for(i=1;i<54;i++)
     {
         if (err[i]==1){
-            printf("KO test 1 line %d %s \n",i,c_fetch_message(testio, i, ts, 0));
+ //           printf("KO test 1 line %d %s \n",i,c_fetch_message(testio, i, ts, 0));
             test_ret= 1;//non superato
         }
         else if (err[i]==2){
-            printf("KO test 0 line %d %s \n",i,c_fetch_message(testio, i, ts, 0));
+ //           printf("KO test 0 line %d %s \n",i,c_fetch_message(testio, i, ts, 0));
             test_ret= 1;//non superato
         }
     }
 
 
     if(test_ret)
-         printf("TEST IO KO\n");
+        printf("TEST IO FALLITO\n");
     else    
-        printf("TEST IO OK\n");
+        printf("TEST IO SUPERATO\n");
 
  	/* ripristino la configurazione delle porte*/
 // 	q->pio_papar = bkpA_C[0];	

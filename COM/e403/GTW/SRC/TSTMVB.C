@@ -1775,36 +1775,33 @@ short test_SW1 (short argc, char *argv[] )
     
     unsigned short i,vp;
     
-    printf("TEST SW1\n");
+    
     exit = 0;
 
-	*regscr1 = 0x0000; 						/* reset software				*/
 	*regscr = 0x0000;
+	*regscr1 = 0x0000;
 	for (i = 0; i<10; i++);                 /* istruzione di attesa				*/
 	*regscr = 0x8001;						/* predispone per l'inizializzazione dei reg.	*/
-	*regmcr = funmode;						/* setta size della TM				*/
 	for (i = 0; i<10; i++);					/* istruzione di attesa				*/
-
-	*regdaor1 = 0x000D;
-	data1 = *regdaor1;						/* legge il Device Address			*/ 
-	
+	*regdaok = 0x0049;						/* sovrascrive indirizzo hardware               */
+	data1 = *regdaor;						/* legge il Device Address			*/ 
 	*regdr = 0x0000;						/* consente lo switch tra le linee		*/
-	printf ( "DR = %04x DA=%04x\r\n",*regdr,data1);
-	
-	*regdaok = 0x0094;						/* sovrascrive indirizzo hardware               */
-	
-	data1 = *regdaor1;						/* legge il Device Address			*/ 
-	printf ( "DA=%04x\r\n",data1);
 	*regimr0 = 0xFFFF;						/* abilita tutte le interrupt			*/
 	*regimr1 = 0xFFFF;
 	*regivr0 = 0;
 	*regivr1 = 0;
+//   	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
+	*regscr = 0x8503;						/* abilito in full mode l'mvb	*/
 
-   	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
+    if ((argc==2)&& (strcmp(argv[1],"get")==0))
+    {
+        	*regdaok = 0x0049;						/* sovrascrive indirizzo hardware               */
+            data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+            printf("SW1 %x\r",data1);    
+            return 0;    
+    }
 
-	*regscr1 = 0x8503;						/* abilito in full mode l'mvb	*/
-
-
+    printf("TEST SW1\n");
     while (!exit){
         if ((c=_getkey())  == '\t') exit= 1;
   		
@@ -1816,11 +1813,11 @@ short test_SW1 (short argc, char *argv[] )
                 while ((c=_getkey())  != '\r')
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
-                    printf("daor %4X\r",*regdaor);    
+                    printf("SW1 %x\r",data1);    
                 }
         	    if (data1 == 1){
         	        sts_testsw1 = 1;
-        	        printf("OK\n");
+        	        printf("\n");
         	    }
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
@@ -1828,14 +1825,18 @@ short test_SW1 (short argc, char *argv[] )
         	    }
                 break;
             case 1://premi invio verificare 2
-                printf("step 2: Posizionare SW1 su 2 e premere INVIO ");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'));
-                if (c=='x') 
-                    sts_testsw1 = 5;
-                data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                printf("step 2: Posizionare SW1 su 2 e premere INVIO\n");
+                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                {
+                    data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                    printf("SW1 %x\r",data1);    
+                }
+
+                if (c=='x') sts_testsw1 = 5;
+                    
         	    if (data1 == 2){
         	        sts_testsw1 = 2;
-        	        printf("OK\n");
+        	        printf("\n");
         	    }
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
@@ -1843,14 +1844,18 @@ short test_SW1 (short argc, char *argv[] )
         	    }
                 break;
             case 2://premi invio verificare 4
-                printf("step 3: Posizionare SW1 su 4 e premere INVIO ");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'));
+                printf("step 3: Posizionare SW1 su 4 e premere INVIO\n");
+                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                {
+                    data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                    printf("SW1 %x\r",data1);    
+                }
+
                 if (c=='x') 
                     sts_testsw1 = 5;
-                data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
         	    if (data1 == 4){
         	        sts_testsw1 = 3;
-        	        printf("OK\n");
+        	        printf("\n");
         	    }
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
@@ -1858,14 +1863,18 @@ short test_SW1 (short argc, char *argv[] )
         	    }
                 break;
             case 3://premi invio verificare 8
-                printf("step 4: Posizionare SW1 su 8 e premere INVIO ");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'));
-                if (c=='x') 
-                    sts_testsw1 = 5;
-                data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                printf("step 4: Posizionare SW1 su 8 e premere INVIO\n");
+                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                {
+                    data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                    printf("SW1 %x\r",data1);    
+                }
+
+                if (c=='x') sts_testsw1 = 5;
+
         	    if (data1 == 8){
         	        sts_testsw1 = 4;
-        	        printf("OK\n");
+        	        printf("\n");
         	    }
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
@@ -1873,14 +1882,18 @@ short test_SW1 (short argc, char *argv[] )
         	    }
                 break;
             case 4://premi invio verificare 0
-                printf("step 5: Posizionare SW1 su 0 e premere INVIO ");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'));
-                if (c=='x') 
-                    sts_testsw1 = 5;
-                data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                printf("step 5: Posizionare SW1 su 0 e premere INVIO\n");
+                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                {
+                    data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+                    printf("SW1 %x\r",data1);    
+                }
+
+                if (c=='x') sts_testsw1 = 5;
+                    
         	    if (data1 == 0){
         	        sts_testsw1 = 5;
-        	        printf("OK\n");
+        	        printf("\nTEST SW1 OK\n");
         	    }
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
@@ -1893,7 +1906,7 @@ short test_SW1 (short argc, char *argv[] )
                     sts_testsw1=0;
                 break;
             case 10://stampa errore
-                printf("ERROR riletto %04X\n",data1);
+                printf("ERROR riletto %x\n",data1);
                 sts_testsw1 = old_sts_testsw1;//ritorna al test precedente
                 error = old_sts_testsw1;
                 break;
