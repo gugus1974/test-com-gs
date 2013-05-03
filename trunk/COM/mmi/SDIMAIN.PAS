@@ -25,6 +25,7 @@ type
     btnRiprova: TButton;
     ToolBar1: TPanel;
     btnStop: TButton;
+    ConsoRichEdit: TRichEdit;
         procedure FileExit1Execute(Sender: TObject);
         procedure HelpAbout1Execute(Sender: TObject);
         procedure FormCreate(Sender: TObject);
@@ -51,6 +52,7 @@ type
         function  ScanFile(FileName: TFileName; Str: String): Boolean;
         procedure DisplayTestStatus(TestIndex: Integer; TestStatus: Integer; Descr: String);
         function  CheckResultFile(FileName: TFileName): Boolean;
+        function  CheckResultFileNew(FileName: TFileName; out ErrorStr: String ): Boolean;
         procedure ClearTestList;
         function  TestReset: Boolean;
         function  TestClock: Boolean;
@@ -211,6 +213,42 @@ begin
     CheckResultFile := RetVal;
 end;
 
+(* Controlla che nel file non siano presenti i messaggi di errore, restituisce FALSE se ne trova *)
+function TSDIAppForm.CheckResultFileNew(FileName: TFileName; out ErrorStr: String ): Boolean;
+var
+    RetVal: Boolean;
+    RetScan: Boolean;
+    i: Integer;
+(*
+const
+    errorstr: Array [1..5] of string =
+    ('BERR',
+     'error',
+     'Aborted',
+     'WARNING - No power on ICD cable',
+     'Can not enter background mode');
+*)
+begin
+    ErrorStr :='';
+    RetVal := true;
+    if (fileexists(FileName)) then
+    begin
+        for i := 1 to length(errorstr) do
+        begin
+            RetScan := ScanFile(FileName,errorstr[i]);
+            if (RetScan)
+                 then ErrorStr := errorstr[i];
+            RetVal := RetVal and not RetScan;
+
+        end;
+    end
+    else
+    begin
+        RetVal := false;
+    end;
+    CheckResultFileNew := RetVal;
+end;
+
 function TSDIAppForm.TestCommand(cmd,pass,fail: string; timeout: integer): Boolean;
 var
     resstr: string;
@@ -220,6 +258,8 @@ var
     Passed: boolean;
     Failed: boolean;
     cntTimeOut : Integer;
+   Datasize : Integer;
+    p: pchar;
 
 begin
     resstr := '';
@@ -235,7 +275,53 @@ begin
     begin
         ComPortDriver.ReadData(DataPtr,180);
         SetString(s,DataPtr,strlen(DataPtr));
+        Datasize := strlen(DataPtr);
+
         resstr := resstr+s;
+
+        // now for the Ascii reception
+        While ConsoRichEdit.Lines.Count > 1000 Do ConsoRichEdit.Lines.Delete(0);//azzera la lista
+
+        // Get current line
+        If ConsoRichEdit.Lines.Count = 0 Then ConsoRichEdit.Lines.Add('');
+
+        if ConsoRichEdit.Lines.Count <> 0 then
+                s := ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1]
+        else
+                s := '';
+        // Parse incoming text
+        p := DataPtr;
+
+        while Datasize > 0 do
+        begin
+        case p^ of
+        #10:; // LF
+        #13: // CR - cursor to next line
+                begin
+                if ConsoRichEdit.Lines.Count <> 0 then
+                        ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
+                else
+                        ConsoRichEdit.Lines.Add( s );
+                ConsoRichEdit.Lines.Add('');
+                s := '';
+                end;
+        #8: // Backspace - delete last char
+                delete( s, length(s), 1 );
+                else // Any other char - add it to the current line
+                s := s + p^;
+                end;
+        dec( DataSize );
+        inc( p );
+        end;
+        // If current line isn't empty
+        if (s<>'') then
+        if ConsoRichEdit.Lines.Count <> 0 then
+                // Update current line
+                ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
+        else
+                // New line - add it
+                ConsoRichEdit.Lines.Add( s );
+        ConsoRichEdit.Update;
 
         (* Cerca l'esito positivo *)
         Passed := (pos(pass,resstr) > 0);
@@ -406,12 +492,16 @@ begin
 end;
 
 function TSDIAppForm.TestBDM: Boolean;
+var
+        TestBDMError : String;
 begin
     (* Controlla cle il file RESET.RES esista e non contenga errori *)
-    if (CheckResultFile('RESET.RES') or (BDMPort='NONE')) then
+//    if (CheckResultFile('RESET.RES') or (BDMPort='NONE')) then
+    if (CheckResultFileNew('RESET.RES', TestBDMError) or (BDMPort='NONE')) then
     begin
         DisplayTestStatus(BDMTestIndex,1,'');
         TestBDM := True;
+
     end
     else
     begin
@@ -422,16 +512,80 @@ begin
 end;
 
 function TSDIAppForm.TestRam: Boolean;
+var
+        testWE0: boolean;
+        testWE1: boolean;
+        testWE2: boolean;
+        testWE3: boolean;
+        bt:      Word;
+
 begin
     (* Controlla che il file TESTRAM.RES esista, non contenga errori, e contenga l'esito positivo del test *)
+    if (CheckResultFile('TRAM_WE0.RES') and ScanFile('TRAM_WE0.RES','00000000 00000000')
+                                         and ScanFile('TRAM_WE0.RES','00000000 55000000')
+                                         and ScanFile('TRAM_WE0.RES','00000000 AA000000'))  then
+    begin
+        testWE0 := True;
+        lblMessage.Caption := 'test WE0 OK'+#13;
+    end
+    else
+    begin
+        testWE0 := False;
+        lblMessage.Caption := 'ERRORE test WE0'+#13;
+    end;
+
+    if (CheckResultFile('TRAM_WE1.RES') and ScanFile('TRAM_WE1.RES','00000000 00000000')
+                                         and ScanFile('TRAM_WE1.RES','00000000 00AA0000')
+                                         and ScanFile('TRAM_WE1.RES','00000000 00550000'))  then
+    begin
+        testWE1 := True;
+        lblMessage.Caption := 'test WE1 OK'+#13;
+    end
+    else
+    begin
+        testWE1 := False;
+        lblMessage.Caption := 'ERRORE test WE1'+#13;
+    end;
+
+    if (CheckResultFile('TRAM_WE2.RES') and ScanFile('TRAM_WE2.RES','00000000 00000000')
+                                         and ScanFile('TRAM_WE2.RES','00000000 0000AA00')
+                                         and ScanFile('TRAM_WE2.RES','00000000 00005500'))  then
+   begin
+        testWE2 := True;
+        lblMessage.Caption := 'test WE2 OK'+#13;
+    end
+    else
+    begin
+        testWE2 := False;
+        lblMessage.Caption := 'ERRORE test WE2'+#13;
+    end;
+
+
+    if (CheckResultFile('TRAM_WE3.RES') and ScanFile('TRAM_WE3.RES','00000000 00000000')
+                                         and ScanFile('TRAM_WE3.RES','00000000 000000AA')
+                                         and ScanFile('TRAM_WE3.RES','00000000 00000055'))  then
+   begin
+        testWE2 := True;
+        lblMessage.Caption := 'test WE3 OK'+#13;
+    end
+    else
+    begin
+        testWE2 := False;
+        lblMessage.Caption := 'ERRORE test WE3'+#13;
+    end;
+
+
     if ((CheckResultFile('TESTRAM.RES') and ScanFile('TESTRAM.RES','00000050 000000A5'))
         or (BDMPort='NONE')) then
     begin
         DisplayTestStatus(RAMTestIndex,1,'');
+        if (testWE0 and testWE1 and testWE2 and testWE3) then
+        TestRAM := True
+        else
         TestRAM := True;
     end
     else
-    begin
+    begin  //test fallito
         DisplayTestStatus(RAMTestIndex,0,'');
         TestRAM := False;
         Beep;
@@ -507,11 +661,12 @@ begin
         (*******************************************)
         (* Invia il comando per resettare la flash *)
         (*******************************************)
-        DisplayTestStatus(FLASHTestIndex,-1, 'CANCELLAZIONE');
+//        DisplayTestStatus(FLASHTestIndex,-1, 'CANCELLAZIONE');
 
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('resflash','FLASHERASEOK','ERROR',10);
+            Passed := TestCommand('tstFLASH','FLASHERASEOK','ERROR',10);
+//            Passed := TestCommand('resflash','FLASHERASEOK','ERROR',10);
         end
         else
         begin
@@ -1025,9 +1180,6 @@ begin
     inc(i);
     testnames[i] := 'Interfaccia BDM';
     BDMTestIndex := i;
-    inc(i);
-    testnames[i] := 'Pilotaggio WE Memoria RAM';
-    RAMTestIndex := i;
     inc(i);
     testnames[i] := 'Memoria RAM';
     RAMTestIndex := i;

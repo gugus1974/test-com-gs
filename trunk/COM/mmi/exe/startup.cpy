@@ -28,7 +28,7 @@ debugger_sfc 5
 ; *****  ATTENDERE CARICAMENTO APPLICATIVO DI TEST IN CORSO...  *****
 
 loadv boot.het
-loadv comtest.hex
+loadv testcom.hex
 
 pc 110
 
