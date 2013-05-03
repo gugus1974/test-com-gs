@@ -995,6 +995,271 @@ int maxrum_mvb(unsigned int xhuge * startadd, unsigned int xhuge * endadd)
 /**********************************************************/
 int t_mvbel (void)
 {
+	unsigned short data1,i,er,vp;
+	unsigned long j;
+	char c;
+	unsigned short  off,seg,p2val,fcval,ecval,isr0val,isr1val;
+	unsigned long   app; 
+	unsigned short  * st_DA_PITptr;
+	unsigned short  * st_DA_PCSptr;
+	unsigned short  * st_DA_DATA0ptr;
+	unsigned short  * st_DA_DATA1ptr;
+	unsigned short  * st_DA_PCSptr1;
+	unsigned short  * st_DA_DATA0ptr1;
+	unsigned short  * st_DA_DATA1ptr1;
+	unsigned short  * FC15_PCSptr;
+	unsigned short  * FC15_DATAptr;
+
+	er = 0;
+
+	*regscr1 = 0x0000; 						/* reset software funmode 4*/
+	*regscr = 0x0000;                       /* reset software funmode 0*/
+
+	for (i = 0; i<20; i++);					/* istruzione di attesa				*/
+	
+	*regscr = 0x0409;						/* Motorola Mode,Config Mode, TMO43.7us, MAS=1	,*/
+	*regmcr = funmode;						/* write MCM 4				*/
+	
+	/* read MVBC type*/
+	if ((*regmcr & 0xF800) == 0x0000)       printf("MVBC01 detected\n");
+	else if ((*regmcr & 0xF800) == 0x1000)  printf("MVBC02A detected\n");
+	else if ((*regmcr & 0xF800) == 0x1800)  printf("MVBC02B detected\n");
+	else if ((*regmcr & 0xF800) == 0x2000)  printf("MVBC02C detected\n");
+	    
+	/* DA ORA MCM = 4*/
+	for (i = 0; i<20; i++);								/* istruzione di attesa				*/
+	
+	/* azzera la LA port index table così tutti i LA port puntano al port 0 */
+    for (st_DA_PITptr=(unsigned short  *) st_LA_PIT; st_DA_PITptr<=(unsigned short  *) end_LA_PIT; 
+        st_DA_PITptr++) *st_DA_PITptr = 0;	
+	
+	/* azzera tutti gli LA PCS per disattivare tutti gli LA port  */
+    for (st_DA_PITptr=(unsigned short  *) st_LA_PCS; st_DA_PITptr<=(unsigned short  *) end_LA_PCS; 
+        st_DA_PITptr++) *st_DA_PITptr = 0;	
+	
+	/* azzera la DA port index table così tutti i DA port puntano al port 0 */
+    for (st_DA_PITptr=(unsigned short  *) st_DA_PIT; st_DA_PITptr<=(unsigned short  *) end_DA_PIT; 
+        st_DA_PITptr++) *st_DA_PITptr = 0;	
+	
+	/* azzera tutti i DA PCS per disattivare tutti i DA port  */
+    for (st_DA_PITptr=(unsigned short  *) st_DA_PCS; st_DA_PITptr<=(unsigned short  *) end_DA_PCS; 
+        st_DA_PITptr++) *st_DA_PITptr = 0;	
+	
+	data1 = *regdaor1;						/* legge il Device Address			*/ 
+	*regdr = 0x0009;						/* LAA=1 SLM=1 blocca lo switch tra le linee LAA=1 SLM=1		*/
+	
+	printf ( "DR = %04x DA=%04x\n",*regdr,data1);  
+	
+	*regdaor1 = 0x0001;                     /* sovrascrive Device address con 0x0001*/
+	*regdaok = 0x0094;						/* 94 sovrascrive indirizzo hardware            */
+	                                        /* 49 disabilita override indirizzo hardware    */
+	data1 = *regdaor1;						/* legge il Device Address			            */ 
+	printf ( "DA=%04x\n",data1);
+	*regimr0 = 0xFFFF;						/* abilita tutte le interrupt			*/
+	*regimr1 = 0xFFFF;
+	*regivr0 = 0;
+	*regivr1 = 0;
+//    
+//    st_DA_PITptr = (unsigned short  *)(st_DA_PIT + data1*2);
+//	*st_DA_PITptr = 0x0001; /* utilizza il DA port index 1 per il proprio device add.*/
+//    
+//    st_DA_PCSptr = (unsigned short  *)(st_DA_PCS + (0x0001<<3));
+//    *st_DA_PCSptr = 0xF820;		/* FC=15, src port, no check seq., no write always, DTI1 abilitato, no queue, no num data, no forcing data*/
+//	*(st_DA_PCSptr + 1) = 0x0000;
+//
+//
+//    st_DA_PITptr = (unsigned short  *)(st_DA_PIT + 0x000D*2);
+//	*st_DA_PITptr = 0x0002;						/* utilizza il DA port n°2 per il device add. della stim*/
+//    
+//    st_DA_PCSptr1 = (unsigned short  *)(st_DA_PCS + (0x0002<<3));
+//    *st_DA_PCSptr1 = 0xF440;		/* FC=15, sink port, no check seq., no write always, DTI2 abilitato, no queue, no num data, no forcing data*/
+//	*(st_DA_PCSptr1 + 1) = 0x0000;
+//	
+//	vp = 0;
+//	st_DA_DATA0ptr =  (unsigned short  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
+//	st_DA_DATA0ptr1 =  (unsigned short  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
+//	
+//	vp = 1;
+//	st_DA_DATA1ptr =  (unsigned short  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
+//	st_DA_DATA1ptr1 =  (unsigned short  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
+	
+	
+	/* Set TM for status report */
+	FC15_PCSptr = (unsigned short  *)st_FC15_PCS; 
+	
+	FC15_DATAptr = (unsigned short  *)st_FC15_DATA0;
+
+//    *FC15_PCSptr = 0xF860;		/* FC=15, source port, no check seq., no write always, DTI3, no queue, no num data, no forcing data*/
+    *FC15_PCSptr = 0xF802;		/* FC=15, source port, no check seq., no write always, DTI3, no queue, no num data, no forcing data*/
+
+	*(FC15_PCSptr + 1) = 0x0000;
+
+    *FC15_DATAptr = 0x0001;
+		
+	*regmfs =  0xF001;       /* master frame di richiesta proprio stato*/ 
+	printf("set MF %04xH",*regmfs); /*  */            
+	
+	*regmr = 0;                     /*  */
+
+	/* connect to the MVB line */
+	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
+
+	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
+                                            /* 	*/
+//    hw_watchdog_service();
+//	while  ((c=_getkey()) != '\r') {
+//    	hw_watchdog_service();
+//    	switch (c) {
+//    	case '1':
+//        	/* connect to the MVB line */
+//        	set_out_port(0, DOP0_KMA, DOP0_KMA);
+////    		 printf("line A connessa %c\n",c);	
+//    		 break;
+//    	case '2':
+//        	set_out_port(0, DOP0_KMA, 0);
+////    		 printf("%c line A disconnessa\n",c);	
+//    		 break;
+//    	case '3':
+//        	set_out_port(0, DOP0_KMB, DOP0_KMB);
+////    		 printf("%c line B connessa\n",c);	
+//    		 break;
+//    	case '4':
+//        	set_out_port(0, DOP0_KMB, 0);
+////    		 printf("%c line B disconnessa\n",c);	
+//    		 break;
+//    	}
+	//}
+
+	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
+
+    *regisr0=0;
+	*regivr0=0;
+	*regisr1=0;
+	*regivr1=0;
+	*regfc=0;
+	*regec=0;
+	*st_DA_DATA0ptr=0;
+	*(st_DA_DATA0ptr+1)=0;
+	*(st_DA_DATA0ptr+2)=0;
+	*(st_DA_DATA0ptr+3)=0;
+	*st_DA_DATA1ptr=0;
+	*(st_DA_DATA1ptr+1)=0;
+	*(st_DA_DATA1ptr+2)=0;
+	*(st_DA_DATA1ptr+3)=0;
+	*st_DA_DATA0ptr1=0;
+	*(st_DA_DATA0ptr1+1)=0;
+	*(st_DA_DATA0ptr1+2)=0;
+	*(st_DA_DATA0ptr1+3)=0;
+	*st_DA_DATA1ptr1=0;
+	*(st_DA_DATA1ptr1+1)=0;
+	*(st_DA_DATA1ptr1+2)=0;
+	*(st_DA_DATA1ptr1+3)=0;
+
+
+/* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
+	for (i = 0; i<20000; i++) ;					/* istruzione di attesa				*/
+	printf("test MVB LINE A - Premere invio dopo aver verificato la forma d'onda su  linea A\r\n");
+   	set_out_port(0, DOP0_KMA, DOP0_KMA);
+	for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
+	{
+		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
+		} 
+		if ( c == '\t') break; 
+        *FC15_DATAptr = *FC15_DATAptr + 1;
+		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+	
+	}
+	printf("\n");
+  	set_out_port(0, DOP0_KMA, 0);
+
+	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//GUGU	p2val = (P2 & 0x0600);
+	isr0val = *regisr0;     /* INT0 interrupts*/
+	isr1val = *regisr1;     /* INT1 interrupts*/
+	fcval = *regfc;         /* Frame Counter */
+	ecval = *regec;         /* Error Counter */
+    *regisr0=0;
+	*regivr0=0;
+	*regisr1=0;
+	*regivr1=0;
+	*regfc=0;
+	*regec=0;
+	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
+	{
+		printf("KO!!!!!!    ");
+		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+		er = 1;
+	}
+	*st_DA_DATA0ptr=0;
+	*(st_DA_DATA0ptr+1)=0;
+	*(st_DA_DATA0ptr+2)=0;
+	*(st_DA_DATA0ptr+3)=0;
+	*st_DA_DATA1ptr=0;
+	*(st_DA_DATA1ptr+1)=0;
+	*(st_DA_DATA1ptr+2)=0;
+	*(st_DA_DATA1ptr+3)=0;
+	*st_DA_DATA0ptr1=0;
+	*(st_DA_DATA0ptr1+1)=0;
+	*(st_DA_DATA0ptr1+2)=0;
+	*(st_DA_DATA0ptr1+3)=0;
+	*st_DA_DATA1ptr1=0;
+	*(st_DA_DATA1ptr1+1)=0;
+	*(st_DA_DATA1ptr1+2)=0;
+	*(st_DA_DATA1ptr1+3)=0;
+
+/* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
+	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+	printf("test MVB LINEA B e premere invio dopo aver verificato la  linea B\r\n");
+   	set_out_port(0, DOP0_KMB, DOP0_KMB);
+	for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
+	{
+		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
+		} 
+		if ( c == '\t') break; 
+        *FC15_DATAptr = *FC15_DATAptr + 1;
+		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+	
+	}
+	printf("\r\n");
+	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+
+	isr0val = *regisr0;     /* INT0 interrupts*/
+	isr1val = *regisr1;     /* INT1 interrupts*/
+	fcval = *regfc;         /* Frame Counter */
+	ecval = *regec;         /* Error Counter */
+    *regisr0=0;
+	*regivr0=0;
+	*regisr1=0;
+	*regivr1=0;
+	*regfc=0;
+	*regec=0;
+	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
+	{
+		printf("KO!!!!!!    ");
+		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+		er = 1;
+	}
+	*st_DA_DATA0ptr=0;
+	*(st_DA_DATA0ptr+1)=0;
+	*(st_DA_DATA0ptr+2)=0;
+	*(st_DA_DATA0ptr+3)=0;
+	*st_DA_DATA1ptr=0;
+	*(st_DA_DATA1ptr+1)=0;
+	*(st_DA_DATA1ptr+2)=0;
+	*(st_DA_DATA1ptr+3)=0;
+	*st_DA_DATA0ptr1=0;
+	*(st_DA_DATA0ptr1+1)=0;
+	*(st_DA_DATA0ptr1+2)=0;
+	*(st_DA_DATA0ptr1+3)=0;
+	*st_DA_DATA1ptr1=0;
+	*(st_DA_DATA1ptr1+1)=0;
+	*(st_DA_DATA1ptr1+2)=0;
+	*(st_DA_DATA1ptr1+3)=0;
+	return er;
+}
+
+int t_mvbel_new (void)
+{
 	unsigned int data1,i,er,vp;
 	unsigned long j;
 	char c;

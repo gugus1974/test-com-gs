@@ -1012,24 +1012,24 @@ short tstflash_vel (short argc, char *argv[] )
 	}
     else
     { 
-        if (error == 1)  prn_stato (0,TFLATOTERSCH1KO);
-        if (error == 2)  prn_stato (0,TFLATOTERSCH2KO);
-        if (error == 3)  prn_stato (0,TFLAFZEXITTOTERS);
+        if (error == 1)         save_stato (TFLATOTERSCH1KO);
+        if (error == 2)         save_stato (TFLATOTERSCH2KO);
+        if (error == 3)         save_stato (TFLAFZEXITTOTERS);
             
-        if (error5555 == 9)  prn_stato (0,TFLAFZEXITWRVR55);
-        if (error5555 == 10)  prn_stato (0,TFLAFVRFFKO);
-        if (error5555 == 11)  prn_stato (0,TFLAFWR55KO);
-        if (error5555 == 12)  prn_stato (0,TFLAFVR55KO);
+        if (error5555 == 9)     save_stato (TFLAFZEXITWRVR55);
+        if (error5555 == 10)    save_stato (TFLAFVRFFKO);
+        if (error5555 == 11)    save_stato (TFLAFWR55KO);
+        if (error5555 == 12)    save_stato (TFLAFVR55KO);
 
-        if (errorSECT == 6)  prn_stato (0,TFLASCTERSCH1KO);
-        if (errorSECT == 7)  prn_stato (0,TFLASCTERSCH2KO);
-        if (errorSECT == 8)  prn_stato (0,TFLAFZEXITSCTERS);
+        if (errorSECT == 6)     save_stato (TFLASCTERSCH1KO);
+        if (errorSECT == 7)     save_stato (TFLASCTERSCH2KO);
+        if (errorSECT == 8)     save_stato (TFLAFZEXITSCTERS);
 
  
-        if (errorAAAA == 9)  prn_stato (0,TFLAFZEXITWRVRAA);
-        if (errorAAAA == 10)  prn_stato (0,TFLAFVRFFKO);
-        if (errorAAAA == 11)  prn_stato (0,TFLAFWRAAKO);
-        if (errorAAAA == 12)  prn_stato (0,TFLAFWRAAKO);
+        if (errorAAAA == 9)     save_stato (TFLAFZEXITWRVRAA);
+        if (errorAAAA == 10)    save_stato (TFLAFVRFFKO);
+        if (errorAAAA == 11)    save_stato (TFLAFWRAAKO);
+        if (errorAAAA == 12)    save_stato (TFLAFWRAAKO);
     }	
 	
 
@@ -1041,6 +1041,18 @@ short tstflash_vel (short argc, char *argv[] )
 void prn_stato (unsigned int prg, unsigned int cod)
 {
 	switch (cod){
+		case TE2PROMOK:
+			printf("%04d  %04x  Test EEPROM.................................................   OK  ",prg,cod);
+			break;
+		case TE2PROMKO:
+			printf("%04d  %04x  Test EEPROM.................................................   KO  ",prg,cod);
+			break;
+		case TESTIOOK:
+			printf("%04d  %04x  Test IO.....................................................   OK  ",prg,cod);
+			break;
+		case TESTIOKO:
+			printf("%04d  %04x  Test IO.....................................................   KO  ",prg,cod);
+			break;
 		case TFLAFZEXITR2F:
 			printf("%04d  %04x  Test Flash forzata uscita durante copy RAM TO FLASH.........   KO  ",prg,cod);
 			break;

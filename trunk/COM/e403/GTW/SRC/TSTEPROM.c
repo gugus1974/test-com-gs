@@ -10,6 +10,8 @@
 #include "hw_com.h"
 #include "tsteprom.h"
 #include "x25642.h"
+#include "tstflash.h"
+#include "COD_ST.h"
 
 extern volatile QUICC	*quicc;				/* pointer to the QUICC DP-RAM structure */
 
@@ -83,10 +85,13 @@ short tstEEPROM(short argc, char *argv[] )
         printf("!!! errore PB17 = 0\n");
     }    
         
-    if (!error) 
+    if (!error) {
         printf ("\nTEST OK\n");
-    else
+        save_stato(TE2PROMOK);
+    }
+    else {
         printf ("\nTEST KO (%d)\n",error);
-
+        save_stato(TE2PROMKO);
+    }
     return error;
 }
