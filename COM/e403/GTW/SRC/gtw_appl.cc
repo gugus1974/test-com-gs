@@ -569,6 +569,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     		{		
     	        printf("AVVIO TEST FLASH 5555/AAAA\n");
     	        tstflash_vel(0,0);
+    	        stsTest = 0;
     	    }
 //    		else if (strcmp(s,"2") == 0)
 //    		{		
@@ -579,37 +580,43 @@ static short TestCOM_cmd(short argc, char *argv[])
     		{		
     	        printf("Test EEPROM\n");
     	        tstEEPROM(0,0);
+    	        stsTest = 0;
     	        
     	    }
     		else if (strcmp(s,"3") == 0)
     		{		
     	        printf("Test IO\n");
     	        tstio(0,0);
+    	        stsTest = 0;
     	    }
     		else if (strcmp(s,"4") == 0)
     		{		
     	        printf("Test SW1 %d\n");
     	        test_SW1(0,0);
+    	        stsTest = 0;
     	    }
     		else if (strcmp(s,"5") == 0)
     		{		
     	        printf("test MVB Traffic Memory\n");
     	        test_mvb(0,0);
+    	        stsTest = 0;
     	    }
     		else if (strcmp(s,"6") == 0)
     		{		
- //   	        printf("test TX/RX MVB\n");
- //   	        tstmvb_txrx(0,0);
+    	        printf("test TX/RX MVB\n");
+    	        tstmvb_txrx(0,0);
     	    }
     	    else if (strcmp(s,"7") == 0)
     	    {
                 printf("test LED\n");
                 tstio_led(0,0);
+                stsTest = 0;
             }
     	    else if (strcmp(s,"8") == 0)
     	    {
                 printf("REPORT TEST\n");
                 prn_report(0,0);
+                stsTest = 0;
             }
     	    else if (strcmp(s,"10") == 0)
     	    {

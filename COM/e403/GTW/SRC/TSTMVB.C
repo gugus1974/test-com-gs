@@ -86,31 +86,6 @@ unsigned short  * FC15_DATAptr;
 /**********************************************************/
 //static short bt_cmd(short argc, char *argv[])
 //{
-//	static unsigned short mf = 0xF001;		/* master frame to use for the test              */
-//	static unsigned short count = 10;		/* number of master frames to send               */
-//	static unsigned short isr0_dbg_mask = DFLT_ISR0_DBG_MASK;
-//	static unsigned short pcs1_dbg_mask = DFLT_PCS1_DBG_MASK;
-//
-//	unsigned short	isr0, isr1;				/* interrupt flags                               */
-//	unsigned short	msnk1, msnk2;
-//	unsigned short	dr, new_dr;				/* decoder register save and new values          */
-//	unsigned short	i, j, k;				/* generic indexes                               */
-//	char			f;						/* generic flag                                  */
-//
-//	unsigned short  save_msnk[4];			/* storage for the MSNK port PCS                 */
-//	unsigned short  save_scr;				/* storage for the SCR                           */
-//	unsigned short  save_imr0, save_imr1;	/* storage for IMR0, IMR1                        */
-//
-//	char            tx_line, rx_line;		/* MVB line selction storage                     */
-//	char			mvb_line = LC_MVB_LINE_CMD_SLA | LC_MVB_LINE_CMD_SLB; /* line to test    */
-//
-//	unsigned short	dmf_counter = 0;	/* duplicated master frame counter                   */
-//	unsigned short	dsf_counter = 0;	/* duplicated slave frame counter                    */
-//	unsigned short	ec_counter = 0;		/* error counter                                     */
-//	unsigned long	rld_counter = 0;	/* redundant line disturbed 0->1 transitions counter */
-//	unsigned long	ls_counter = 0;		/* line switch counter                               */
-//
-//	static unsigned short ix[MAX_IX];	/* storage for the results                           */
 //
 //	/* parse the arguments */
 //	i = 1;
@@ -372,7 +347,7 @@ int shf0(unsigned short  * startadd, unsigned short  * endadd)
     		tim1 = 0;
     		vrf = ((data3 = *pt_ram)  != dt);
     		printf("@%06lX \r",pt_ram );
-            while( ((c=_getkey())  != '\r') &&  vrf ) {
+            while( /*((c=_getkey())  != '\r') &&   vrf*/  ((data3 = *pt_ram)  != dt) ) {
                 er = 1;
                 if ( k == 10000)
                 {
@@ -441,7 +416,7 @@ int shf1(unsigned short  * startadd, unsigned short  * endadd)
             
             vrf = ((data3 = *pt_ram)  != (unsigned short)(~dt));
             printf("@%06lX \r",pt_ram );
-            while(/*((c=_getkey())  != '\r') && */ vrf ) {
+            while(/*((c=_getkey())  != '\r') &&  vrf*/  ((data3 = *pt_ram)  != (unsigned short)(~dt)) ) {
 		        er = 1;
 		        if ( k == 10000) {	   
 			        app = (unsigned long) pt_ram;
@@ -1463,7 +1438,7 @@ void MVB_init(void)
 	*regivr0=0;
 	*regisr1=0;
 	*regivr1=0;
-	
+ 	
 	*regfc=0;
 	*regec=0;
 	
@@ -1555,29 +1530,6 @@ int t_mvbel (void)
 	*regimr1 = 0xFFFF;
 	*regivr0 = 0;
 	*regivr1 = 0;
-//    
-//    st_DA_PITptr = (unsigned short  *)(st_DA_PIT + data1*2);
-//	*st_DA_PITptr = 0x0001; /* utilizza il DA port index 1 per il proprio device add.*/
-//    
-//    st_DA_PCSptr = (unsigned short  *)(st_DA_PCS + (0x0001<<3));
-//    *st_DA_PCSptr = 0xF820;		/* FC=15, src port, no check seq., no write always, DTI1 abilitato, no queue, no num data, no forcing data*/
-//	*(st_DA_PCSptr + 1) = 0x0000;
-//
-//
-//    st_DA_PITptr = (unsigned short  *)(st_DA_PIT + 0x000D*2);
-//	*st_DA_PITptr = 0x0002;						/* utilizza il DA port n°2 per il device add. della stim*/
-//    
-//    st_DA_PCSptr1 = (unsigned short  *)(st_DA_PCS + (0x0002<<3));
-//    *st_DA_PCSptr1 = 0xF440;		/* FC=15, sink port, no check seq., no write always, DTI2 abilitato, no queue, no num data, no forcing data*/
-//	*(st_DA_PCSptr1 + 1) = 0x0000;
-//	
-//	vp = 0;
-//	st_DA_DATA0ptr =  (unsigned short  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
-//	st_DA_DATA0ptr1 =  (unsigned short  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
-//	
-//	vp = 1;
-//	st_DA_DATA1ptr =  (unsigned short  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
-//	st_DA_DATA1ptr1 =  (unsigned short  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
 	
 	
 	/* Set TM for status report */
@@ -1593,7 +1545,7 @@ int t_mvbel (void)
     *FC15_DATAptr = 0x0001;
 		
 	*regmfs =  0xF001;       /* master frame di richiesta proprio stato*/ 
-	printf("set MF %04xH",*regmfs); /*  */            
+	printf("set MF %04xH\n",*regmfs); /*  */            
 	
 	*regmr = 0;                     /*  */
 
@@ -1602,29 +1554,6 @@ int t_mvbel (void)
 
 	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
                                             /* 	*/
-//    hw_watchdog_service();
-//	while  ((c=_getkey()) != '\r') {
-//    	hw_watchdog_service();
-//    	switch (c) {
-//    	case '1':
-//        	/* connect to the MVB line */
-//        	set_out_port(0, DOP0_KMA, DOP0_KMA);
-////    		 printf("line A connessa %c\n",c);	
-//    		 break;
-//    	case '2':
-//        	set_out_port(0, DOP0_KMA, 0);
-////    		 printf("%c line A disconnessa\n",c);	
-//    		 break;
-//    	case '3':
-//        	set_out_port(0, DOP0_KMB, DOP0_KMB);
-////    		 printf("%c line B connessa\n",c);	
-//    		 break;
-//    	case '4':
-//        	set_out_port(0, DOP0_KMB, 0);
-////    		 printf("%c line B disconnessa\n",c);	
-//    		 break;
-//    	}
-	//}
 
 	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
 
@@ -1654,22 +1583,20 @@ int t_mvbel (void)
 
 /* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
 	for (i = 0; i<20000; i++) ;					/* istruzione di attesa				*/
-	printf("test MVB LINE A - Premere invio dopo aver verificato la forma d'onda su  linea A\r\n");
+	printf("test TX MVB LINE A - Premere invio dopo aver verificato la forma d'onda su  linea A tra i pin 1 e 2\r\n");
    	set_out_port(0, DOP0_KMA, DOP0_KMA);
-	for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
+	for (off=0; (off != 0x1FFE || c != '\r'); off++)	/*while ( (c=_getkey())!= '\t')*/
 	{
-		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
+		while (((c=_getkey())!= '\r') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
 		} 
-		if ( c == '\t') break; 
+		if ( c == '\r') break; 
         *FC15_DATAptr = *FC15_DATAptr + 1;
 		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
 	
 	}
-	printf("\n");
-  	set_out_port(0, DOP0_KMA, 0);
 
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-//GUGU	p2val = (P2 & 0x0600);
+
 	isr0val = *regisr0;     /* INT0 interrupts*/
 	isr1val = *regisr1;     /* INT1 interrupts*/
 	fcval = *regfc;         /* Frame Counter */
@@ -1682,10 +1609,16 @@ int t_mvbel (void)
 	*regec=0;
 	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
 	{
-		printf("KO!!!!!!    ");
-		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+//		printf("KO!!!!!!    ");
+		printf("\nISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		er = 1;
 	}
+	
+	printf("\n");
+    printf("VERIFICARE INTERRUZIONE  MVB LINE A - Premere invio e verificare che la forma d'onda su  linea A tra i pin 1 e 2 sia assente\r\n");    
+    while ((c=_getkey())!= '\r');
+  	set_out_port(0, DOP0_KMA, 0);
+
 	*st_DA_DATA0ptr=0;
 	*(st_DA_DATA0ptr+1)=0;
 	*(st_DA_DATA0ptr+2)=0;
@@ -1705,13 +1638,13 @@ int t_mvbel (void)
 
 /* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
 	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	printf("test MVB LINEA B e premere invio dopo aver verificato la  linea B\r\n");
+	printf("test MVB LINEA B e premere invio dopo aver verificato la forma d'onda sulla linea B tra i pin 4 e 5\r\n");
    	set_out_port(0, DOP0_KMB, DOP0_KMB);
-	for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
+	for (off=0; (off != 0x1FFE || c != '\r'); off++)	/*while ( (c=_getkey())!= '\t')*/
 	{
-		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
+		while (((c=_getkey())!= '\r') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
 		} 
-		if ( c == '\t') break; 
+		if ( c == '\r') break; 
         *FC15_DATAptr = *FC15_DATAptr + 1;
 		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
 	
@@ -1731,10 +1664,17 @@ int t_mvbel (void)
 	*regec=0;
 	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
 	{
-		printf("KO!!!!!!    ");
-		printf("ISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+//		printf("KO!!!!!!    ");
+		printf("\nISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
 		er = 1;
 	}
+	
+    printf("VERIFICARE INTERRUZIONE  MVB LINE A - Premere invio e verificare che la forma d'onda su  linea A tra i pin 1 e 2 sia assente\r\n");    
+    while ((c=_getkey())!= '\r');
+  	set_out_port(0, DOP0_KMB, 0);
+
+	
+	
 	*st_DA_DATA0ptr=0;
 	*(st_DA_DATA0ptr+1)=0;
 	*(st_DA_DATA0ptr+2)=0;
@@ -1753,6 +1693,8 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+3)=0;
 	return er;
 }
+
+
 
 
 
@@ -1894,6 +1836,7 @@ short test_SW1 (short argc, char *argv[] )
         	    if (data1 == 0){
         	        sts_testsw1 = 5;
         	        printf("\nTEST SW1 OK\n");
+        	        save_stato (TESTSW1OK);
         	    }
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
@@ -1924,10 +1867,35 @@ short test_SW1 (short argc, char *argv[] )
 
 short tstmvb_txrx(short argc, char *argv[] )
 {
-   char c;
-   short er;
-      printf("collegare le terminazioni MVB come da specifica e premere invio per proseguire\r\n");    
-	while ( (c=_getkey()) != '\r' );
+	unsigned short data1,i,er;
+    char c;
+  
+
+	printf("********** TEST MVBC *************\r\n");
+	printf("POSIZIONARE SW1 IN POSIZIONE 1 E PREMERE INVIO\r\n");
+    while( (c=_getkey())  != '\r');
+
+	printf("VERIFICA selettore d'indirizzo IN POSIZ 1\r\n");
+	/* MCM IS 0 ->TM SIZE 16KB*/
+	*regmcr = *regmcr & 0xFFF8;// set MCM=000 
+	*regscr = *regscr | 0x8001;// set IL=01  configuration mode
+	
+	er = 0;
+	
+	data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
+	if (data1 != 1){
+//	     save_stato(TMVBSELKO);
+	     printf("\n !! selezionare SW1 in posizione 1  %d\n",data1);
+	}
+	else 
+    {
+//	     save_stato(TMVBSELOK);
+    }
+    
+  	printf("Test della Traffic Memory 1MB MCM = 4\r\n");
+	*regmcr = *regmcr | funmode;
+    printf("collegare le terminazioni MVB come da specifica e premere invio per proseguire\r\n");    
+    while ( (c=_getkey()) != '\r' );
 
 	if (!(er = t_mvbel())) {
 //			while ( _getkey() != '\r' );
@@ -1938,7 +1906,7 @@ short tstmvb_txrx(short argc, char *argv[] )
 	else save_stato(TMVBBUSOK);	
 
   
-  return er;  
+    return er;  
 }
 
 /**********************************************************/

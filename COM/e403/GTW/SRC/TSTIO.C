@@ -11,6 +11,8 @@
 #include "hw_com.h"
 #include "c_utils.h"
 #include "strParse.h"
+#include "tstflash.h"
+#include "COD_ST.h"
 
 
 extern volatile QUICC	*quicc;				/* pointer to the QUICC DP-RAM structure */
@@ -912,11 +914,15 @@ short tstio(short argc, char *argv[] )
     }
 
 
-    if(test_ret)
+    if(test_ret){
         printf("TEST IO FALLITO\n");
-    else    
+        save_stato(TESTIOKO);
+    }
+    else
+        {    
         printf("TEST IO SUPERATO\n");
-
+        save_stato(TESTIOOK);
+    }
  	/* ripristino la configurazione delle porte*/
 // 	q->pio_papar = bkpA_C[0];	
 //	q->pio_padir = bkpA_C[1];

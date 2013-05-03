@@ -46,6 +46,23 @@
 #define  TSIOOK 		0x0201
 /* Test SIO KO */ 
 #define  TSIOKO 		0x0202
+
+/* Test EEPROM OK */ 
+#define  TE2PROMOK 		0x0203
+
+/* Test EEPROM KO */ 
+#define  TE2PROMKO 		0x0204
+
+/* Test IO OK */ 
+#define  TESTIOOK 		0x0300
+
+/* Test IO KO */ 
+#define  TESTIOKO 		0x0301
+/* Test MVB  SW1 OK */ 
+#define  TESTSW1OK 		0x0301
+
+
+
 /* Test ADC OK */ 
 #define  TADCOK 		0x0601
 /* Test ADC KO */ 
