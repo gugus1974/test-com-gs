@@ -1,5 +1,5 @@
 ;LOG RESET COMMNAD
-CAPTURE reset.log
+CAPTURE RESET.RES
 reset
 reset
 reset
@@ -29,9 +29,9 @@ mm.l FFFF1054 3FF00002
 ; Program the SYPCR to disable the watchdog (to allow Flash burning)
 mm.b FFFF1022 4C
 
-
-CAPTURE pretestram.log
 ;************************************
+
+CAPTURE TRAM_WE0.RES
 ;verifica /WE0
 ;test RAM bus D31..D24 IC6 con /WE0
 mm.l 	00000000 $00000000
@@ -45,15 +45,9 @@ dump.l  00000000 00000003
 mm.b 	00000000 $AA
 dump.l  00000000 00000003
 dump.l  00000000 00000003
+CAPTUREOFF
 
-;mm.b 	00000000 $00
-;dump.l  00000000 00000003
-;dump.l  00000000 00000003
-
-;mm.b 	00000000 $55
-;dump.l  00000000 00000003
-;dump.l  00000000 00000003
-
+CAPTURE TRAM_WE1.RES
 ;test RAM bus D23..D16 IC7 con /WE1
 mm.l 	00000000 $00000000
 dump.l  00000000 00000003
@@ -66,7 +60,9 @@ dump.l  00000000 00000003
 mm.b 	00000001 $55
 dump.l  00000000 00000003
 dump.l  00000000 00000003
+CAPTUREOFF
 
+CAPTURE TRAM_WE2.RES
  ;test RAM bus D15..D8 IC8 con /WE2
 mm.l 	00000000 $00000000
 dump.l  00000000 00000003
@@ -79,10 +75,10 @@ dump.l  00000000 00000003
 mm.b 	00000002 $55
 dump.l  00000000 00000003
 dump.l  00000000 00000003
+CAPTUREOFF
 
-
-
- ;test RAM bus D8..D0 IC9 con /WE3
+CAPTURE TRAM_WE3.RES
+;test RAM bus D8..D0 IC9 con /WE3
 mm.l 	00000000 $00000000
 dump.l  00000000 00000003
 dump.l  00000000 00000003
@@ -104,9 +100,6 @@ CAPTUREOFF
 
 CAPTURE testram.res
 loadv testram.hex
-
-
-.
 ;Esegue il TESTRAM 
 g 0
 
