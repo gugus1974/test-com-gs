@@ -556,8 +556,10 @@ void tstio_getDI()
 short tstio_led(short argc, char *argv[])
 {
     unsigned int i,j;    
+    char c;
     
-    printf("verifica LED\n");
+    
+    printf("Verificare accensione dei led secondo la segquenza 4A-4B-5A-5B-6A-6B\n");
     set_out_port(1,DOP1_LD6b_,DOP1_LD6b_);
     set_out_port(1,DOP1_LD6a_,DOP1_LD6a_);
     set_out_port(1,DOP1_LD5b_,DOP1_LD5b_);
@@ -636,8 +638,12 @@ short tstio_led(short argc, char *argv[])
     set_out_port(1,DOP1_LD4b_,DOP1_LD4b_);
     set_out_port(1,DOP1_LD4a_,DOP1_LD4a_);
    
+    printf("Premere 1 se la sequenza di accensione è corretta altrimenti premere 0\n");
+	        
+    while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') ){}
     
-
+    if (c == '1') save_stato(TESTLED_OK);
+    else          save_stato(TESTLED_KO);
 
 }
 

@@ -1317,7 +1317,7 @@ void MVB_init(void)
 	unsigned short data1,i,vp;
 	unsigned short  off,seg;
 	unsigned long app; 
-
+    
 
 
 	*regscr1 = 0x0000; 						/* reset software				*/
@@ -1469,6 +1469,9 @@ int t_mvbel (void)
 	unsigned short data1,i,er,vp;
 	unsigned long j;
 	char c;
+	static unsigned char   stato=0;
+	unsigned char   test_mvb_lineA,test_mvb_lineB;
+	unsigned char   test_mvb_lineAOFF,test_mvb_lineBOFF;
 	unsigned short  off,seg,p2val,fcval,ecval,isr0val,isr1val;
 	unsigned long   app; 
 	unsigned short  * st_DA_PITptr;
@@ -1519,7 +1522,7 @@ int t_mvbel (void)
 	data1 = *regdaor1;						/* legge il Device Address			*/ 
 	*regdr = 0x0009;						/* LAA=1 SLM=1 blocca lo switch tra le linee LAA=1 SLM=1		*/
 	
-	printf ( "DR = %04x DA=%04x\n",*regdr,data1);  
+//	printf ( "DR = %04x DA=%04x\n",*regdr,data1);  
 	
 	*regdaor1 = 0x0001;                     /* sovrascrive Device address con 0x0001*/
 	*regdaok = 0x0094;						/* 94 sovrascrive indirizzo hardware            */
@@ -1553,7 +1556,6 @@ int t_mvbel (void)
 	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
 
 	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
-                                            /* 	*/
 
 	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
 
@@ -1580,117 +1582,303 @@ int t_mvbel (void)
 	*(st_DA_DATA1ptr1+2)=0;
 	*(st_DA_DATA1ptr1+3)=0;
 
+    stato = 0;
+    test_mvb_lineA = 0;
+    test_mvb_lineAOFF = 0;
+    test_mvb_lineB = 0;
+    test_mvb_lineBOFF = 0;
+    
 
-/* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
 	for (i = 0; i<20000; i++) ;					/* istruzione di attesa				*/
-	printf("test TX MVB LINE A - Premere invio dopo aver verificato la forma d'onda su  linea A tra i pin 1 e 2\r\n");
-   	set_out_port(0, DOP0_KMA, DOP0_KMA);
-	for (off=0; (off != 0x1FFE || c != '\r'); off++)	/*while ( (c=_getkey())!= '\t')*/
+
+	while( stato != 10 )	
 	{
-		while (((c=_getkey())!= '\r') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
-		} 
-		if ( c == '\r') break; 
-        *FC15_DATAptr = *FC15_DATAptr + 1;
-		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+	    switch (stato)
+	    {
+	        default:
+	        case 0:// AVVIA TEST SU LINEA A
+            	printf("\n\nPROVA TRASMISSIONE CON RELÈ CHIUSI SULLA LINEA A:\n\n");
+            	printf("Verificare con un oscilloscopio che tra i pin 1 e 2 del connettore MVB1\n");
+            	printf("della scheda EMD sia presente un segnale di trasmissione seriale con   \n");
+            	printf("bit rate di 1 usec e ampiezza co mpresa tra 2 e 12 V p.p.\n\n");
+            	printf("Premere 1 se la forma d'onda sulla linea A tra i pin 1 e 2 è corretta altrimenti premere 0\n");
+               	set_out_port(0, DOP0_KMA, DOP0_KMA);
+	            stato = 1;
+	           break;
+	        
+	        case 1:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA A
+	            set_out_port(0, DOP0_KMA, DOP0_KMA);
+        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+        		{ 
+        		} 
+                *FC15_DATAptr = *FC15_DATAptr + 1;
+        		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+
+//                if (strcmp(c,"1")==0)  
+                if ( c == '1')  
+                {
+                    test_mvb_lineA = 1;//OK
+                    stato = 2;
+//                            save_stato(TESTMVB_LINE_A_OK);// Test TX MVB su LINEA  A OK
+                }
+//                else if (strcmp(c,"0")==0)  
+                else if ( c == '0')   
+                {
+                    test_mvb_lineA = 0;//KO
+                    stato = 2;
+//                            save_stato(TESTMVB_LINE_A_KO);// Test TX MVB su LINEA  A KO    
+                }
+                else 
+                    stato = 1;
+	           break;
+
+	        case 2://PROVA ISOLAMENTO LINEA A
+                printf("\n\nPROVA ISOLAMENTO LINEA A\n\n");    
+            	printf("Verificare con un oscilloscopio che tra i pin 1 e 2 dei connettori CN1 e CN2\n");
+            	printf("della scheda EMD non sia presente alcun segnale\n\n");
+                printf("\nPremere 1 se la trasmissione sulla linea A tra i pin 1 e 2 si interrompe altrimenti premere 0\n");    
+                stato = 3;
+	           break;
+
+	        case 3: //ATTENDE CARATTERE DI ESITO TEST SU LINEA A
+              	set_out_port(0, DOP0_KMA, 0);
+
+        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+        		{ 
+        		} 
+                *FC15_DATAptr = *FC15_DATAptr + 1;
+        		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+
+                if ( c == '1')  
+                {
+                    test_mvb_lineAOFF = 1;//OK
+                    stato = 4;
+//                  save_stato(TESTMVB_LINE_A_OFF_OK);// Test TX MVB su LINEA  A OK
+                }
+                else if ( c == '0')  
+                {
+                    test_mvb_lineAOFF = 0;//KO
+                    stato = 4;
+//                  save_stato(TESTMVB_LINE_A_OFF_KO);// Test TX MVB su LINEA  A KO    
+                }
+                else 
+                    stato = 3;
+
+	           break;
+
+	        case 4:// AVVIA TEST SU LINEA B
+	               
+            	printf("\n\nPROVA TRASMISSIONE CON RELÈ CHIUSI SULLA LINEA B:\n\n");
+            	printf("Verificare con un oscilloscopio che tra i pin 3 e 4 del connettore MVB1\n");
+            	printf("della scheda EMD sia presente un segnale di trasmissione seriale con   \n");
+            	printf("bit rate di 1 usec e ampiezza co mpresa tra 2 e 12 V p.p.\n\n");
+            	printf("\nPremere 1 se la forma d'onda sulla linea B tra i pin 3 e 4 è corretta altrimenti premere 0\n");
+               	set_out_port(0, DOP0_KMB, DOP0_KMB);
+	            stato = 5;
+	           break;
+	        
+	        case 5:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA 5
+	            set_out_port(0, DOP0_KMB, DOP0_KMB);
+        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+        		{ 
+        		} 
+                *FC15_DATAptr = *FC15_DATAptr + 1;
+        		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+
+                if ( c == '1')  
+                {
+                    test_mvb_lineB = 1;//OK
+                    stato = 6;
+//                  save_stato(TESTMVB_LINE_B_OK);// Test TX MVB su LINEA B OK
+                }
+                else if ( c == '0')  
+                {
+                    test_mvb_lineB = 0;//KO
+                    stato = 6;
+//                  save_stato(TESTMVB_LINE_B_KO);// Test TX MVB su LINEA B KO    
+                }
+                else 
+                    stato = 5;
+	           break;
+	        
+	        case 6://PROVA ISOLAMENTO LINEA B
+               	printf("\n\nPROVA ISOLAMENTO LINEA B\n\n");    
+            	printf("Verificare con un oscilloscopio che tra i pin 3 e 4 dei connettori CN1 e CN2\n");
+            	printf("della scheda EMD non sia presente alcun segnale\n\n");
+                printf("\nPremere 1 se la trasmissione sulla linea B tra i pin 3 e 4 si interrompe altrimenti premere 0\n");    
+                stato = 7;
+	           break;
+
+	        case 7: //ATTENDE CARATTERE DI ESITO TEST SU LINEA B
+              	set_out_port(0, DOP0_KMB, 0);
+
+        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+        		{ 
+        		} 
+                *FC15_DATAptr = *FC15_DATAptr + 1;
+        		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+
+                if ( c == '1') 
+                {
+                    test_mvb_lineBOFF = 1;//OK
+                    stato = 8;
+//                  save_stato(TESTMVB_LINE_B_OFF_OK);// Test TX MVB su LINEA B OK
+                }
+                else if ( c == '0')  
+                {
+                    test_mvb_lineBOFF = 0;//KO
+                    stato = 8;
+//                  save_stato(TESTMVB_LINE_B_OFF_KO);// Test TX MVB su LINEA B KO    
+                }
+                else 
+                    stato = 7;
+	           break;
+
+	        case 8: //SALVA ESITO TEST
+	                
+	                printf("\n\nESITO TEST\n");
+	                if (test_mvb_lineA) save_stato(TESTMVB_LINE_A_OK);// Test TX MVB su LINEA A OK
+	                else                save_stato(TESTMVB_LINE_A_KO);// Test TX MVB su LINEA A KO
+	                
+	                if (test_mvb_lineAOFF)  save_stato(TESTMVB_LINE_A_OFF_OK);// Test ISOL MVB su LINEA A OK
+	                else                    save_stato(TESTMVB_LINE_A_OFF_KO);// Test ISOL MVB su LINEA A KO
+
+	                if (test_mvb_lineB) save_stato(TESTMVB_LINE_B_OK);// Test TX MVB su LINEA B OK
+	                else                save_stato(TESTMVB_LINE_B_KO);// Test TX MVB su LINEA B KO
+	            
+	                if (test_mvb_lineBOFF)  save_stato(TESTMVB_LINE_B_OFF_OK);// Test ISOL MVB su LINEA B OK
+	                else                    save_stato(TESTMVB_LINE_B_OFF_KO);// Test ISOL MVB su LINEA B KO
+                    stato = 10;
+                    
+                    if (test_mvb_lineA && test_mvb_lineAOFF && test_mvb_lineB && test_mvb_lineBOFF)
+                        er=0;
+                    else
+                        er=1;
+                    
+	            break;
+	        case 10: 
+	            break;
+	    
+	    }
+	
+	
 	
 	}
-
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-
-	isr0val = *regisr0;     /* INT0 interrupts*/
-	isr1val = *regisr1;     /* INT1 interrupts*/
-	fcval = *regfc;         /* Frame Counter */
-	ecval = *regec;         /* Error Counter */
-    *regisr0=0;
-	*regivr0=0;
-	*regisr1=0;
-	*regivr1=0;
-	*regfc=0;
-	*regec=0;
-	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
-	{
-//		printf("KO!!!!!!    ");
-		printf("\nISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
-		er = 1;
-	}
-	
-	printf("\n");
-    printf("VERIFICARE INTERRUZIONE  MVB LINE A - Premere invio e verificare che la forma d'onda su  linea A tra i pin 1 e 2 sia assente\r\n");    
-    while ((c=_getkey())!= '\r');
-  	set_out_port(0, DOP0_KMA, 0);
-
-	*st_DA_DATA0ptr=0;
-	*(st_DA_DATA0ptr+1)=0;
-	*(st_DA_DATA0ptr+2)=0;
-	*(st_DA_DATA0ptr+3)=0;
-	*st_DA_DATA1ptr=0;
-	*(st_DA_DATA1ptr+1)=0;
-	*(st_DA_DATA1ptr+2)=0;
-	*(st_DA_DATA1ptr+3)=0;
-	*st_DA_DATA0ptr1=0;
-	*(st_DA_DATA0ptr1+1)=0;
-	*(st_DA_DATA0ptr1+2)=0;
-	*(st_DA_DATA0ptr1+3)=0;
-	*st_DA_DATA1ptr1=0;
-	*(st_DA_DATA1ptr1+1)=0;
-	*(st_DA_DATA1ptr1+2)=0;
-	*(st_DA_DATA1ptr1+3)=0;
-
-/* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-	printf("test MVB LINEA B e premere invio dopo aver verificato la forma d'onda sulla linea B tra i pin 4 e 5\r\n");
-   	set_out_port(0, DOP0_KMB, DOP0_KMB);
-	for (off=0; (off != 0x1FFE || c != '\r'); off++)	/*while ( (c=_getkey())!= '\t')*/
-	{
-		while (((c=_getkey())!= '\r') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
-		} 
-		if ( c == '\r') break; 
-        *FC15_DATAptr = *FC15_DATAptr + 1;
-		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
-	
-	}
-	printf("\r\n");
-	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-
-	isr0val = *regisr0;     /* INT0 interrupts*/
-	isr1val = *regisr1;     /* INT1 interrupts*/
-	fcval = *regfc;         /* Frame Counter */
-	ecval = *regec;         /* Error Counter */
-    *regisr0=0;
-	*regivr0=0;
-	*regisr1=0;
-	*regivr1=0;
-	*regfc=0;
-	*regec=0;
-	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
-	{
-//		printf("KO!!!!!!    ");
-		printf("\nISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
-		er = 1;
-	}
-	
-    printf("VERIFICARE INTERRUZIONE  MVB LINE A - Premere invio e verificare che la forma d'onda su  linea A tra i pin 1 e 2 sia assente\r\n");    
-    while ((c=_getkey())!= '\r');
-  	set_out_port(0, DOP0_KMB, 0);
-
-	
-	
-	*st_DA_DATA0ptr=0;
-	*(st_DA_DATA0ptr+1)=0;
-	*(st_DA_DATA0ptr+2)=0;
-	*(st_DA_DATA0ptr+3)=0;
-	*st_DA_DATA1ptr=0;
-	*(st_DA_DATA1ptr+1)=0;
-	*(st_DA_DATA1ptr+2)=0;
-	*(st_DA_DATA1ptr+3)=0;
-	*st_DA_DATA0ptr1=0;
-	*(st_DA_DATA0ptr1+1)=0;
-	*(st_DA_DATA0ptr1+2)=0;
-	*(st_DA_DATA0ptr1+3)=0;
-	*st_DA_DATA1ptr1=0;
-	*(st_DA_DATA1ptr1+1)=0;
-	*(st_DA_DATA1ptr1+2)=0;
-	*(st_DA_DATA1ptr1+3)=0;
+//
+//    if (strcmp(c,'1')==0)  {
+//        test_mvb_lineA = 1;//OK
+//        save_stato(TESTMVB_LINE_A_OK);// Test TX MVB su LINEA  A OK
+//    }
+//    if (strcmp(c,'0')==0)  {
+//        test_mvb_lineA = 0;//KO
+//        save_stato(TESTMVB_LINE_A_KO);// Test TX MVB su LINEA  A KO    
+//    }
+//
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//
+//	isr0val = *regisr0;     /* INT0 interrupts*/
+//	isr1val = *regisr1;     /* INT1 interrupts*/
+//	fcval = *regfc;         /* Frame Counter */
+//	ecval = *regec;         /* Error Counter */
+//    *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+//	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
+//	{
+////		printf("KO!!!!!!    ");
+////		printf("\nISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+////		er = 1;
+//	}
+//	
+//	printf("\n");
+//    printf("PROVA ISOLAMENTO DALLA LINEA A\n");    
+//    printf("Premere 1 se la trasmissione sulla linea A tra i pin 1 e 2 si interrompre  altrimenti premere 0\n");    
+//    while (((c=_getkey())!= '0') && ((c=_getkey())!= '1'));
+//    if ((strcmp(c,'1')==0)  {
+//        test_mvb_lineAOFF = 1;//OK
+//        save_stato(TESTMVB_LINE_A_OFF_OK);// Test TX MVB su LINEA  A OK
+//    }
+//    if ((strcmp(c,'0')==0)  {
+//        test_mvb_lineAOFF = 0;//KO
+//        save_stato(TESTMVB_LINE_A_OFF_KO);// Test TX MVB su LINEA  A KO    
+//    }
+//  	set_out_port(0, DOP0_KMA, 0);
+//
+//	*st_DA_DATA0ptr=0;
+//	*(st_DA_DATA0ptr+1)=0;
+//	*(st_DA_DATA0ptr+2)=0;
+//	*(st_DA_DATA0ptr+3)=0;
+//	*st_DA_DATA1ptr=0;
+//	*(st_DA_DATA1ptr+1)=0;
+//	*(st_DA_DATA1ptr+2)=0;
+//	*(st_DA_DATA1ptr+3)=0;
+//	*st_DA_DATA0ptr1=0;
+//	*(st_DA_DATA0ptr1+1)=0;
+//	*(st_DA_DATA0ptr1+2)=0;
+//	*(st_DA_DATA0ptr1+3)=0;
+//	*st_DA_DATA1ptr1=0;
+//	*(st_DA_DATA1ptr1+1)=0;
+//	*(st_DA_DATA1ptr1+2)=0;
+//	*(st_DA_DATA1ptr1+3)=0;
+//
+///* test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//	printf("test MVB LINEA B e premere invio dopo aver verificato la forma d'onda sulla linea B tra i pin 4 e 5\r\n");
+//   	set_out_port(0, DOP0_KMB, DOP0_KMB);
+//	for (off=0; (off != 0x1FFE || c != '\r'); off++)	/*while ( (c=_getkey())!= '\t')*/
+//	{
+//		while (((c=_getkey())!= '\r') && ((*regmr & 0x0200) != 0)){ //MVBC BUSY
+//		} 
+//		if ( c == '\r') break; 
+//        *FC15_DATAptr = *FC15_DATAptr + 1;
+//		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+//	
+//	}
+//	printf("\r\n");
+//	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+//
+//	isr0val = *regisr0;     /* INT0 interrupts*/
+//	isr1val = *regisr1;     /* INT1 interrupts*/
+//	fcval = *regfc;         /* Frame Counter */
+//	ecval = *regec;         /* Error Counter */
+//    *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+////	if (  (isr0val != 0x0685) | (isr1val != 0) | (fcval != 0x3FFC) | ( ecval > 10) | (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
+////	{
+//////		printf("KO!!!!!!    ");
+//////		printf("\nISR0=%04x ISR1=%04x FC=%04x EC=%04x\r\n",isr0val,isr1val,fcval,ecval);
+//////		er = 1;
+////	}
+//	
+//    printf("VERIFICARE INTERRUZIONE  MVB LINE A - Premere invio e verificare che la forma d'onda su  linea A tra i pin 1 e 2 sia assente\r\n");    
+//    while ((c=_getkey())!= '\r');
+//  	set_out_port(0, DOP0_KMB, 0);
+//
+//	
+//	
+//	*st_DA_DATA0ptr=0;
+//	*(st_DA_DATA0ptr+1)=0;
+//	*(st_DA_DATA0ptr+2)=0;
+//	*(st_DA_DATA0ptr+3)=0;
+//	*st_DA_DATA1ptr=0;
+//	*(st_DA_DATA1ptr+1)=0;
+//	*(st_DA_DATA1ptr+2)=0;
+//	*(st_DA_DATA1ptr+3)=0;
+//	*st_DA_DATA0ptr1=0;
+//	*(st_DA_DATA0ptr1+1)=0;
+//	*(st_DA_DATA0ptr1+2)=0;
+//	*(st_DA_DATA0ptr1+3)=0;
+//	*st_DA_DATA1ptr1=0;
+//	*(st_DA_DATA1ptr1+1)=0;
+//	*(st_DA_DATA1ptr1+2)=0;
+//	*(st_DA_DATA1ptr1+3)=0;
 	return er;
 }
 
@@ -1881,20 +2069,15 @@ short tstmvb_txrx(short argc, char *argv[] )
 	*regscr = *regscr | 0x8001;// set IL=01  configuration mode
 	
 	er = 0;
-	
 	data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
-	if (data1 != 1){
-//	     save_stato(TMVBSELKO);
-	     printf("\n !! selezionare SW1 in posizione 1  %d\n",data1);
+	*regdaok = 0x0049;						/* sovrascrive indirizzo hardware               */
+	if (data1 != 0x0001){
+	     printf("\n !! selezionare SW1 in posizione 1 \n",data1);
 	}
-	else 
-    {
-//	     save_stato(TMVBSELOK);
-    }
     
-  	printf("Test della Traffic Memory 1MB MCM = 4\r\n");
+  	printf("Test della Traffic Memory 1MB (MCM = 4)\n");
 	*regmcr = *regmcr | funmode;
-    printf("collegare le terminazioni MVB come da specifica e premere invio per proseguire\r\n");    
+    printf("Collegare il tappo di terminazione MVB al connettore MVB2 e premere invio per proseguire\n");    
     while ( (c=_getkey()) != '\r' );
 
 	if (!(er = t_mvbel())) {
@@ -1943,7 +2126,7 @@ short test_mvb (short argc, char *argv[] )
 	data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
 	if (data1 != 1){
 //	     save_stato(TMVBSELKO);
-	     printf("\n !! selezionare SW1 in posizione 1  (%x)\n",data1);
+//	     printf("\n !! selezionare SW1 in posizione 1  \n");
 	}
 	else 
     {
