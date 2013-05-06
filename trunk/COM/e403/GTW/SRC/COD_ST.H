@@ -67,10 +67,31 @@
 #define  TADCOK 		0x0601
 /* Test ADC KO */ 
 #define  TADCKO 		0x0602
-/* Test PIO OK */ 
-#define  TPIOOK 		0x0701
+
+#define  TESTMVB_LINE_A_OK 		0x0610
+#define  TESTMVB_LINE_A_KO 		0x0611
+#define  TESTMVB_LINE_A_OFF_OK 	0x0612
+#define  TESTMVB_LINE_A_OFF_KO 	0x0613
+
+#define  TESTMVB_LINE_B_OK 		0x0620
+#define  TESTMVB_LINE_B_KO 		0x0621
+#define  TESTMVB_LINE_B_OFF_OK 	0x0622
+#define  TESTMVB_LINE_B_OFF_KO 	0x0623
+
+
+
+/* Test PIO OK */
+#define  TPIOOK 		0x0710
 /* Test PIO KO */ 
-#define  TPIOKO 		0x0702
+#define  TPIOKO 		0x0712
+
+/* Test LED OK */
+#define  TESTLED_OK 		0x0701
+
+/* Test LED KO */
+#define  TESTLED_KO 		0x0702
+
+
 /* Test MVB Service Area Shift 0 KO */ 
 #define  TMVBSASHF0KO 		0x0902
 /* Test MVB Service Area Shift 0 OK */ 

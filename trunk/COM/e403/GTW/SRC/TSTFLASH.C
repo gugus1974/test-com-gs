@@ -1041,6 +1041,41 @@ short tstflash_vel (short argc, char *argv[] )
 void prn_stato (unsigned int prg, unsigned int cod)
 {
 	switch (cod){
+
+
+		case TESTLED_OK:
+			printf("%04d  %04x  Test LED....................................................   OK  ",prg,cod);
+			break;
+		case TESTLED_KO:
+			printf("%04d  %04x  Test LED....................................................   KO  ",prg,cod);
+			break;
+
+		case TESTMVB_LINE_A_OK:
+			printf("%04d  %04x  Test TX MVB su LINEA A......................................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LINE_A_KO:
+			printf("%04d  %04x  Test TX MVB su LINEA A......................................   KO  ",prg,cod);
+			break;
+		case TESTMVB_LINE_A_OFF_OK:
+			printf("%04d  %04x  Test ISOLAMENTO MVB su LINEA A..............................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LINE_A_OFF_KO:
+			printf("%04d  %04x  Test ISOLAMENTO MVB su LINEA A..............................   KO  ",prg,cod);
+			break;
+
+		case TESTMVB_LINE_B_OK:
+			printf("%04d  %04x  Test TX MVB su LINEA B......................................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LINE_B_KO:
+			printf("%04d  %04x  Test TX MVB su LINEA B......................................   KO  ",prg,cod);
+			break;
+		case TESTMVB_LINE_B_OFF_OK:
+			printf("%04d  %04x  Test ISOLAMENTO MVB su LINEA B..............................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LINE_B_OFF_KO:
+			printf("%04d  %04x  Test ISOLAMENTO MVB su LINEA B..............................   KO  ",prg,cod);
+			break;
+
 		case TE2PROMOK:
 			printf("%04d  %04x  Test EEPROM.................................................   OK  ",prg,cod);
 			break;

@@ -42,8 +42,8 @@ type
     procedure btnRiprovaClick(Sender: TObject);
     procedure btnAnnullaClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-
+//    procedure Button1Click(Sender: TObject);
+    procedure ShowTestResult(FileName: String);
     private
 
         procedure StartTest;
@@ -118,6 +118,9 @@ end;
 procedure TSDIAppForm.HelpAbout1Execute(Sender: TObject);
 begin
   AboutBox.ShowModal;
+  Wait(5000);
+  AboutBox.Close;
+
 end;
 
 procedure TSDIAppForm.Wait(ms: Integer);
@@ -213,6 +216,29 @@ begin
     CheckResultFile := RetVal;
 end;
 
+procedure TSDIAppForm.ShowTestResult(FileName: string);
+var
+    testoFile: TextFile;
+    buffer : string;
+begin
+       if (fileexists(FileName)) then
+       begin
+        While ConsoRichEdit.Lines.Count > 1000 Do ConsoRichEdit.Lines.Delete(0);//azzera la lista
+
+        AssignFile(testoFile, FileName);
+        Reset(testoFile);
+
+        while not EOF(testoFile) do
+        begin
+                ReadLn(testoFile, buffer);
+                ConsoRichEdit.Lines.Add('buffer');
+        end;
+        CloseFile(testoFile);
+       end;
+
+end;
+
+
 (* Controlla che nel file non siano presenti i messaggi di errore, restituisce FALSE se ne trova *)
 function TSDIAppForm.CheckResultFileNew(FileName: TFileName; out ErrorStr: String ): Boolean;
 var
@@ -258,7 +284,7 @@ var
     Passed: boolean;
     Failed: boolean;
     cntTimeOut : Integer;
-   Datasize : Integer;
+    Datasize : Integer;
     p: pchar;
 
 begin
@@ -295,8 +321,18 @@ begin
         while Datasize > 0 do
         begin
         case p^ of
-        #10:; // LF
-        #13: // CR - cursor to next line
+
+        #13: // CR - Carriage return
+                begin
+                if ConsoRichEdit.Lines.Count <> 0 then
+                        ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
+                else
+                        ConsoRichEdit.Lines.Add( s );
+//                ConsoRichEdit.Lines.Add('');
+                s := '';
+                end;
+
+        #10:  // Line Feed
                 begin
                 if ConsoRichEdit.Lines.Count <> 0 then
                         ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
@@ -327,7 +363,7 @@ begin
         Passed := (pos(pass,resstr) > 0);
 
         (* Cerca l'esito negativo *)
-        Failed := ((pos(fail,resstr) > 0) or (cntTimeOut > TimeOut));
+        Failed := ((pos(fail,resstr) > 0) (*or (cntTimeOut > TimeOut)*));
 
         Inc(cntTimeOut);
     end;
@@ -494,6 +530,7 @@ end;
 function TSDIAppForm.TestBDM: Boolean;
 var
         TestBDMError : String;
+        bt : Word;
 begin
     (* Controlla cle il file RESET.RES esista e non contenga errori *)
 //    if (CheckResultFile('RESET.RES') or (BDMPort='NONE')) then
@@ -501,14 +538,17 @@ begin
     begin
         DisplayTestStatus(BDMTestIndex,1,'');
         TestBDM := True;
-
     end
     else
     begin
         DisplayTestStatus(BDMTestIndex,0,'');
         TestBDM := False;
         Beep;
+        bt := MessagePanel('Errore TEST BDM:'+TestBDMError,mtConfirmation,[mbYES]);
+
     end;
+
+
 end;
 
 function TSDIAppForm.TestRam: Boolean;
@@ -518,6 +558,8 @@ var
         testWE2: boolean;
         testWE3: boolean;
         bt:      Word;
+        testoFile : TextFile;
+        buffer : string;
 
 begin
     (* Controlla che il file TESTRAM.RES esista, non contenga errori, e contenga l'esito positivo del test *)
@@ -527,11 +569,15 @@ begin
     begin
         testWE0 := True;
         lblMessage.Caption := 'test WE0 OK'+#13;
+
     end
     else
     begin
         testWE0 := False;
         lblMessage.Caption := 'ERRORE test WE0'+#13;
+
+
+
     end;
 
     if (CheckResultFile('TRAM_WE1.RES') and ScanFile('TRAM_WE1.RES','00000000 00000000')
@@ -545,8 +591,11 @@ begin
     begin
         testWE1 := False;
         lblMessage.Caption := 'ERRORE test WE1'+#13;
-    end;
 
+
+
+    end;
+    Wait(1000);
     if (CheckResultFile('TRAM_WE2.RES') and ScanFile('TRAM_WE2.RES','00000000 00000000')
                                          and ScanFile('TRAM_WE2.RES','00000000 0000AA00')
                                          and ScanFile('TRAM_WE2.RES','00000000 00005500'))  then
@@ -559,8 +608,7 @@ begin
         testWE2 := False;
         lblMessage.Caption := 'ERRORE test WE2'+#13;
     end;
-
-
+    Wait(1000);
     if (CheckResultFile('TRAM_WE3.RES') and ScanFile('TRAM_WE3.RES','00000000 00000000')
                                          and ScanFile('TRAM_WE3.RES','00000000 000000AA')
                                          and ScanFile('TRAM_WE3.RES','00000000 00000055'))  then
@@ -572,9 +620,9 @@ begin
     begin
         testWE2 := False;
         lblMessage.Caption := 'ERRORE test WE3'+#13;
+
     end;
-
-
+    Wait(1000);
     if ((CheckResultFile('TESTRAM.RES') and ScanFile('TESTRAM.RES','00000050 000000A5'))
         or (BDMPort='NONE')) then
     begin
@@ -665,14 +713,14 @@ begin
 
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('tstFLASH','FLASHERASEOK','ERROR',10);
+            Passed := TestCommand('tstFLASH','FLASHERASEOK','ERROR',1000);
 //            Passed := TestCommand('resflash','FLASHERASEOK','ERROR',10);
         end
         else
         begin
             Passed := True;
         end;
-
+ 
         if (Passed) then
         begin
             (************************************)
@@ -1249,24 +1297,26 @@ begin
         COMPort := 'com1';
     end;
 
-    Caption := 'COM Board Tester v.'+Version;
-    Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+')';
- 
+
     ClearTestList; //procedura che presetta il TMEMO1
 
     ComPortDriver.BaudRateValue := 38400;
     ComPortDriver.PortName := COMPort;
 
+   Caption := 'COM Board Tester v.'+Version;
 
     if (Not ComPortDriver.Connect) then
     begin
+    Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+')';
         MessageDlg('Impossibile aprire la porta seriale: '+COMPort,mtError,[mbOK],0);
         Application.Terminate;
-        ConsolleForm.StatusBar1.Panels[1].Text := COMPort +' 38400 8N1 '+ 'CLOSED';
+//       ConsolleForm.StatusBar1.Panels[1].Text := COMPort +' 38400 8N1 '+ 'CLOSED';
     end
     else
     begin
-//        ConsolleForm.StatusBar1.Panels[0].Text :=  ComPortDriver.PortName;
+    Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+' OPEN)';
+
+    //        ConsolleForm.StatusBar1.Panels[0].Text :=  ComPortDriver.PortName;
 //        ConsolleForm.StatusBar1.Panels[1].Text :=  'OPEN';
 //        ConsolleForm.StatusBar1.Panels[2].Text := IntToStr(ComPortDriver.BaudRateValue);
     end;
@@ -1320,6 +1370,8 @@ begin
     txtBoardID.TabStop := False;
 
     BDMPort := 'lpt1';
+
+    //HelpAbout1Execute();
 
     (* Cancella i risultati di un eventuale test precedente *)
     BoardOK  := true;
@@ -1729,12 +1781,6 @@ begin
     UserStopTest := True;
 end;
 
-procedure TSDIAppForm.Button1Click(Sender: TObject);
-begin
-//  ConsolleForm.Show;
-//  ConsolleForm.StatusBar1.Panels[0].Text :=  COMPort;
-
-  end;
 
 end.
 
