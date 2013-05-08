@@ -363,9 +363,13 @@ begin
         Passed := (pos(pass,resstr) > 0);
 
         (* Cerca l'esito negativo *)
-        Failed := ((pos(fail,resstr) > 0) (*or (cntTimeOut > TimeOut)*));
 
-        Inc(cntTimeOut);
+        if (timeout<>0) then
+              Failed := (pos(fail,resstr) > 0)
+        else
+              Failed := ((pos(fail,resstr) > 0) or (cntTimeOut > timeout)) ;
+
+        if (timeout<>0) then Inc(cntTimeOut);
     end;
     ComPortDriver.FlushBuffers(true,true);
 
@@ -713,64 +717,14 @@ begin
 
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('tstFLASH','FLASHERASEOK','ERROR',1000);
-//            Passed := TestCommand('resflash','FLASHERASEOK','ERROR',10);
+            DisplayTestStatus(FLASHTestIndex,-1, 'IN ESECUZIONE');
+            Passed := TestCommand('tstflash','TEST_FLASH_OK','TEST_FLASH_KO',0);
         end
         else
         begin
-            Passed := True;
-        end;
- 
-        if (Passed) then
-        begin
-            (************************************)
-            (* Invia il comando per verifica AA *)
-            (************************************)
-            DisplayTestStatus(FLASHTestIndex,-1, 'VERIFICA AAAA');
-
-            if (BDMPort<>'NONE') then
-            begin
-                Passed := TestCommand('verflashaa','FLASHAAPASSED','ERROR',20);
-            end
-            else
-            begin
-                Passed := True;
-            end;
+            Passed := False;
         end;
 
-        if (Passed) then
-        begin
-            (*******************************************)
-            (* Invia il comando per resettare la flash *)
-            (*******************************************)
-            DisplayTestStatus(FLASHTestIndex,-1, 'CANCELLAZIONE');
-
-            if (BDMPort<>'NONE') then
-            begin
-                Passed := TestCommand('resflash','FLASHERASEOK','ERROR',10);
-            end
-            else
-            begin
-                Passed := True;
-            end;
-        end;
-
-        if (Passed) then
-        begin
-            (************************************)
-            (* Invia il comando per verifica 55 *)
-            (************************************)
-            DisplayTestStatus(FLASHTestIndex,-1, 'VERIFICA 5555');
-
-            if (BDMPort<>'NONE') then
-            begin
-                Passed := TestCommand('verflash55','FLASH55PASSED','ERROR',20);
-            end
-            else
-            begin
-                Passed := True;
-            end;
-        end;
 
         TestFlash := Passed;
         if Passed then
@@ -784,6 +738,7 @@ begin
             Beep;
             bt := MessagePanel('Ripetere il test ?',mtConfirmation,[mbYES, mbNO]);
             Retry := (bt = mrYES);
+            ExecAppWait('LOAD_COM_IN_FLASH.BAT','');
         end;
     end;
 end;
@@ -801,33 +756,17 @@ begin
         (********************************************************)
         (* Invia il comando per riempire la EEPROM di dati noti *)
         (********************************************************)
-        DisplayTestStatus(EEPROMTestIndex,-1, 'SCRITTURA');
+        DisplayTestStatus(EEPROMTestIndex,-1, 'SCRITTURA e VERIFICA');
 
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('filleeprom','EEPROMFILLOK','ERROR',25);
+            Passed := TestCommand('filleeprom','TEST OK','TEST KO',40);
         end
         else
         begin
             Passed := True;
         end;
 
-        if (Passed) then
-        begin
-            (*****************************************************)
-            (* Invia il comando per la verifica dei dati scritti *)
-            (*****************************************************)
-            DisplayTestStatus(EEPROMTestIndex,-1, 'VERIFICA');
-
-            if (BDMPort<>'NONE') then
-            begin
-                Passed := TestCommand('vereeprom','EEPROMVERIFYOK','ERROR',10);
-            end
-            else
-            begin
-                Passed := True;
-            end;
-        end;
 
         TestEEPROM := Passed;
         if Passed then
@@ -867,7 +806,7 @@ begin
 
     while Retry do
     begin
-        TestCommand('ledcycle','LEDOK','ERROR',10);
+        TestCommand('ledcycle','TEST OK','TEST KO',20);
 
         bt := MessagePanel('La sequenza e'' corretta ?',mtConfirmation,[mbYES, mbNO, mbRETRY]);
 
@@ -1303,14 +1242,15 @@ begin
     ComPortDriver.BaudRateValue := 38400;
     ComPortDriver.PortName := COMPort;
 
-   Caption := 'COM Board Tester v.'+Version;
-
+    Caption := 'COM Board Tester v.'+Version;
+    While ConsoRichEdit.Lines.Count > 1000 Do ConsoRichEdit.Lines.Delete(0);//azzera la lista
     if (Not ComPortDriver.Connect) then
     begin
     Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+')';
         MessageDlg('Impossibile aprire la porta seriale: '+COMPort,mtError,[mbOK],0);
         Application.Terminate;
 //       ConsolleForm.StatusBar1.Panels[1].Text := COMPort +' 38400 8N1 '+ 'CLOSED';
+        ConsoRichEdit.Lines.Add('Aperta porta seriale '+COMPort)
     end
     else
     begin
@@ -1389,6 +1329,26 @@ begin
     begin
         deletefile('loadapp.res');
     end;
+    if (fileexists('TRAM_WE0.RES')) then
+    begin
+        deletefile('TRAM_WE0.RES');
+    end;
+    if (fileexists('TRAM_WE1.RES')) then
+    begin
+        deletefile('TRAM_WE1.RES');
+    end;
+    if (fileexists('TRAM_WE2.RES')) then
+    begin
+        deletefile('TRAM_WE2.RES');
+    end;
+    if (fileexists('TRAM_WE3.RES')) then
+    begin
+        deletefile('TRAM_WE3.RES');
+    end;
+   if (fileexists('ram2flash.res')) then
+    begin
+        deletefile('ram2flash.res');
+    end;
 
     if (Not StopTest and Not UserStopTest) then
     begin
@@ -1464,6 +1424,7 @@ begin
 
     if (Not StopTest and Not UserStopTest) then
     begin
+        MessagePanel('Errore TEST BDM:',mtConfirmation,[mbYES]);
         if (Not TestLoad) then
         begin
             StopTest := true;
@@ -1504,7 +1465,10 @@ begin
         DisplayTestStatus(FLASHTestIndex,-1, 'NON ESEGUITO');
     end;
 
-    Wait(10);
+    Wait(100);
+    if (Not fileexists('ram2flash.res')) then
+        ExecAppWait('LOAD_COM_IN_FLASH.BAT','');
+    Wait(100);
 
     if (Not StopTest and Not UserStopTest) then
     begin
