@@ -955,7 +955,7 @@ short tstflash_vel (short argc, char *argv[] )
 				{
 //				    printf("2 ERASED from @%06lX\n",sectstart);
 					sectend = sectstart + (dimsct/2);
-					printf(" VERIFY ERASING SECTOR start @%06lX -> end @%06lX \n",sectstart,sectend);
+//					printf(" VERIFY ERASING SECTOR start @%06lX -> end @%06lX \n",sectstart,sectend);
 					for ( sectaddr = sectstart; sectaddr <= sectend; sectaddr++)
 					{
 						k = 10000;
@@ -984,7 +984,7 @@ short tstflash_vel (short argc, char *argv[] )
 					}	
 				}
 				else {
-				    printf("\nerrorSECT = %d\n",errorSECT);
+//				    printf("\nerrorSECT = %d\n",errorSECT);
 				    break;   
 				}
 				if ( exit ) break;	
@@ -1007,11 +1007,13 @@ short tstflash_vel (short argc, char *argv[] )
 	
 	
 	if (!error && !error5555 && !errorAAAA && !errorSECT){
+		printf("TEST_FLASH_OK");
 		save_stato (TFLAWRVROK);
 //		ram2flash ();
 	}
     else
     { 
+		printf("TEST_FLASH_KO");
         if (error == 1)         save_stato (TFLATOTERSCH1KO);
         if (error == 2)         save_stato (TFLATOTERSCH2KO);
         if (error == 3)         save_stato (TFLAFZEXITTOTERS);
@@ -1043,6 +1045,9 @@ void prn_stato (unsigned int prg, unsigned int cod)
 	switch (cod){
 
 
+		case TESTSW1OK:
+			printf("%04d  %04x  Test SW1 MVBC ..............................................   OK  ",prg,cod);
+			break;
 		case TESTLED_OK:
 			printf("%04d  %04x  Test LED....................................................   OK  ",prg,cod);
 			break;

@@ -360,12 +360,12 @@ int shf0(unsigned short  * startadd, unsigned short  * endadd)
                     tim1 = 1;
                 }
                 k++;
-                if ( c == '\t' ) break;
+                if ( c == '\r' ) break;
                 *pt_ram = dt;
                 data3 = *pt_ram;
             }
-    		if ( tim1 ) printf("\r\n");
-            if ( c == '\t' ) break;				
+    		if ( tim1 ) printf("\n");
+            if ( c == '\r' ) break;				
     		i++;
     		if (i==1024){
     			printf(".");
@@ -458,12 +458,12 @@ int shf1(unsigned short  * startadd, unsigned short  * endadd)
 /*   startadd    indirizzo di start della ram             */
 /*   endadd      indirizzo di fine della ram              */
 /**********************************************************/
-int march(unsigned int  * startadd, unsigned int  * endadd)
+int march(unsigned short  * startadd, unsigned short  * endadd)
 {
-	unsigned int data3,tim1,i,k,dt,j,vrf;
+	unsigned short data3,tim1,i,k,dt,j,vrf;
 	int  er;
-	unsigned int  * pt_ram;
-	unsigned int  off,seg;
+	unsigned short  * pt_ram;
+	unsigned short  off,seg;
 	unsigned long app; 
 	char c;
 
@@ -484,15 +484,15 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
     		k = 10000;
     		tim1 = 0;
     		vrf = ((data3 = (*pt_ram & dt)) != 0);
-    		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
-    		while( ((c=_getkey())  != '\r') && vrf ) {
+    		printf("@%06lX  %v\r",pt_ram, *pt_ram  );
+    		while(/* ((c=_getkey())  != '\r') &&*/ vrf ) {
     		     er = 1;
     		     if ( k == 10000) 
     		     {	   
         			app = (unsigned long) pt_ram;
-        			off = (unsigned int)(app & 0x00FFFF);
+        			off = (unsigned short)(app & 0x00FFFF);
         			app = app >> 16;
-        			seg = (unsigned int)(app & 0x0000FF);
+        			seg = (unsigned short)(app & 0x0000FF);
         			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 0 letto %04x",seg,off,j,data3);
         			k = 0;
         			tim1 = 1;
@@ -526,14 +526,14 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		tim1 = 0;
 		vrf = ((data3 = (*pt_ram & dt)) == 0);
    		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
-		while( ((c=_getkey())  != '\r') && vrf ) {
+		while( /*((c=_getkey())  != '\r') &&*/ vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
 		     {	   
 			app = (unsigned long) pt_ram;
-			off = (unsigned int)(app & 0x00FFFF);
+			off = (unsigned short)(app & 0x00FFFF);
 			app = app >> 16;
-			seg = (unsigned int)(app & 0x0000FF);
+			seg = (unsigned short)(app & 0x0000FF);
 			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 1 letto %04x",seg,off,j,data3);
 			k = 0;
 			tim1 = 1;
@@ -567,14 +567,14 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		tim1 = 0;
 		vrf = ((data3 = (*pt_ram & dt)) != 0);
    		printf("@%06lX  %04X\r",pt_ram,*(pt_ram)  );
-		while( ((c=_getkey())  != '\r') && vrf ) {
+		while(/*((c=_getkey())  != '\r') && */vrf ) {
 		     er = 1;
 		     if ( k == 10000) 
 		     {	   
 			app = (unsigned long) pt_ram;
-			off = (unsigned int)(app & 0x00FFFF);
+			off = (unsigned short)(app & 0x00FFFF);
 			app = app >> 16;
-			seg = (unsigned int)(app & 0x0000FF);
+			seg = (unsigned short)(app & 0x0000FF);
 			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 0 letto %04x",seg,off,j,data3);
 			k = 0;
 			tim1 = 1;
@@ -613,9 +613,9 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		     if ( k == 10000) 
 		     {	   
 			app = (unsigned long) pt_ram;
-			off = (unsigned int)(app & 0x00FFFF);
+			off = (unsigned short)(app & 0x00FFFF);
 			app = app >> 16;
-			seg = (unsigned int)(app & 0x0000FF);
+			seg = (unsigned short)(app & 0x0000FF);
 			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 1 letto %04x",seg,off,j,data3);
 			k = 0;
 			tim1 = 1;
@@ -654,9 +654,9 @@ int march(unsigned int  * startadd, unsigned int  * endadd)
 		     if ( k == 10000) 
 		     {	   
 			app = (unsigned long) pt_ram;
-			off = (unsigned int)(app & 0x00FFFF);
+			off = (unsigned short)(app & 0x00FFFF);
 			app = app >> 16;
-			seg = (unsigned int)(app & 0x0000FF);
+			seg = (unsigned short)(app & 0x0000FF);
 			printf("\rKO!!! Ad Address %02x%04x Bit %02d atteso 0 letto %04x",seg,off,j,data3);
 			k = 0;
 			tim1 = 1;
@@ -1552,8 +1552,8 @@ int t_mvbel (void)
 	
 	*regmr = 0;                     /*  */
 
-	/* connect to the MVB line */
-	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
+	/* connect to the MVB line A*/
+	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);
 
 	*regscr1 = 0x050B;						/* predispone per l'inizializzazione dei reg.	*/
 
@@ -1602,12 +1602,12 @@ int t_mvbel (void)
             	printf("della scheda EMD sia presente un segnale di trasmissione seriale con   \n");
             	printf("bit rate di 1 usec e ampiezza co mpresa tra 2 e 12 V p.p.\n\n");
             	printf("Premere 1 se la forma d'onda sulla linea A tra i pin 1 e 2 è corretta altrimenti premere 0\n");
-               	set_out_port(0, DOP0_KMA, DOP0_KMA);
+               	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);
 	            stato = 1;
 	           break;
 	        
 	        case 1:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA A
-	            set_out_port(0, DOP0_KMA, DOP0_KMA);
+               	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);
         		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		} 
@@ -1641,7 +1641,7 @@ int t_mvbel (void)
 	           break;
 
 	        case 3: //ATTENDE CARATTERE DI ESITO TEST SU LINEA A
-              	set_out_port(0, DOP0_KMA, 0);
+              	set_out_port(0, DOP0_KMA|DOP0_KMB, 0);
 
         		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
@@ -1669,16 +1669,16 @@ int t_mvbel (void)
 	        case 4:// AVVIA TEST SU LINEA B
 	               
             	printf("\n\nPROVA TRASMISSIONE CON RELÈ CHIUSI SULLA LINEA B:\n\n");
-            	printf("Verificare con un oscilloscopio che tra i pin 3 e 4 del connettore MVB1\n");
+            	printf("Verificare con un oscilloscopio che tra i pin 4 e 5 del connettore MVB1\n");
             	printf("della scheda EMD sia presente un segnale di trasmissione seriale con   \n");
             	printf("bit rate di 1 usec e ampiezza co mpresa tra 2 e 12 V p.p.\n\n");
-            	printf("\nPremere 1 se la forma d'onda sulla linea B tra i pin 3 e 4 è corretta altrimenti premere 0\n");
-               	set_out_port(0, DOP0_KMB, DOP0_KMB);
+            	printf("\nPremere 1 se la forma d'onda sulla linea B tra i pin 4 e 5 è corretta altrimenti premere 0\n");
+              	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMB);
 	            stato = 5;
 	           break;
 	        
 	        case 5:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA 5
-	            set_out_port(0, DOP0_KMB, DOP0_KMB);
+              	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMB);
         		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		} 
@@ -1702,15 +1702,16 @@ int t_mvbel (void)
 	           break;
 	        
 	        case 6://PROVA ISOLAMENTO LINEA B
+              	set_out_port(0, DOP0_KMA|DOP0_KMB, 0);
                	printf("\n\nPROVA ISOLAMENTO LINEA B\n\n");    
-            	printf("Verificare con un oscilloscopio che tra i pin 3 e 4 dei connettori CN1 e CN2\n");
+            	printf("Verificare con un oscilloscopio che tra i pin 4 e 5 dei connettori CN1 e CN2\n");
             	printf("della scheda EMD non sia presente alcun segnale\n\n");
-                printf("\nPremere 1 se la trasmissione sulla linea B tra i pin 3 e 4 si interrompe altrimenti premere 0\n");    
+                printf("\nPremere 1 se la trasmissione sulla linea B tra i pin 4 e 5 si interrompe altrimenti premere 0\n");    
                 stato = 7;
 	           break;
 
 	        case 7: //ATTENDE CARATTERE DI ESITO TEST SU LINEA B
-              	set_out_port(0, DOP0_KMB, 0);
+              	set_out_port(0, DOP0_KMA|DOP0_KMB, 0);
 
         		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
@@ -1913,15 +1914,16 @@ short test_SW1 (short argc, char *argv[] )
 	for (i = 0; i<10; i++);                 /* istruzione di attesa				*/
 	*regscr = 0x8001;						/* predispone per l'inizializzazione dei reg.	*/
 	for (i = 0; i<10; i++);					/* istruzione di attesa				*/
-	*regdaok = 0x0049;						/* sovrascrive indirizzo hardware               */
+	*regdaok = 0x0049;						/* DISAB sovrascrive indirizzo hardware               */
 	data1 = *regdaor;						/* legge il Device Address			*/ 
 	*regdr = 0x0000;						/* consente lo switch tra le linee		*/
-	*regimr0 = 0xFFFF;						/* abilita tutte le interrupt			*/
-	*regimr1 = 0xFFFF;
+	*regimr0 = 0x0000;						/* abilita tutte le interrupt			*/
+	*regimr1 = 0x0000;
 	*regivr0 = 0;
 	*regivr1 = 0;
 //   	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);
-	*regscr = 0x8503;						/* abilito in full mode l'mvb	*/
+//	*regscr = 0x8503;						/* abilito in full mode l'mvb	*/
+//	*regscr = 0x8502;						/* abilito in full mode l'mvb	*/
 
     if ((argc==2)&& (strcmp(argv[1],"get")==0))
     {
@@ -1933,14 +1935,14 @@ short test_SW1 (short argc, char *argv[] )
 
     printf("TEST SW1\n");
     while (!exit){
-        if ((c=_getkey())  == '\t') exit= 1;
+        if ((c=sio_poll_key(10))  == '\t') exit= 1;
   		
             
         switch(sts_testsw1)
         {
             case 0://premi invio verificare 1
                 printf("step 1: Posizionare SW1 su 1 e premere INVIO\n");
-                while ((c=_getkey())  != '\r')
+                while ((c=sio_poll_key(10))  != '\r')
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -1956,7 +1958,7 @@ short test_SW1 (short argc, char *argv[] )
                 break;
             case 1://premi invio verificare 2
                 printf("step 2: Posizionare SW1 su 2 e premere INVIO\n");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -1975,7 +1977,7 @@ short test_SW1 (short argc, char *argv[] )
                 break;
             case 2://premi invio verificare 4
                 printf("step 3: Posizionare SW1 su 4 e premere INVIO\n");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -1994,7 +1996,7 @@ short test_SW1 (short argc, char *argv[] )
                 break;
             case 3://premi invio verificare 8
                 printf("step 4: Posizionare SW1 su 8 e premere INVIO\n");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -2013,7 +2015,7 @@ short test_SW1 (short argc, char *argv[] )
                 break;
             case 4://premi invio verificare 0
                 printf("step 5: Posizionare SW1 su 0 e premere INVIO\n");
-                while (((c=_getkey())  != '\r')&&((c=_getkey())  != 'x'))
+                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -2101,50 +2103,22 @@ short test_mvb (short argc, char *argv[] )
 	char c;
 
 	printf("\nTEST Traffic Memory MVB\n");
-	printf("POSIZIONARE SW1 IN POSIZIONE 1 E PREMERE INVIO\r\n");
-    while( (c=_getkey())  != '\r');
-
-	*regscr = 0x0000;
-
-	printf("VERIFICA selettore d'indirizzo IN POSIZ 1\r\n");
 	/* MCM IS 0 ->TM SIZE 16KB*/
-	*regmcr = *regmcr & 0xFFF8;// set MCM=000 
+	*regmcr1 = *regmcr1 & 0xFFF8;// set MCM=000 
 	*regscr = *regscr | 0x8001;// set IL=01  configuration mode
-
-//	for (i = 0; i<10; i++);                 /* istruzione di attesa				*/
-//	*regscr = 0x8001;						/* predispone per l'inizializzazione dei reg.	*/
-//	for (i = 0; i<10; i++);					/* istruzione di attesa				*/
-//	*regdaok = 0x0049;						/* sovrascrive indirizzo hardware               */
-//	data1 = *regdaor;						/* legge il Device Address			*/ 
-//	*regdr = 0x0000;						/* consente lo switch tra le linee		*/
-//	*regimr0 = 0x0000;						/* abilita tutte le interrupt			*/
-//	*regimr1 = 0x0000;
-//	*regivr0 = 0;
-	
 	er = 0;
-	*regdaok = 0x0049;
-	data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
-	if (data1 != 1){
-//	     save_stato(TMVBSELKO);
-//	     printf("\n !! selezionare SW1 in posizione 1  \n");
-	}
-	else 
-    {
-//	     save_stato(TMVBSELOK);
-    }
 
-	printf("Test Service Area in Traffic Memory (C03C00H..C03FFEH)\r\n");
 
-	sasaddmvb1     = 0xC03C00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
-    saeaddmvb1     = 0xC03FFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
+	printf("Test Service Area (C0FC00H..C0FFFEH)\r\n");
 
-	if (shf0(sasaddmvb1,saeaddmvb1)) save_stato(TMVBSASHF0KO);
+//	sasaddmvb1     = 0xC03C00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
+//    saeaddmvb1     = 0xC03FFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
+
+	if (shf0(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF0KO);
 	else save_stato(TMVBSASHF0OK);	
 
-
-	if (shf1(sasaddmvb1,saeaddmvb1)) save_stato(TMVBSASHF1KO);
+	if (shf1(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF1KO);
 	else save_stato(TMVBSASHF1OK);	
-
 /*
 	if (march(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMARCHKO);
 	else save_stato(TMVBSAMARCHOK);	
@@ -2153,7 +2127,7 @@ short test_mvb (short argc, char *argv[] )
 	else save_stato(TMVBSAMXRUMOK);	
 */
 
-	printf("Test della Traffic Memory 1MB MCM = 4\r\n");
+	printf("Test della Traffic Memory 1MB MCM = 4 evitando la Service Area testata prima\r\n");
 	*regmcr = *regmcr | funmode;
 
 	if (shf0_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF0KO);

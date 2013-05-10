@@ -59,7 +59,7 @@
 /* Test IO KO */ 
 #define  TESTIOKO 		0x0301
 /* Test MVB  SW1 OK */ 
-#define  TESTSW1OK 		0x0301
+#define  TESTSW1OK 		0x0302
 
 
 
