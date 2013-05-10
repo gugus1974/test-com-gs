@@ -538,8 +538,8 @@ static short TestCOM_cmd(short argc, char *argv[])
 //            printf("    2 - test FLASH 0-shifting\n");       
             printf("    2 - test EEPROM\n");       
             printf("    3 - test IO digitali\n");       
-            printf("    4 - test SW1 MVB \n");       
-            printf("    5 - test MVB Traffic Memory\n");       
+            printf("    4 - test MVB Traffic Memory\n");       
+            printf("    5 - test SW1 MVB \n");       
             printf("    6 - test TX/RX MVB\n");       
             printf("    7 - test LED\n");       
             printf("    8 - test REPORT\n");       
@@ -591,14 +591,14 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    }
     		else if (strcmp(s,"4") == 0)
     		{		
-    	        printf("Test SW1 %d\n");
-    	        test_SW1(0,0);
+    	        printf("test MVB Traffic Memory\n");
+    	        test_mvb(0,0);
     	        stsTest = 0;
     	    }
     		else if (strcmp(s,"5") == 0)
     		{		
-    	        printf("test MVB Traffic Memory\n");
-    	        test_mvb(0,0);
+    	        printf("Test SW1 %d\n");
+    	        test_SW1(0,0);
     	        stsTest = 0;
     	    }
     		else if (strcmp(s,"6") == 0)
@@ -621,7 +621,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    else if (strcmp(s,"10") == 0)
     	    {
                 printf("COPY RAM->ROM\n");
-	             hw_ram2rom ();
+//	             hw_ram2rom ();
 	            //hw_reset();
             }
             else

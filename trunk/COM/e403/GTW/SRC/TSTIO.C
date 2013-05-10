@@ -555,11 +555,16 @@ void tstio_getDI()
 
 short tstio_led(short argc, char *argv[])
 {
-    unsigned int i,j;    
-    char c;
-    
+    unsigned int i,j,exit;    
+    char c[32];
     
     printf("Verificare accensione dei led secondo la segquenza 4A-4B-5A-5B-6A-6B\n");
+    printf("premere un tasto per iniziare la sequenza\n");
+    while (!sio_poll_key(10)); 
+
+    exit =0;
+    do{
+    
     set_out_port(1,DOP1_LD6b_,DOP1_LD6b_);
     set_out_port(1,DOP1_LD6a_,DOP1_LD6a_);
     set_out_port(1,DOP1_LD5b_,DOP1_LD5b_);
@@ -639,11 +644,25 @@ short tstio_led(short argc, char *argv[])
     set_out_port(1,DOP1_LD4a_,DOP1_LD4a_);
    
     printf("Premere 1 se la sequenza di accensione è corretta altrimenti premere 0\n");
-	        
-    while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') ){}
+    printf("Premere ""x"" per ripetere la sequenza\n");
+    if (!get_line(c, sizeof(c), 0)) exit =0;
+	
+        if(strcmp(c,"x") == 0)  
+            exit =0;
+        
+        if(strcmp(c,"1") == 0){
+            exit =1;
+            save_stato(TESTLED_OK);
+        }
+        if(strcmp(c,"0") == 0){
+            exit =1;
+            save_stato(TESTLED_KO);
+        }
     
-    if (c == '1') save_stato(TESTLED_OK);
-    else          save_stato(TESTLED_KO);
+    } while (!exit);       
+//    while (((c=sio_poll_key(10))!= '0') && ((c=sio_poll_key(10))!= '1') );       
+    
+
 
 }
 
