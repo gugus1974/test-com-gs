@@ -740,6 +740,7 @@ short tstio(short argc, char *argv[] )
     static  unsigned short  result[4];
 
     static  unsigned char   posiz;
+    static  unsigned char   ko1;
     
     unsigned int i,j,k;    
     unsigned short  bkpA_C[4];
@@ -804,112 +805,106 @@ short tstio(short argc, char *argv[] )
 //    for (i = 1; i <= 54; i++) putchar('0' + (i % 10));
 //    printf("\n");
 //    
-        /*  TEST1 */
+    /*  TEST1 shift degli 1 sulle uscite */
     for(i=1;i<55;i++)
     {
         /*reset error */
         err[i]=0;
-        
-//        while( ((c=_getkey())  != '\t'));
-        
-        /*set a 0 di tutti i DO*/
-        clearDO();
+        ko1 = 1;
+        while ( (ko1 == 1) && ((c=sio_poll_key(10)) != '\r'))
+		{		
+            /*set a 0 di tutti i DO*/
+            clearDO();
+            for(j=0;j<100;j++);
+    
+            /*salvo lo stato degli ingressi prima del TEST1*/
+            tstio_getDI();
+            lettura_di_prec[0] = lettura_di[0];
+            lettura_di_prec[1] = lettura_di[1];
+            lettura_di_prec[2] = lettura_di[2];
+            lettura_di_prec[3] = lettura_di[3];
+            /*set a 1 l'output */    
+            tstio_setDO(i,1);
 
-        for(j=0;j<100;j++);
-
-        /*salvo lo stato dei di prima del test1*/
-        tstio_getDI();
-        lettura_di_prec[0] = lettura_di[0];
-        lettura_di_prec[1] = lettura_di[1];
-        lettura_di_prec[2] = lettura_di[2];
-        lettura_di_prec[3] = lettura_di[3];
-
-        /*set a 1 l'output */    
-        tstio_setDO(i,1);
-
-        for(j=0;j<1000;j++);
-        /* aggiorna la lettura degli ingressi*/
-        tstio_getDI();
+            for(j=0;j<1000;j++);
+            /* aggiorna la lettura degli ingressi*/
+            tstio_getDI();
          
-//        printf("\nTest a 1 riga %2d\n",i);
-//        printf("READ:");
-//        printbits(lettura_di[0],16,'0','1');
-//        printbits(lettura_di[1],16,'0','1');
-//        printbits(lettura_di[2],16,'0','1');
-//        printbits(lettura_di[3],6,'0','1');
-
-        /* confrontando le variazioni sui di*/
-        result[0] = lettura_di_prec[0]^lettura_di[0];
-        result[1] = lettura_di_prec[1]^lettura_di[1];
-        result[2] = lettura_di_prec[2]^lettura_di[2];
-        result[3] = lettura_di_prec[3]^lettura_di[3];
-//        printf("\nVRFY:");
-//        printbits(result[0],16,'0','1');
-//        printbits(result[1],16,'0','1');
-//        printbits(result[2],16,'0','1');
-//        printbits(result[3],6,'0','1');
-//        printf("\n");
-        /*controlla le variazioni degli ingressi*/
-        for(j=0;j<4;j++){
-            for(k = 0; k <= 15; k++){
-                posiz = k+(j*16)+1;
-                if (result[j] & (1<<k)){
-//                    printf("TEST 1 riga=%d -> letto 1 posiz=%d  (k,j,i)=(%d,%d,%d)\n",i,posiz,k,j,i);
-                    if ( posiz != i)
-                    {                
-                        if (((i==1 || i==5) && posiz!=38)||
-                            ((i==2 || i==6) && posiz!=45)||
-                            ((i==3 || i==7) && posiz!=53)||
-                            ((i==4 || i==8) && posiz!=54)||
-                            (i>8))
-                         {
-                            printf("!!! TEST 1  riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \n",i,posiz);
-                            err[i] = 1; //error
-                            break;
-                         }
-                    } 
-                }      
-            }
-        }
-//        printf("errT1 =%d\n",err[i]);
-        
-        /* TEST0*/
-        lettura_di_prec[0] = lettura_di[0];
-        lettura_di_prec[1] = lettura_di[1];
-        lettura_di_prec[2] = lettura_di[2];
-        lettura_di_prec[3] = lettura_di[3];
-
-       /*set a 0 l'output */    
-        tstio_setDO(i,0);
-
-        /*just a delay*/
-        for(j=0;j<1000;j++);
-        /* aggiorna la lettura degli ingressi*/
-        tstio_getDI();
-//        printf("\nTest a 0 riga %2d\n",i);
-//        printf("READ:");
-//        printbits(lettura_di[0],16,'0','1');
-//        printbits(lettura_di[1],16,'0','1');
-//        printbits(lettura_di[2],16,'0','1');
-//        printbits(lettura_di[3],6,'0','1');
-//        printf("\n");
-        /* confrontando le variazioni sui di*/
-        
-
-
-        /*controlla le variazioni degli ingressi*/
-        for(j=0;j<4;j++){
-           for(k = 0; k <= 15; k++){
-                posiz = k+(j*16)+1;
-                if (lettura_di[j] & (1<<k)){
-                    printf("!!! TEST 0 riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \n",i,posiz);
-                    err[i] = 2; //error
-                    break;
+            /* confronta le variazioni sui di*/
+            result[0] = lettura_di_prec[0]^lettura_di[0];
+            result[1] = lettura_di_prec[1]^lettura_di[1];
+            result[2] = lettura_di_prec[2]^lettura_di[2];
+            result[3] = lettura_di_prec[3]^lettura_di[3];
+            //        printf("\nVRFY:");
+            //        printbits(result[0],16,'0','1');
+            //        printbits(result[1],16,'0','1');
+            //        printbits(result[2],16,'0','1');
+            //        printbits(result[3],6,'0','1');
+            //        printf("\n");
+            ko1 = 0;
+            /*controlla le variazioni degli ingressi*/
+            for(j=0;j<4;j++){
+                for(k = 0; k <= 15; k++){
+                    posiz = k+(j*16)+1;
+                    if (result[j] & (1<<k)){
+                        if ( posiz != i){                
+                            if (((i==1 || i==5) && posiz!=38)||
+                                ((i==2 || i==6) && posiz!=45)||
+                                ((i==3 || i==7) && posiz!=53)||
+                                ((i==4 || i==8) && posiz!=54)||
+                                (i>8)){
+                                printf("!!! TEST 1  riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \r",i,posiz);
+                                err[i] = 1; //error
+                                ko1 = 1;
+                                break;
+                             }
+                        } 
+                    }      
                 }
-            } 
+            }
+//        printf("errT1 =%d\n",err[i]);
         }
-//        printf("errT0 =%d \n",err[i]);
 
+        ko1 = 1;
+        while ( (ko1 == 1) && ((c=sio_poll_key(10)) != '\r'))
+		{		
+
+            /* TEST0*/
+            lettura_di_prec[0] = lettura_di[0];
+            lettura_di_prec[1] = lettura_di[1];
+            lettura_di_prec[2] = lettura_di[2];
+            lettura_di_prec[3] = lettura_di[3];
+        
+           /*set a 0 l'output */    
+            tstio_setDO(i,0);
+    
+            /*just a delay*/
+            for(j=0;j<1000;j++);
+            /* aggiorna la lettura degli ingressi*/
+            tstio_getDI();
+    //        printf("\nTest a 0 riga %2d\n",i);
+    //        printf("READ:");
+    //        printbits(lettura_di[0],16,'0','1');
+    //        printbits(lettura_di[1],16,'0','1');
+    //        printbits(lettura_di[2],16,'0','1');
+    //        printbits(lettura_di[3],6,'0','1');
+    //        printf("\n");
+            /* confrontando le variazioni sui di*/
+            ko1 = 0;
+            /*controlla le variazioni degli ingressi*/
+            for(j=0;j<4;j++){
+               for(k = 0; k <= 15; k++){
+                    posiz = k+(j*16)+1;
+                    if (lettura_di[j] & (1<<k)){
+                        printf("!!! TEST 0 riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \n",i,posiz);
+                        err[i] = 2; //error
+                        ko1 = 1;
+                        break;
+                    }
+                } 
+            }
+//        printf("errT0 =%d \n",err[i]);
+        }
     }
     
     test_ret= 0;//superato

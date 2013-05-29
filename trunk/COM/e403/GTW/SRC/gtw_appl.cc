@@ -672,7 +672,7 @@ NcEleID get_station_id(unsigned short mvb_hw_address)
     ushell_register("do", "<ch> <0|1>", "Digital Onputs",           do_cmd);
     ushell_register("w", "", "copy RAM to Flash",                   w_cmd);   
 
-    ushell_exec("tstcom\n");
+//    ushell_exec("tstcom\n");
 	return station_id = 0;
 }
 
