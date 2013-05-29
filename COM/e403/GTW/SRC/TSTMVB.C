@@ -2099,14 +2099,14 @@ short tstmvb_txrx(short argc, char *argv[] )
 /**********************************************************/
 short test_mvb (short argc, char *argv[] )
 {
-	unsigned short data1,i,er;
+	unsigned short data1,i,er[4];
 	char c;
 
 	printf("\nTEST Traffic Memory MVB\n");
 	/* MCM IS 0 ->TM SIZE 16KB*/
 	*regmcr1 = *regmcr1 & 0xFFF8;// set MCM=000 
 	*regscr = *regscr | 0x8001;// set IL=01  configuration mode
-	er = 0;
+//	er = 0;
 
 
 	printf("Test Service Area (C0FC00H..C0FFFEH)\r\n");
@@ -2114,11 +2114,23 @@ short test_mvb (short argc, char *argv[] )
 //	sasaddmvb1     = 0xC03C00;   /* indirizzo di partenza della service area dell'MVBC nel mode 'funmode'*/     
 //    saeaddmvb1     = 0xC03FFE;   /* indirizzo di fine della service area dell'MVBC nel mode 'funmode'*/
 
-	if (shf0(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF0KO);
-	else save_stato(TMVBSASHF0OK);	
+	if (shf0(sasaddmvb,saeaddmvb)){
+	    save_stato(TMVBSASHF0KO);
+	    er[0]=1;
+	}
+	else{
+	    save_stato(TMVBSASHF0OK);	
+	    er[0]=0;
+	}
 
-	if (shf1(sasaddmvb,saeaddmvb)) save_stato(TMVBSASHF1KO);
-	else save_stato(TMVBSASHF1OK);	
+	if (shf1(sasaddmvb,saeaddmvb)){
+	    save_stato(TMVBSASHF1KO);
+	    er[1]=1;
+	}
+	else{
+        save_stato(TMVBSASHF1OK);	
+        er[1]=0;
+    }
 /*
 	if (march(sasaddmvb,saeaddmvb)) save_stato(TMVBSAMARCHKO);
 	else save_stato(TMVBSAMARCHOK);	
@@ -2130,11 +2142,23 @@ short test_mvb (short argc, char *argv[] )
 	printf("Test della Traffic Memory 1MB MCM = 4 evitando la Service Area testata prima\r\n");
 	*regmcr = *regmcr | funmode;
 
-	if (shf0_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF0KO);
-	else save_stato(TMVBTMSHF0OK);	
+	if (shf0_mvb(saddmvb,eaddmvb)) {
+	    save_stato(TMVBTMSHF0KO);
+	    er[2]=1;
+	}
+	else {
+	    save_stato(TMVBTMSHF0OK);	
+	    er[2]=0;
+	}
 
-	if (shf1_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMSHF1KO);
-	else save_stato(TMVBTMSHF1OK);	
+	if (shf1_mvb(saddmvb,eaddmvb)) {
+	    save_stato(TMVBTMSHF1KO);
+	    er[3]=1;
+	}
+	else {
+	    save_stato(TMVBTMSHF1OK);	
+	    er[3]=0;
+	}
 /*
 	if (march_mvb(saddmvb,eaddmvb)) save_stato(TMVBTMMARCHKO);
 	else save_stato(TMVBTMMARCHOK);	
@@ -2143,6 +2167,7 @@ short test_mvb (short argc, char *argv[] )
 	else save_stato(TMVBTMMXRUMOK);	
 
 */
-    printf("TEST MVB terminato");
+    if(er[0] || er[1] || er[2] || er[3] )    printf("TEST_TM_MVB_KO\n");
+    else printf("TEST_TM_MVB_OK\n");
 }
 
