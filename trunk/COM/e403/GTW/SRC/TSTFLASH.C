@@ -15,10 +15,11 @@
 
 
 /* la flash viene vista come un array di interi */
-#define flash1 ((unsigned int  *)(0x402AAA))
-#define flash2 ((unsigned int  *)(0x405555))
+#define flash1 ((unsigned short  *)(0x40AAAA))
+#define flash2 ((unsigned short  *)(0x405555))
 #define KEY1    0x5555
-#define KEY2    0x2AAA
+//#define KEY2    0x2AAA
+#define KEY2    0xAAAA
 #define am29f040(base, offset) *((( unsigned short  *)(base)) + (offset))
 
 //#define flash2 ((unsigned int  *)(0x405554))
@@ -47,7 +48,6 @@ unsigned short  * flashlimit =(unsigned short  *)0x48FFFE; /*  limite superiore 
 static short am29f040_wait(void *base, long offset, short value)
 {
     short t;
-//    err = am29f040_wait(base, 0, 0xFFFF);
 
     do
     {
@@ -98,6 +98,8 @@ int chip_erase(void)
 	int er;
     char c;
 	er = 0;//azzera errore
+	
+	
 	printf("ERASE FLASH...");
 	/***    procedura di start erase         ***/
     am29f040(sctstr, 0)       = 0xF0F0;//reset
@@ -152,22 +154,22 @@ int chip_erase(void)
 		data3 =  am29f040(sctstr, 0);
 		
 		if(/*(i==0) ||*/ (i==32000)) {
-			printf("%d %05x data=%04x\r",i,a,data3);
+//			printf("%d %05x data=%04x\r",i,a,data3);
 			a++;
 		}
 		
 		i++;
         
-        if ( (c=_getkey()) == '\t' ) 
-	    {
-		    er = 3;
-	    	break;
-			
-		}				
-//	    printf("\ni=%d ok1=%d  ok2=%d  addr=%05d data=%04x tim1=%d  tim2=%d\n",i,ok1,ok2,a,data3 , tim1, tim2);
-    	//printf("%05d data=%04x\r\n",a,data3);
+//        if ( (c=_getkey()) == '\t' ) 
+//	    {
+//		    er = 3;
+//	    	break;
+//			
+//		}				
+//	    printf("i=%d ok1=%d  ok2=%d  addr=%05d data=%04x tim1=%d  tim2=%d\r",i,ok1,ok2,a,data3 , tim1, tim2);
+    	printf("data=%04x\r",data3);
 	}
-	data3 = *flash1;
+//	data3 = *flash1;
 //	printf("\n RESET FLASH CHIP\n");
 	*flash1 = 0xF0F0;
 
@@ -904,7 +906,6 @@ short tstflash_vel (short argc, char *argv[] )
 	unsigned long app;
 	char c;
 
-
 	i=i;
 	
 	error = 0;
@@ -922,16 +923,16 @@ short tstflash_vel (short argc, char *argv[] )
 
     /* check the manufacture code and Am29F040 device code */
     if (am29f040(sctstr, 0) != 0x0101 || am29f040(sctstr, 1) != 0xA4A4)
-        printf("\nAM29F04O NON RICONOSCIUTA\n");
+        printf("\nAM29F040 NON RICONOSCIUTA\n");
     else
-        printf("\nAM29F04O RICONOSCIUTA\n");
+        printf("\nAM29F040 RICONOSCIUTA\n");
 
     /* reset to read mode and return */
     am29f040(sctstr, 0)       = 0xF0F0;
 	
-	
 	printf("TEST ERASE FLASH...\n");
 	error = chip_erase();
+
 	if(error) 
 	    printf("ERASE FAILED (error = %d)\n",error);
 	else

@@ -896,7 +896,7 @@ short tstio(short argc, char *argv[] )
                for(k = 0; k <= 15; k++){
                     posiz = k+(j*16)+1;
                     if (lettura_di[j] & (1<<k)){
-                        printf("!!! TEST 0 riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \n",i,posiz);
+                        printf("!!! TEST 0 riga %d KO -> letto 1 alla riga %d della tabella 2 della specifica di collaudo \r",i,posiz);
                         err[i] = 2; //error
                         ko1 = 1;
                         break;
