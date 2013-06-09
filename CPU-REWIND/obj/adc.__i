@@ -1,1 +1,0 @@
-"src\adc.c" OPTIMIZE (SIZE) CODE SYMBOLS PRINT(.\lst\adc.lst) PREPRINT(.\lst\adc.i) OBJECT(.\obj\adc.obj)

@@ -1,9 +1,0 @@
-".\exe\main.obj",
-".\exe\test_ram.obj",
-".\exe\adc.obj",
-".\exe\pio.obj",
-".\exe\uart8251.obj" 
-TO ".\exe\test" 
-PRINT(".\lst\test.m51") NOLINES 
-CODE( 0X0000-0X4FFE )
-XDATA( 0X0000-0X1FFE )
