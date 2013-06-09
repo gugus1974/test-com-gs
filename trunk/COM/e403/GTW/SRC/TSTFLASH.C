@@ -15,11 +15,10 @@
 
 
 /* la flash viene vista come un array di interi */
-#define flash1 ((unsigned short  *)(0x40AAAA))
-#define flash2 ((unsigned short  *)(0x405555))
+#define flash1 ((unsigned int  *)(0x402AAA))
+#define flash2 ((unsigned int  *)(0x405555))
 #define KEY1    0x5555
-//#define KEY2    0x2AAA
-#define KEY2    0xAAAA
+#define KEY2    0x2AAA
 #define am29f040(base, offset) *((( unsigned short  *)(base)) + (offset))
 
 //#define flash2 ((unsigned int  *)(0x405554))
@@ -100,7 +99,7 @@ int chip_erase(void)
 	er = 0;//azzera errore
 	
 	
-	printf("ERASE FLASH...");
+	printf("ERASE FLASH...\n");
 	/***    procedura di start erase         ***/
     am29f040(sctstr, 0)       = 0xF0F0;//reset
     am29f040(sctstr, KEY1)    = 0xAAAA;//KEY1= 5555
@@ -154,7 +153,7 @@ int chip_erase(void)
 		data3 =  am29f040(sctstr, 0);
 		
 		if(/*(i==0) ||*/ (i==32000)) {
-//			printf("%d %05x data=%04x\r",i,a,data3);
+			printf("%d %05x data=%04x\r",i,a,data3);
 			a++;
 		}
 		
@@ -169,8 +168,8 @@ int chip_erase(void)
 //	    printf("i=%d ok1=%d  ok2=%d  addr=%05d data=%04x tim1=%d  tim2=%d\r",i,ok1,ok2,a,data3 , tim1, tim2);
     	printf("data=%04x\r",data3);
 	}
-//	data3 = *flash1;
-//	printf("\n RESET FLASH CHIP\n");
+	data3 = *flash1;
+	printf("\n");
 	*flash1 = 0xF0F0;
 
 	return er;
