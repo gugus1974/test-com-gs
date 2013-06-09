@@ -1,0 +1,538 @@
+/*==============================================================================================*/
+/* Hardware Monitoring interface                                                                */
+/* Implementation file (hw_mon.c) 													            */
+/* 																					            */
+/* Version 1.0																		            */
+/*																					            */
+/* (c)1997 Ansaldo Trasporti														            */
+/* Written by Giuseppe Carnevale													            */
+/*==============================================================================================*/
+/*
+    $Date: 2006/12/05 14:02:11 $          $ $
+    $Author: schiavor $
+*/
+
+
+/*==============================================================================================*/
+/* Includes */
+
+#include "hw_mon.h"
+
+#if defined(__C166__)
+/*
+#ifndef _REG167_H_
+#define _REG167_H_
+#include "reg167.h"
+#endif
+*/
+#include "cpudrv.h"
+#include <intrins.h>				  /* intrinsic functions                  */
+#elif defined(_MRI)
+#include "hw_com.h"
+#endif
+#include <stdio.h>
+
+#include "atr_hw.h"
+#include "pi_sys.h"
+#include "ushell.h"
+#include "am29f040.h"
+#include "crc.h"
+#include "strparse.h"
+#include "atr_log.h"
+
+
+/*==============================================================================================*/
+/* Pragmas */
+
+#ifdef __C166__
+#pragma WL(0)
+#endif
+
+
+/*==============================================================================================*/
+/* Globals */
+
+#if defined(O_COM)
+static char buf[128];	/* temporary placeholder */
+#endif
+
+
+/*==============================================================================================*/
+/* Version commands */
+
+/*----------------------------------------------------------------------------------------------*/
+extern const char application_version[];
+extern const char library_version[];
+static short version_dump(short argc, char *argv[])
+{
+	if (argc != 1) return -1;
+
+	if (application_version[0])	printf("*** Application : %s\n", application_version[0] != ' ' ?
+										application_version : application_version + 1);
+	if (library_version[0])		printf("*** Library     : %s\n", library_version);
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+#ifdef __C166__
+static short rom_crc(short argc, char *argv[])
+{
+	if (argc != 1) return -1;
+
+	printf("\nROM CRC : 0x%X\n", hw_rom_crc());
+	return 0;
+}
+#endif
+
+
+/*==============================================================================================*/
+/* Target commands */
+
+#ifdef _MRI
+extern char *sys_unused_low,		/* first unused byte in the heap */
+			*sys_unused_high;		/* highest heap address */
+#endif
+
+/*----------------------------------------------------------------------------------------------*/
+static short target_cmd(short argc, char *argv[])
+{
+	unsigned long ticks = pi_ticks_elapsed();
+
+	if (argc != 1) return -1;
+
+	printf("\n*** PIL status ***\n");
+	printf("PIL ticks since startup : 0x%lX (", ticks);
+	dump_ticks(ticks);
+	printf(")\n");
+	printf("PIL system pool use     : 0x%lX\n", pi_mempool_use(0));
+
+#ifdef __C166__
+	printf("\n*** RTX-166 status ***\n");
+	printf("RTX-166 heap use        : 0x%X\n", os_heap_use());
+	printf("RTX-166 heap use far    : 0x%lX\n", os_heap_use_far());
+#endif
+
+#ifdef _MRI
+	printf("\n*** VRTXsa status ***\n");
+	printf("VRTX workspace free     : 0x%lX\n", sys_unused_high - sys_unused_low);
+#endif
+
+	return 0;
+}
+
+
+/*==============================================================================================*/
+/* Reset commands */
+
+/*----------------------------------------------------------------------------------------------*/
+static short reset_cmd(short argc, char *argv[])
+{
+	if (argc != 1) return -1;
+
+	printf("Resetting...\n");
+	pi_wait(500/PI_TICK);
+	hw_reset();
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+static short nmi_cmd(short argc, char *argv[])
+{
+	/* parse the argument */
+	if (argc != 1) return -1;
+
+	/* send a Non-Maskable Interrupt */
+	hw_nmi();
+
+	return 0;
+}
+
+
+/*==============================================================================================*/
+/* Reset commands (C166 specific) */
+
+#ifdef __C166__
+
+/*----------------------------------------------------------------------------------------------*/
+static short reboot_cmd(short argc, char *argv[])
+{
+	if (argc != 2) return -1;
+
+	printf("ROM disabled. Rebooting...\n");
+	pi_wait(500/PI_TICK);
+	hw_reboot((void*)parse_number(argv[1]), 0);
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+static short reset2rom_cmd(short argc, char *argv[])
+{
+	if (argc != 1) return -1;
+
+	printf("ROM enabled. Resetting...\n");
+	pi_wait(500/PI_TICK);
+	hw_reset2rom();
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+static short bootstrap_loader_cmd(short argc, char *argv[])
+{
+	if (argc > 2) return -1;
+
+	/* start the bootstrap loader */
+	printf("Bootstrap loader enabled.\n");
+	pi_wait(500/PI_TICK);
+	hw_bootstrap_loader();
+
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+
+#endif
+
+
+/*==============================================================================================*/
+/* Memory commands */
+
+/*----------------------------------------------------------------------------------------------*/
+static short memory_dump(short argc, char *argv[])
+{
+	static long  address = 0;	/* address of the memory to show */
+	static short len = 64;		/* len of the memory block */
+
+	if (argc > 3) return -1;
+	if (argc >= 2) address = parse_number(argv[1]);
+	if (argc == 3) len = parse_number(argv[2]);
+	dump_buffer(TRUE, (void*)address, len);
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+static short memory_set(short argc, char *argv[])
+{
+	long  address;	/* memory address */
+
+	if (argc != 3) return -1;
+	address = parse_number(argv[1]);
+	parse_buffer(argv[2], (void*)address, 1);
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+static short crc16_cmd(short argc, char *argv[])
+{
+	if (argc != 3) return -1;
+	printf("CRC16 : 0x%04X\n", crc_16(crc_table_0x1021, 0, (void*)parse_number(argv[1]),
+									  parse_number(argv[2])));
+
+	return 0;
+}
+
+
+/*==============================================================================================*/
+/* CPU performance measurement routines */
+
+/*----------------------------------------------------------------------------------------------*/
+#if defined(__C166__)
+
+static short cpu_cmd(short argc, char *argv[])
+{
+	long i;				/* generic index */
+	long t1, t2;		/* times */
+	long n = 500000;	/* number of loops */
+
+	/* parse the arguments */
+	if (argc != 1) return -1;
+
+	/* sync with the next tick */
+	t2 = 0;
+	while ((t1 = pi_ticks_elapsed()) == t2);
+
+	/* do our loop (the instructions here are just to have the same timing of the next loop) */
+	for (i = 0; i < n; i++) {
+		_srvwdt_();
+		if (T0IR) t2++;
+	}
+
+	/* calculate the ticks elapsed */
+	t1 = pi_ticks_elapsed() - t1;
+
+	/* disable all the interrupts */
+	_atomic_(3); IEN = 0; _nop_(); _nop_();
+
+	/* prepare the next test and sync with the next tick */
+	t2 = 0;
+	while (!T0IR);
+	T0IR = 0;
+
+	/* do our loop again */
+	for (i = 0; i < n; i++) {
+		_srvwdt_();
+		if (T0IR) {
+ 			T0IR = 0;
+ 			t2++;
+   		}
+	}
+
+	/* end the test enabling the interrupts */
+	IEN = 1;
+
+	/* print the test report */
+	printf("CPU usage: %lu%%\n", 100 - ((t2 * 100) / t1));
+
+	return 0;
+}
+
+#elif defined (_MRI)
+
+static short cpu_cmd(short argc, char *argv[])
+{
+	unsigned long i;			/* generic index */
+	unsigned long t1, t2;		/* times */
+	unsigned long n = 1000000;	/* number of loops */
+
+	/* parse the arguments */
+	if (argc != 1) return -1;
+
+	/* sync with the next tick, do our loop and calculate the ticks elapsed */
+	i = cpm_risctimer_counter();
+	while ((t1 = cpm_risctimer_counter()) == i);
+	for (i = 0; i < n; i++) quicc->sim_swsr = 0x55, quicc->sim_swsr = 0xAA;
+	t1 = cpm_risctimer_counter() - t1;
+
+	/* disable everything else is running */
+	pi_disable();
+
+	/* sync with the next tick, do our loop and calculate the ticks elapsed */
+	i = cpm_risctimer_counter();
+	while ((t2 = cpm_risctimer_counter()) == i);
+	for (i = 0; i < n; i++) quicc->sim_swsr = 0x55, quicc->sim_swsr = 0xAA;
+	t2 = cpm_risctimer_counter() - t2;
+
+	/* re-enable the others (hoping they are still alive...) */
+	pi_enable();
+
+	/* print the test report */
+	printf("CPU usage: %lu%%\n", 100 - ((t2 * 100) / t1));
+
+	return 0;
+}
+
+#endif
+
+
+/*==============================================================================================*/
+/* Flash management */
+
+/*---------------------------------------------------------------------------------------------*/
+static short flash_check(short argc, char *argv[])
+{
+	if (argc != 2) return -1;
+
+	if (am29f040_check_code((void*)parse_number(argv[1])) == AM29F040_OK)
+		printf("Am29F040 detected.\n");
+	else printf("No FLASH memory at the specified base address.\n");
+
+	return 0;
+}
+
+
+/*---------------------------------------------------------------------------------------------*/
+static short flash_sector_erase(short argc, char *argv[])
+{
+	if (argc != 3) return -1;
+
+	if (am29f040_sector_erase((void*)parse_number(argv[1]), parse_number(argv[2])) == AM29F040_OK)
+		printf("Am29F040 sector succesfully erased.\n");
+	else printf("Unable to erase the specified sector.\n");
+
+	return 0;
+}
+
+/*---------------------------------------------------------------------------------------------*/
+static short flash_chiperase(short argc, char *argv[])
+{
+	if (argc != 3) return -1;
+
+	if (am29f040_chip_erase(0x400000) == AM29F040_OK)
+		printf("FLASH ERASE OK\n");
+	else printf("Unable to erase the specified sector.\n");
+
+	return 0;
+}
+
+
+/*---------------------------------------------------------------------------------------------*/
+static short flash_write(short argc, char *argv[])
+{
+	short err;		/* error code */
+	void *buff;		/* buffer ptr */
+	short buff_len;	/* buffer used len */
+
+	if (argc != 4) return -1;
+
+	buff = pi_alloc(512);
+	buff_len = parse_buffer(argv[3], buff, 1);
+	err = am29f040_write((void*)parse_number(argv[1]), parse_number(argv[2]), buff, buff_len);
+	pi_free(buff);
+
+	if (err == AM29F040_OK) printf("Am29F040 write OK.\n");
+	else printf("Unable to write.\n");
+
+	return 0;
+}
+
+
+/*==============================================================================================*/
+/* EEPROM management */
+
+#if defined(O_COM)
+
+#include "x25642.h"
+
+/*---------------------------------------------------------------------------------------------*/
+static short eeprom_read_status(short argc, char *argv[])
+{
+	short 			err;
+	unsigned char	status;
+
+	if (argc != 1) return -1;
+
+	Check(x25642_read_status(&status));
+	printf("X25642 status byte: %02X\n", status);
+
+error:
+	if (err) printf("ERROR: %d\n", err);
+	return 0;
+}
+
+
+/*---------------------------------------------------------------------------------------------*/
+static short eeprom_write_status(short argc, char *argv[])
+{
+	short 			err;
+	unsigned char	status;
+
+	if (argc != 2) return -1;
+
+	status = parse_number(argv[1]);
+	Check(x25642_write_status(status));
+
+error:
+	if (err) printf("ERROR: %d\n", err);
+	return 0;
+}
+
+
+/*---------------------------------------------------------------------------------------------*/
+static short eeprom_read(short argc, char *argv[])
+{
+	static unsigned short address = 0;	/* address of the memory to show */
+	static unsigned short len = 64;		/* len of the memory block */
+	short				  err;
+	void				  *buf = 0;
+
+	if (argc > 3) return -1;
+	if (argc >= 2) address = parse_number(argv[1]);
+	if (argc == 3) len = parse_number(argv[2]);
+
+	buf = pi_alloc(len);
+	Check(x25642_read(address, buf, len));
+	printf("Memory dump of X25642 @ 0x%04X :\n", address);
+	dump_buffer(FALSE, buf, len);
+
+error:
+	if (buf) pi_free(buf);
+	if (err) printf("ERROR: %d\n", err);
+	return 0;
+}
+
+
+/*---------------------------------------------------------------------------------------------*/
+static short eeprom_write(short argc, char *argv[])
+{
+	unsigned short address;	/* memory address */
+	unsigned short len;		/* len of the memory block */
+	short		   err;
+
+	if (argc != 3) return -1;
+	address = parse_number(argv[1]);
+	len = parse_buffer(argv[2], (void*)buf, 1);
+	Check(x25642_write(address, buf, len));
+
+error:
+	if (err) printf("ERROR: %d\n", err);
+	return 0;
+}
+
+
+/*---------------------------------------------------------------------------------------------*/
+
+#endif
+
+
+/*==============================================================================================*/
+/* "Human" interface */
+
+void hw_monitor(void)
+{
+	ushell_register("ver", "", "Print the version string", version_dump);
+#ifdef __C166__
+	ushell_register("rom_crc", "", "Print the CRC of the ROM", rom_crc);
+#endif
+
+	ushell_register("t", "", "Show target info", target_cmd);
+
+	ushell_register("reset", "", "Reset the board", reset_cmd);
+	ushell_register("nmi", "", "Send a Non-Maskable Interrupt", nmi_cmd);
+
+#ifdef __C166__
+	ushell_register("reboot", "<addr>", "Reboot to addr", reboot_cmd);
+	ushell_register("resetrom", "", "Reset to ROM", reset2rom_cmd);
+ 	ushell_register("bootload", "", "Start the bootstrap loader", bootstrap_loader_cmd);
+#endif
+
+	ushell_register("dm", "[<addr> [<size>]]", "Dump a memory region", memory_dump);
+	ushell_register("sm", "<addr> <data..>", "Set a memory region", memory_set);
+	ushell_register("crc16", "<addr> <len>", "Calculate the CRC-16 of a memory region", crc16_cmd);
+
+#if defined(__C166__) || defined(_MRI)
+	ushell_register("cpu", "", "Measure the CPU usage", cpu_cmd);
+#endif
+
+	ushell_register("flash_check", "<base>", "Check that there is a FLASH at that address", flash_check);
+	ushell_register("flash_sector_erase", "<base> <sector num>", "Erase a FLASH sector", flash_sector_erase);
+	ushell_register("flash_write", "<base> <offset> <data..>", "Write data to a FLASH", flash_write);
+	ushell_register("flash_chip_erase", "<base> ", "Write data to a FLASH", flash_chiperase);
+
+#ifdef O_COM
+	ushell_register("eeprom_read_status", "", "Read the serial EEPROM status byte", eeprom_read_status);
+	ushell_register("eeprom_write_status", "<status>", "Write the serial EEPROM status byte", eeprom_write_status);
+	ushell_register("eeprom_read", "[<addr> [<size>]]", "Read data from the serial EEPROM", eeprom_read);
+	ushell_register("eeprom_write", "<addr> <data..>", "Write data from the serial EEPROM", eeprom_write);
+#endif
+}
+
+
+/*==============================================================================================*/
+/* ****************************************************************************
+    $Log: hw_mon.c,v $
+    Revision 1.1.2.3  2006/12/05 14:02:11  schiavor
+    05/12/2006                         Napoli                            SchiavoR
+    si rende compatibile con il sw del gtw
+
+    Revision 1.1.2.2  2005/03/01 14:54:05  schiavor
+     01/03/05                  Napoli                       SchiavoR
+    sostituito include reg167.h con cpudrv.h
+
+    Revision
+*/

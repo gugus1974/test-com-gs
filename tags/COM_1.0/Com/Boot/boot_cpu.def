@@ -1,0 +1,16 @@
+# -----------------------------------------------------------------------------------------------
+# Xconfig definition file for building the boot image for the COM board
+#
+# (c)1997 Ansaldo Trasporti
+# Written by Giuseppe Carnevale
+# -----------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------
+# Include the definitions for the boot image, the target and the compiler
+# -----------------------------------------------------------------------------------------------
+
+@include(boot.def)
+@dnl @include(mrxhs020.def)
+@include(../bsp/atrcom.def)
+@include(microtec.def)
+

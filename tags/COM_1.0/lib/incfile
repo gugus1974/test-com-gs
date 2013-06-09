@@ -1,0 +1,72 @@
+#****************************************************************/
+# 2004/nov/30,mar 12:10                 \SWISV\LIB\incfile      */
+#****************************************************************/
+#   Definizione variabili per dipendenze da 'include file'      */
+#****************************************************************/
+# $Date: 2004/12/13 10:08:23 $          $Revision: 1.1 $
+# $Author: mungiguerrav $
+
+
+DLIBS   =   \SWISV\LIB\SRC
+DLIBD   =   \SWISV\LIB\HCD
+
+
+I_am29Dev   =   $(DLIBS)\am29Dev.h
+I_am29f040  =   $(DLIBS)\am29f040.h
+I_consio    =   $(DLIBS)\consio.h
+I_consolle  =   $(DLIBS)\consolle.h
+I_cputmg    =   $(DLIBS)\cputmg.h
+I_diag      =   $(DLIBS)\diag.h
+I_diDrv     =   $(DLIBS)\diDrv.h
+I_diDrvCmd  =   $(DLIBS)\diDrvCmd.h
+I_doDrv     =   $(DLIBS)\doDrv.h
+I_doDrvCmd  =   $(DLIBS)\dodrvcmd.h
+I_dp8570a   =   $(DLIBS)\dp8570a.h
+I_dp_comm   =   $(DLIBS)\dp_comm.h      $(I_dp_mbx)
+I_dp_mbx    =   $(DLIBS)\dp_mbx.h
+I_dp_ram    =   $(DLIBS)\dp_ram.h       $(I_dp_mbx)
+I_energy    =   $(DLIBS)\energy.h
+I_hw16x     =   $(DLIBS)\hw16x.h
+I_libisv    =   $(DLIBS)\libisv.h
+I_logMac    =   $(DLIBS)\logMac.h
+I_mdvDev    =   $(DLIBS)\mdvDev.h
+I_memd      =   $(DLIBS)\memd.h
+I_msf       =   $(DLIBS)\msf.h
+I_nvramDev  =   $(DLIBS)\nvramDev.h
+I_pardb     =   $(DLIBS)\pardb.h        $(I_stream)
+I_query     =   $(DLIBS)\query.h
+I_queryCmd  =   $(DLIBS)\queryCmd.h
+I_ramDev    =   $(DLIBS)\ramDev.h
+I_ritar     =   $(DLIBS)\ritar.h
+I_rtcCmd    =   $(DLIBS)\rtcCmd.h
+I_sio       =   $(DLIBS)\sio.h
+I_spartan   =   $(DLIBS)\spartan.h
+I_stream    =   $(DLIBS)\stream.h
+I_strmCmd   =   $(DLIBS)\strmCmd.h
+I_strParse  =   $(DLIBS)\strParse.h
+I_strt_usr  =   $(DLIBS)\strt_usr.h
+I_tempo     =   $(DLIBS)\tempo.h
+I_timeDate  =   $(DLIBS)\timeDate.h
+I_trace     =   $(DLIBS)\trace.h        $(I_stream)
+I_trcbk     =   $(DLIBS)\trcbk.h
+I_ushell    =   $(DLIBS)\ushell.h       $(I_strParse)
+I_vardb     =   $(DLIBS)\vardb.h
+I_vardbCmd  =   $(DLIBS)\vardbCmd.h
+I_versio    =   $(DLIBS)\versio.h
+I_view      =   $(DLIBS)\view.h
+
+I_dsptmg    =   $(DLIBD)\dsptmg.h
+I_frepick   =   $(DLIBD)\frepick.h
+I_libdsp    =   $(DLIBD)\libdsp.h       $(I_libisv)
+I_regC31    =   $(DLIBD)\regC31.h
+
+
+#****************************************************************************/
+# $Log: incfile,v $
+# Revision 1.1  2004/12/13 10:08:23  mungiguerrav
+# 2004/nov/30,mar 12:10           Napoli      Mungi
+# - Si crea per permettere ai mekefile di gestire gli include a piu' livelli:
+#   in questo file sono create le variabili con gli include a cascade dei file
+#   header presenti nella dir SRC e HCD
+#
+# 

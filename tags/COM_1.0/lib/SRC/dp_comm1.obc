@@ -1,0 +1,34 @@
+@echo off
+rem 2004/nov/12,ven 15:50               \SWISV\LIB\SRC\dp_comm1.obc
+rem ==============================================================
+rem
+rem ==============================================================
+rem $Date: 2004/11/12 15:12:18 $        $Revision: 1.3 $
+rem $Author: mungiguerrav $
+
+
+:HL7
+call    \SWISV\COMANDI\skca     %1      dea     v403    lib
+if "%risSK%"=="0"           goto HL7end
+    echo .obc: errore in %dObj%\%1      >>  \SWISV\TEMP.DAN\error.rac
+:HL7end
+
+
+rem ****************************************************************************/
+rem $Log: dp_comm1.obc,v $
+rem Revision 1.3  2004/11/12 15:12:18  mungiguerrav
+rem 2004/nov/12,ven 15:50          Napoli       Mungi
+rem - Si aggiungono keyword CVS e breve storia
+rem - Adegua il test di errore a Win2000        (if "%risXX%"=="0")
+rem - Migliora le informazioni fornite in caso di errore di compilazione
+rem
+rem
+rem ----------------   Fase transitoria tra *.mod e CVS    ------------
+rem     Revision 1.2        2004/08/31 14:25:16     mungiguerrav
+rem     2004/ago/31,mar 16:25        Napoli          Mungi\Busco
+rem     - Si effettua Merge da branch makefile
+rem
+rem     Revision 1.1.2.1    2004/06/16 15:42:41     buscob
+rem     - Inserimento sul branch makefile
+rem 01.00   2004/giu/16,mer         Napoli              Busco
+rem         - Creazione con la compilazione solo per OBJ7L

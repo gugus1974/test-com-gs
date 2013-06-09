@@ -1,0 +1,28 @@
+[Project ID]
+Signature=UE Proj: v.1
+[Project Information]
+Use Relative Directory=1
+Relative to Project File=1
+Include Sub Directories=1
+Project Tagfile=
+Project Wordfile=
+Filter=
+Create Tagfile=0
+Using VCS=1
+Save Account=1
+VCS Default Module={9C4C305D-E75A-407d-8C61-C34BCB2187C5}
+[Files]
+0=C:\SW\
+[VCS Module List]
+{9C4C305D-E75A-407d-8C61-C34BCB2187C5}=
+[{9C4C305D-E75A-407d-8C61-C34BCB2187C5}]
+Module Id={9C4C305D-E75A-407d-8C61-C34BCB2187C5}
+Module Type=SVN
+Module Path=C:\SW
+Module Enabled=true
+Account Information=
+Account Id={E8613E9F-6217-4d57-9989-46A160378D32}
+Account Type=SVN
+Account Name=
+VCS Module Path=
+VCS Specific Settings=

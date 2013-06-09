@@ -1,0 +1,99 @@
+# -----------------------------------------------------------------------------------------------
+# Xconfig definition file for building a TCN gateway for the COM board
+#
+# (c)1997 Ansaldo Trasporti
+# Written by Giuseppe Carnevale
+# 07/09/2001     Schiavo        Napoli
+# - si elim. dipendenza da c:
+# -----------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------
+# Include the definitions for the operating system, the target and the compiler
+# -----------------------------------------------------------------------------------------------
+
+@include(vrtxsa.def)
+@dnl @include(mrxhs020.def)
+@include(/sw/com/bsp/atrcom.def)
+@include(microtec.def)
+
+
+# -----------------------------------------------------------------------------------------------
+# The following lines define the application's target rule in the makefile
+# -----------------------------------------------------------------------------------------------
+
+make.*.vrtxos.name:	ComTest
+make.*.vrtxos.target:   ComTest.x
+
+
+# -----------------------------------------------------------------------------------------------
+# The next two lines will disable the Xtrace debug and system call
+# server, which is not needed when XDM is used
+# -----------------------------------------------------------------------------------------------
+
+sys.os_mode:		no
+sys.syscall_server:	no
+
+
+# -----------------------------------------------------------------------------------------------
+# The following lines define the files to be linked with the kernel (VRTXsa)
+# when the example is linked. The name of the resulting absolute file is
+# also given here.
+# -----------------------------------------------------------------------------------------------
+
+vrtxos.objs.usr:	$(LIBSDIR)/vde_sc.o
+vrtxos.libs.usr:	../OBJ/ComTest.lib, /SW/COM/LIBs/LIB/com_tcn.lib, $(MRI_68K_LIB)/ccc68kab.lib, $(MRI_68K_LIB)/mcc68kab.lib
+user.cc_flags:		-I/SW/COM/LIBs/INC -g -Gf -O -Ob -Oe -Ot -zc -D__READY_EXTENSIONS__
+
+# -----------------------------------------------------------------------------------------------
+# The following line defines the function that creates the first task.
+# It is written by the user, and is usually called spawn_main. What is
+# does is simply to create the main (first) task.
+# -----------------------------------------------------------------------------------------------
+
+sys.entry_point2:	main
+
+
+# -----------------------------------------------------------------------------------------------
+# The make.rule should be link_abs to generate an absolute IEEE file
+# for XRAY.
+# -----------------------------------------------------------------------------------------------
+
+make.rule : link_abs
+
+
+# -----------------------------------------------------------------------------------------------
+# The following lines define the starting address of the example code
+# and data. The default is to use the "board.memory.host.address" of
+# the selected board. This is where spectra downloads user code.
+# If the "make.*.vrtxos.data" is commented out (default), the data will
+# be linked after the code.
+# -----------------------------------------------------------------------------------------------
+
+#make.*.vrtxos.code : `@substr(@(board.memory.host.address),2)'
+#make.*.vrtxos.data : xxx
+
+
+# -----------------------------------------------------------------------------------------------
+# The following lines define the stack sizes
+# We do not use a software interrupt stack (to have better performance), but we have quite large
+# task stack sizes (our interrupt routines are memory hungry)
+# -----------------------------------------------------------------------------------------------
+
+vrtx.interrupt.stack_size : 0
+vrtx.system.stack_size    : 8192
+vrtx.idle_task.stack_size : 8192
+vrtx.user.stack_size      : 16384
+
+
+# -----------------------------------------------------------------------------------------------
+# Here we specify some system parameters
+# -----------------------------------------------------------------------------------------------
+
+vrtx.user_task_count : 12
+
+
+# -----------------------------------------------------------------------------------------------
+
+@dnl rtl.IFX_support: yes
+@dnl ifx.enabled: yes
+

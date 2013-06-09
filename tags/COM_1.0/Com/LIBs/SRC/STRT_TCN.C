@@ -1,0 +1,1024 @@
+/************************************************************************/
+/* 2005/gen/24,lun 16:50                \SWISV\TCNS\SRC\strt_tcn.c      */
+/************************************************************************/
+/* TCN startup                                                          */
+/************************************************************************/
+/*
+    $Date: 2005/01/24 15:59:00 $          $Revision: 1.6 $
+    $Author: mungiguerrav $
+*/
+
+/*==============================================================================================*/
+/* Includes */
+
+#include <stdio.h>
+#include <string.h>
+
+#include "strt_tcn.h"
+#include "conf_tcn.h"
+#include "recorder.h"
+#include "atr_hw.h"
+#include "sio.h"
+#include "hw_mon.h"
+#include "tcn_mon.h"
+#include "ushell.h"
+//#include "lib_ver.h"
+
+#ifdef STRT_CONFIGURE_TCN
+#include "lc_sys.h"
+#include "pi_sys.h"
+#include "am_sys.h"
+#include "bax_incl.h"
+#include "lm_layer.h"
+#include "atr_nma.h"
+#ifdef ATR_WTB
+#include "pdm_main.h"
+#include "atr_pdm.h"
+extern UNSIGNED16 pdm_ftf_size;
+void bmi_report_task(void);
+extern unsigned long BITRATE;
+#endif
+#ifdef STRT_MAP
+#ifdef UMS
+#include "adid.h"
+#include "uagt.h"
+#include "uimcs.h"
+#include "ungs.h"
+#include "utbc.h"
+#include "uwtm.h"
+extern void ums_monitor(void);
+#else
+#include "map.h"
+void map_npt(void);
+void map_npv(void);
+unsigned short node_mode_from_vhdes(map_VehicleDescr *vhdes);
+void map_monitor(void);
+#endif
+#endif
+#endif
+
+
+/*==============================================================================================*/
+/* Pragmas */
+
+#ifdef __C166__
+#pragma WL(3) hold(near 1024)
+#endif
+
+
+/*==============================================================================================*/
+/* Configuration check */
+
+#if defined(ATR_WTB) && !defined(STRT_MAP)
+#error Not supported: cannot configure the WTB LL without the UIC Mapping Server
+#endif
+
+#if !defined(ATR_WTB) && defined(STRT_MAP) && defined(UMS)
+#error Not supported: UIC Mapping Server 12 for stations not available
+#endif
+
+
+/*==============================================================================================*/
+/* Externals */
+
+extern const NcObjHeader *nc_db_ptr;    /* default NC database ptr */
+extern const AppStEntry  nc_ap_list[];  /* NC application list of configurations */
+
+
+/*==============================================================================================*/
+/* Globals */
+
+const char application_version[] = STRT_PROJECT_STRING " (" __DATE__ " " __TIME__ ")";
+//const char library_version[]     = LIB_VER;
+//extern const char library_version[]     = LIB_VER;
+
+char strt_tcn_configured = FALSE;   /* if TRUE the configuration was succesful          */
+char strt_tcn_failure    = FALSE;   /* if TRUE there was a failure in the configuration */
+
+#ifdef STRT_CONFIGURE_TCN
+
+static TYPE_LP_TMO_CLUS *tmo_cfg = 0;   /* TMO configuration pointer */
+
+static const struct LM_STR_FRAGMENTS xq0 = TM0_XQ0_SPACE;
+static const struct LM_STR_FRAGMENTS xq1 = TM0_XQ1_SPACE;
+static const struct LM_STR_FRAGMENTS rq = TM0_RQ_SPACE;
+
+static unsigned short address = 0;  /* address of this device; if 0 the TCN is out of service */
+
+#ifdef ATR_WTB
+#ifdef UMS
+static char id_ts[LI_INAUG_ENTRIES_MAX * sizeof(TYPE_InaugData)];
+#else
+static map_report old_map_Report;   /* MAP Report function to call */
+#endif
+#endif
+
+#endif
+
+
+/*==============================================================================================*/
+/* Prototypes */
+
+void strt_error(short err, unsigned short errl, const char *errs);
+void do_hw_init(void);
+
+void startcn_init (void);
+void strt(void);
+
+PI_TASK_DEF(sink_tmo);
+PI_TASK_DEF(messenger);
+PI_TASK_DEF(shell_task);
+PI_TASK_DEF(bmi_task);
+PI_TASK_DEF(pdm_task);
+PI_TASK_DEF(map_task);
+
+#ifdef STRT_CONFIGURE_TCN
+
+void get_ba_diagnosis_change(struct BA_STR_DIAGNOSIS *p_diagnosis);
+
+#ifdef ATR_WTB
+void wtbll_Report(l_report r);
+#ifndef UMS
+void map_Report(map_ReportType r);
+#else
+int uwtm_Report(UNSIGNED8 control, UNSIGNED8 mode);
+#endif
+#endif
+
+#endif
+
+/*==============================================================================================*/
+/* Error reporting */
+
+#undef Check
+#define Check(x) if ((err = x) != 0) {errl = __LINE__; errs = #x; goto error;} else
+
+void strt_error(short err, unsigned short errl, const char *errs)
+{
+#ifdef STRT_SHELL_TASK_ID
+    printf("\n*** ERROR: file='%s', line=%u, command='%s', err=%d\n", __FILE__, errl, errs, err);
+#endif
+    nse_record(__FILE__, errl, NSE_EVENT_TYPE_ERROR, NSE_ACTION_CONTINUE,
+               sizeof(err), (UINT8*)&err);
+}
+
+
+/*==============================================================================================*/
+/* Hardware initialization */
+
+static void do_hw_init(void)
+{
+    static char hw_initialized = FALSE;
+
+    if (!hw_initialized) {
+#ifdef STRT_SIO_BAUD_RATE
+        hw_init(STRT_SIO_BAUD_RATE);
+        printf("\n\n\n");
+        printf("############################################\n");
+        printf("#                                          #\n");
+        printf("#              TEST COM v 1.0              #\n");
+        printf("#                                         L#\n");
+        printf("############################################\n");
+#else
+        hw_init(0);
+#endif
+        hw_initialized = TRUE;
+    }
+}
+
+
+/*==============================================================================================*/
+/* Entry point (different for each operating system) */
+
+/*----------------------------------------------------------------------------------------------*/
+/* RTX-166 */
+
+#ifdef __C166__
+
+/* number of tasks started here (user tasks excluded) */
+#define TASK_NUM    5
+
+#define CONTEXT_SIZE (6 + STRT_RTX166_WSPSIZE_FAST+6 + (TASK_NUM+STRT_USER_TASK_NUM)*(WSPSIZE+6))
+
+static unsigned int system_heap[STRT_RTX166_SYSPOOL_SIZE / 2];
+
+#pragma NOINIT
+// static unsigned int near context_heap[CONTEXT_SIZE / 2];
+static unsigned int near context_heap[(0x4000 - 0x800) / 2];
+#pragma INIT
+
+static const t_rtx_config rtx_conf = {
+    2 + TASK_NUM + STRT_USER_TASK_NUM,          /* max_tasks         */
+    STRT_RTX166_MAX_MAILBOXES,                  /* max_mailboxes     */
+    STRT_RTX166_MAX_SEMAPHORES,                 /* max_semaphores    */
+    STRT_RTX166_MAX_MEM_POOLS,                  /* max_mem_pools     */
+    WSPSIZE,                                    /* idle_wsp_size     */
+    STRT_RTX166_WSPSIZE_FAST,                   /* clock_wsp_size    */
+    STRT_RTX166_ROUND_ROBIN,                    /* round_robin       */
+    system_heap,                                /* system_pool       */
+    sizeof(system_heap),                        /* system_pool_size  */
+    FALSE,                                      /* rtx51             */
+    context_heap,                               /* context_pool      */
+    sizeof(context_heap)                        /* context_pool_size */
+};
+
+static char mempool[STRT_PIL_SYSPOOL_SIZE]; /* PIL system memory allocation pool */
+
+void startcn_init(void)
+{
+    short           err = 0;                    /* error code */
+    unsigned short  errl = 0;                   /* error line */
+    const char      *errs = 0;                  /* error string */
+
+#ifdef STRT_RTX166_NO_ALLOC_IN_ISR
+    int allow_isr_alloc = FALSE;
+#else
+    int allow_isr_alloc = TRUE;
+#endif
+
+    /* start the RTX-166 kernel */
+    Check(os_start_system(&rtx_conf));
+    Check(os_change_prio(STRT_BA_TASK_PRIO));
+    install_os_error_handler();
+
+    /* initialize the hardware */
+    do_hw_init();
+
+    /* initialize the PIL */
+    Check(pi_init((void*)(long)mempool, sizeof(mempool), TASK_NUM + STRT_USER_TASK_NUM,
+                  STRT_PIL_SEM_NUM, STRT_PIL_MQ_NUM, STRT_PIL_TMO_NUM, WSPSIZE,
+                  atr_cpu_clock / 1000, allow_isr_alloc));
+
+    /* install the hardware timeouts (PIL required) */
+    Check(hw_install_timeouts());
+
+    /* we are a task now, so we can simply jump to our entry point */
+    strt();
+
+    /* this isn't a PIL task, so we have to explicitly kill ourself */
+    os_delete_task(os_running_task_id());
+
+error:
+    do_hw_init();
+    strt_error(err, errl, errs);
+    while (1);
+}
+
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+/* VRTX */
+
+#ifdef _MRI
+
+PI_TASK(vrtx_strt, 0, STRT_BA_TASK_PRIO)
+{
+    short                       err = 0;                    /* error code */
+    unsigned short              errl = 0;                   /* error line */
+    const char                  *errs = 0;                  /* error string */
+
+    /* initialize the hardware */
+    do_hw_init();
+
+    /* initialize the PIL */
+    Check(pi_init(STRT_PIL_SYSPOOL_SIZE, STRT_PIL_TMO_NUM));
+
+    /* install the hardware timeouts (PIL required) */
+    Check(hw_install_timeouts());
+    
+    /* jump to our entry point */
+    strt();
+
+    return;
+
+error:
+    strt_error(err, errl, errs);
+}
+/* MAIN called from S.O.*/
+void STRT_ROUTINE_NAME (void)
+{
+    /* start our entry point as a task (we cannot do much now) */
+    pi_task_create(vrtx_strt, 0, STRT_BA_TASK_PRIO);
+}
+
+#endif
+
+
+/*==============================================================================================*/
+/* Strt entry point: this is a task with priority STRT_BA_TASK_PRIO */
+
+#ifdef STRT_CONFIGURE_TCN
+static unsigned long                station_id;         /* station id                           */
+static TYPE_LP_TS_CFG               *mvb_ts_cfg;        /* MVB traffic store configuration      */
+static struct BA_STR_CONFIGURATION  *ba_cfg;            /* MVB bus administrator configuration  */
+static AM_DIR_ENTRY                 *am_func_dir;       /* AM functions directory               */
+static short                        am_func_dir_size;   /* number of functions in the directory */
+#ifdef ATR_WTB
+static TYPE_LP_TS_CFG               *wtb_ts_cfg;        /* WTB traffic store configuration      */
+static TYPE_LP_CB                   wtb_cb;             /* WTB traffic store control block      */
+static void                         *pdm_cfg;           /* PDM configuration                    */
+static unsigned short               internal_mode;      /* PDM internal marshalling mode        */
+static unsigned short               export_mode;        /* PDM export marshalling mode          */
+static unsigned short               import_mode;        /* PDM import marshalling mode          */
+#ifdef UMS
+static ums_NodeConfigurationTable   ums_cfg;            /* UIC Mapping Server configuration (12)*/
+static UWTM_NODE_CONFIG_TABLE_T     uwtm_cfg;
+static UIMCS_T_CONFIGURATION        uimcs_cfg;
+#else
+static map_NodeConfigurationTable   map_cfg;            /* UIC Mapping Server configuration (10)*/
+#endif
+#endif
+static MvbcRedConfHeader            *mvbc_red_cfg;      /* MVBC line redundancy configuration   */
+#endif
+
+static void strt(void)
+{
+    short                       err = 0;            /* error code                           */
+    unsigned short              errl = 0;           /* error line                           */
+    const char                  *errs = 0;          /* error string                         */
+
+    /* initialize the shell if required */
+#ifdef STRT_SHELL_TASK_ID
+    ushell_init();
+#endif
+
+#ifdef STRT_CONFIGURE_TCN
+    /* set the NC database */
+#ifdef STRT_EXT_NCDB_ENABLED
+    {
+        void *ext_ncdb_ptr; /* external NCDB pointer */
+        Check(hw_ext_data_init(&ext_ncdb_ptr, 0));
+        Check(nc_set_db(ext_ncdb_ptr, nc_db_ptr));
+    }
+#else
+    Check(nc_set_db(0, nc_db_ptr));
+#endif
+
+    /* initialize the Link Layer Common (LC) */
+    lc_connect();               /* Initialize the indirect calling mechanism (if used) */
+    Check(lc_init());
+    Check(lc_m_config(MVB_TS_ID, (void*)TM0_BASE, TM0_SIZE, TM0_QO, TM0_MO));
+
+    /* install the interrupts captured by the MVBC */
+    Check(hw_install_lc_interrupts());
+
+    /* get the station configuration id from the user or from the hw address */
+    Check(lc_get_device_address(&address));
+#ifdef STRT_AUTO_ST_ID
+    station_id = STRT_AUTO_ST_ID | (address & 0xFF);
+#else
+    station_id = get_station_id(address);
+#endif
+
+    if (!station_id) address = 0;
+    else {
+
+        /* declare our station id to the configuration */
+        Check(nc_set_app_st_conf(nc_ap_list, station_id));
+
+        /* set the new device address */
+        Check(nc_mvb_address(0, &address));
+        Check(lc_set_device_address(address));
+
+        /* fix the device status word according to our capabilities */
+        lc_set_device_status_word(LC_DSW_DNR_MSK, LC_DSW_DNR_CLR);
+#ifdef ATR_WTB
+        lc_set_device_status_word(LC_DSW_TYPE_BRIDGE_MSK, LC_DSW_TYPE_BRIDGE_SET);
+#endif
+
+        /* start the MVB communication (this should happen later...) */
+        Check(lc_m_go(MVB_TS_ID));
+
+        /* initialize the LP */
+        Check(lp_init());
+
+        /* configure the MVB traffic store */
+        Check(nc_mvb_ts_cfg(&mvb_ts_cfg));
+        mvb_ts_cfg->pb_pit = (void*)TM0_PIT;
+        mvb_ts_cfg->pb_pcs = (void*)TM0_PCS;
+        mvb_ts_cfg->pb_prt = (void*)TM0_PRT;
+        mvb_ts_cfg->pb_frc = (void*)TM0_FRC;
+        Check(lp_create(MVB_TS_ID, LP_HW_TYPE_MVBC, mvb_ts_cfg, 0));
+        pi_free((void*)mvb_ts_cfg->p_prt_cfg);
+        pi_free((void*)mvb_ts_cfg);
+
+//#ifdef ATR_WTB
+//        /* configure the WTB traffic store */
+//        Check(nc_wtb_ts_cfg(&wtb_ts_cfg));
+//        Check(lp_create(WTB_TS_ID, LP_HW_TYPE_HDLC, wtb_ts_cfg, 0));
+//        Check(lp_enquiry(WTB_TS_ID, &wtb_cb));
+//        wtb_ts_cfg->pb_pit = wtb_cb.pb_pit;
+//        wtb_ts_cfg->pb_pcs = wtb_cb.pb_pcs;
+//        wtb_ts_cfg->pb_prt = wtb_cb.pb_prt;
+//        wtb_ts_cfg->pb_frc = wtb_cb.pb_frc;
+//        pi_free((void*)wtb_ts_cfg->p_prt_cfg);
+//        wtb_ts_cfg->p_prt_cfg = 0;
+//
+//        /* initialize the WTB link layer */
+//        ls_t_Init();
+//        Check(ls_t_Reset());
+//
+//#ifdef UMS
+//        /* initialize the UMS */
+//        li_t_IDTSInit((void*)id_ts);
+//        uwtm_init();
+//#endif
+//#endif
+
+        /* configure the datasets (PD) */
+        Check(nc_mvb_ds_cfg());
+
+        /* start the sink timeout supervision */
+#ifdef ATR_WTB
+//        Check(nc_tmo_cfg(&tmo_cfg, 33, 32));
+#else
+        Check(nc_tmo_cfg(&tmo_cfg, 0, 0));
+#endif
+        Check(pi_task_create(sink_tmo, STRT_SINK_TMO_TASK_ID, STRT_SINK_TMO_TASK_PRIO));
+
+        /* configure the message data layer (AM) and start the messenger task */
+        am_init();
+        Check(lm_m_v_config(MVB_TS_ID, (void*)&xq0, (void*)&xq1, (void*)&rq));
+        am_announce_device(nc_get_app_st_conf()->am_max_call_num,
+                           nc_get_app_st_conf()->am_max_inst_num,
+                           nc_get_app_st_conf()->am_ms_reply_tmo / 64,
+                           nc_get_app_st_conf()->am_my_credit);
+        Check(nc_func_cfg(&am_func_dir, &am_func_dir_size));
+        am_insert_dir_entries(am_func_dir, am_func_dir_size);
+        pi_free((void*)am_func_dir);
+        Check(pi_task_create(messenger, STRT_MESSENGER_TASK_ID, STRT_MESSENGER_TASK_PRIO));
+
+        /* configure the MVB bus administrator */
+        Check(nc_mvb_ba_cfg(&ba_cfg));
+        if (ba_cfg) {
+            bam_init();
+            bam_create(MVB_TS_ID, ba_cfg);
+        }
+
+#ifdef ATR_WTB
+//        /* get the PDM configuration (NULL if the gateway interface is disabled) */
+//        Check(nc_pdm_cfg(&pdm_cfg, &pdm_ftf_size));
+//
+//        if (pdm_cfg) {
+//            /* initialize the PDM */
+//            Check(pdm_init());
+//            Check(pi_task_create(pdm_task, STRT_PDM_TASK_ID, STRT_PDM_TASK_PRIO));
+//            Check(pdm_config(pdm_cfg, PDM_DO_NOT_MARSH, PDM_DO_NOT_MARSH, PDM_DO_NOT_MARSH));
+//            pdm_wtb_ts_crea_ind(WTB_TS_ID);
+//        }
+#endif
+
+#ifdef STRT_MAP
+#ifdef ATR_WTB
+        /* initialize the UIC Mapping Server */
+//        if (pdm_cfg) {
+#ifdef UMS
+//            Check(nc_ums_cfg(&ums_cfg, &uwtm_cfg, &uimcs_cfg));
+//            uwtm_cfg.wtb_config.p_traffic_store = (void*)wtb_ts_cfg;
+//            uwtm_cfg.wtb_config.Report          = wtbll_Report;
+//            li_t_IDTSConfig(&ums_cfg);
+//            Check(utbc_init(&ums_cfg, NULL));
+//            Check(ungs_init(&ums_cfg));
+//            Check(uagt_init(5, &ums_cfg));
+//            Check(uwtm_configure(&uwtm_cfg, uwtm_Report));
+//            Check(uimcs_init(&uimcs_cfg));
+#else
+//            Check(map_init());
+//            Check(map_install(map_Report, &old_map_Report, 0, 0));
+//            Check(pi_task_create(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO));
+//            map_user_ls_Report = wtbll_Report;
+//            Check(nc_map_cfg(&map_cfg));
+//            Check(nc_node_cfg(pdm_node_mode_mask(node_mode_from_vhdes(&map_cfg.vehicle_descriptor)),
+//                              &map_cfg.configuration.node_descriptor));
+//            map_cfg.configuration.ts_descriptor = (void*)wtb_ts_cfg;
+//            Check(map_configure(&map_cfg));
+#endif
+//        }
+//        /* start the WTB report task */
+//        Check(pi_task_create(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO));
+#else
+//        if (nc_mvb_map_cfg())
+//            Check(pi_task_create(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO));
+#endif
+#endif
+
+        /* install the network management */
+        Check(atr_nma_init());
+
+        /* configure and start the MVBC line redundancy monitor if required */
+        Check(nc_mvbc_red_cfg(&mvbc_red_cfg));
+        Check(mvbc_red_init(mvbc_red_cfg));
+    }
+#endif
+
+    /* create the shell task if required */
+#ifdef STRT_SHELL_TASK_ID
+    Check(pi_task_create(shell_task, STRT_SHELL_TASK_ID, STRT_SHELL_TASK_PRIO));
+#endif
+
+    /* install the required monitors */
+#ifdef STRT_INSTALL_MONITORS
+    hw_monitor();
+#ifdef STRT_CONFIGURE_TCN
+    if (station_id) {
+        tcn_monitor();
+#if defined(STRT_MAP) && defined(UMS)
+        ums_monitor();
+#elif defined(STRT_MAP)
+        map_monitor();
+#endif
+    }
+#endif
+#endif
+
+    /* create the application task */
+#ifdef STRT_APPLICATION_TASK_ID
+    Check(pi_task_create(application_task, STRT_APPLICATION_TASK_ID, STRT_APPLICATION_TASK_PRIO));
+#endif
+
+    strt_tcn_configured = TRUE;
+
+#ifdef STRT_CONFIGURE_TCN
+    /* run the MVB bus administrator if required */
+    if (ba_cfg) {
+
+        /* subscribe the ba diagnosis procedure */
+        ba_subscribe_diagnosis(0, get_ba_diagnosis_change);
+
+        /* go to the BA task (this should never return) */
+        bam_task(MVB_TS_ID);
+    }
+#endif
+
+error:
+    if (err) {
+
+        strt_tcn_failure = TRUE;
+
+        /* we have got some error; if possible try to set up a debugging environment */
+        strt_error(err, errl, errs);
+#ifdef STRT_SHELL_TASK_ID
+        ushell_init();
+        hw_monitor();
+#ifdef STRT_CONFIGURE_TCN
+        tcn_monitor();
+        address = 0;
+#endif
+        pi_task_create(shell_task, STRT_SHELL_TASK_ID, STRT_SHELL_TASK_PRIO);
+#endif
+    }
+}
+
+
+/*----------------------------------------------------------------------------------------------*/
+#ifdef STRT_CONFIGURE_TCN
+PI_TASK(sink_tmo, STRT_SINK_TMO_TASK_ID, STRT_SINK_TMO_TASK_PRIO)
+{
+    while (tmo_cfg) {
+        lp_tmo_counter(tmo_cfg);
+        pi_wait(ms2tick(64));
+    }
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+#ifdef STRT_CONFIGURE_TCN
+PI_TASK(messenger, STRT_MESSENGER_TASK_ID, STRT_MESSENGER_TASK_PRIO)
+{
+    while (1) {
+        tm_messenger();
+#ifdef UMS
+        uimcs_handler();
+#endif
+        pi_wait(ms2tick(64));
+    }
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+#if defined(STRT_CONFIGURE_TCN) && defined(ATR_WTB)
+PI_TASK(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO)
+{
+    bmi_report_task();
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+#if defined(STRT_CONFIGURE_TCN) && defined(ATR_WTB)
+PI_TASK(pdm_task, STRT_PDM_TASK_ID, STRT_PDM_TASK_PRIO)
+{
+    pdm_main();
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+#if defined(STRT_CONFIGURE_TCN) && defined(STRT_MAP) && !defined(UMS)
+PI_TASK(map_task, STRT_MAP_TASK_ID, STRT_MAP_TASK_PRIO)
+{
+    while (1) {
+#ifdef ATR_WTB
+        map_npt();
+#else
+        map_npv();
+#endif
+        pi_wait(ms2tick(64 /*50*/));
+    }
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+#ifdef STRT_SHELL_TASK_ID
+#include <stdio.h>
+PI_TASK(shell_task, STRT_SHELL_TASK_ID, STRT_SHELL_TASK_PRIO)
+{
+    static char prompt[32];
+
+    printf("\n--- Shell --- Type '?' for help\n");
+
+    /* build the shell prompt */
+#ifdef STRT_CONFIGURE_TCN
+    if (address)
+        sprintf(prompt, "%s/%s:%d>", atr_hw_name, nc_get_app_st_conf()->txt_name, address);
+    else
+#endif
+    sprintf(prompt, "%s>", atr_hw_name);
+
+    /* start the shell */
+    ushell(prompt);
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+/* MVB Report functions */
+
+#if defined(STRT_CONFIGURE_TCN)
+
+struct BA_STR_DIAGNOSIS *ba_status = 0; /* MVB BA status */
+
+static void get_ba_diagnosis_change(struct BA_STR_DIAGNOSIS *p_diagnosis)
+{
+    /* update the BA status pointer (accessible only within the library) */
+    ba_status = p_diagnosis;
+
+#ifndef STRT_NO_USER_BA_REPORT
+    /* inform the user about the BA report */
+    user_ba_report((void*)p_diagnosis);
+#endif
+}
+
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+/* WTB Report functions */
+
+#if defined(STRT_CONFIGURE_TCN) && defined(ATR_WTB)
+
+static void wtbll_Report(l_report r)
+{
+    static Type_Topography  t;  /* placeholder for the current train topography */
+
+    /* filter invalid reports */
+    if (r <= 1) return;
+
+    /* if there is a topography, set the current topo counter */
+    if (!ls_t_GetTopography(&t)) {
+        am_set_current_tc(t.topo_counter);
+#ifdef UMS
+        pdm_new_wtb_topo(&t);
+#endif
+    }
+
+#ifndef STRT_NO_USER_LS_REPORT
+    /* inform the user about the LS report */
+    user_ls_report(r);
+#endif
+
+#ifdef STRT_INSTALL_MONITORS
+    /* display the report */
+    tcn_monitor_wtbll_Report(r);
+#endif
+}
+
+#ifndef UMS
+
+static void map_Report(map_ReportType r)
+{
+#ifndef STRT_NO_USER_MAP_REPORT
+    /* inform the user about the MAP report */
+    user_map_report(r);
+#endif
+
+    /* call the previously installed report function if any */
+    if (old_map_Report) (*old_map_Report)(r);
+}
+
+#else
+
+static int uwtm_Report(UNSIGNED8 control, UNSIGNED8 mode)
+{
+    printf(">>> %d %d <<<\n", control, mode);
+
+    /* in single node mode we prefer to disable the PDM */
+    if (control == PDM_START && mode == PDM_SINGLE_NODE)
+        return pdm_control(PDM_STOP, 0);
+    return pdm_control(control, mode);
+}
+
+#endif
+
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+#ifdef STRT_PROVIDES_NSE_RECORD
+#include "atr_log.h"
+int nse_record(char *module_name, UINT16 line_number, int event_type, int event_action,
+               UINT8 list_length, UINT8 *p_list)
+{
+    return atr_record(module_name, line_number, event_type, event_action, list_length, p_list, 0, 0);
+}
+#endif
+
+
+/*----------------------------------------------------------------------------------------------*/
+
+/****************************************************************************
+ $Log: strt_tcn.c,v $
+ Revision 1.6  2005/01/24 15:59:00  mungiguerrav
+ 2005/gen/24,lun 16:50           Napoli      Mungi
+ - Si elimina include lib_ver.h e si sost. il define LIB_VER direttamente con
+   la stringa  fissa: "Comando Obsoleto: usare [vers] "
+
+ Revision 1.5  2004/09/03 12:51:59  mungiguerrav
+ 2004/set/03,ven 13:55       Napoli      Mungi
+ - Si corregge mancanza caratteri di commento intorno ai
+   token CVS: DATE,REVISION,AUTHOR
+
+ Revision 1.4  2004/09/02 14:04:23  mungiguerrav
+ 2004/09/02,gio 16:00    Napoli          Mungi\Busco
+ - Si correggono errori di fine commento nella storia
+   aggiunta a mano sotto il LOG
+
+ Revision 1.3  2004/09/02 09:51:18  mungiguerrav
+ 2004/set/01,mer 17:30   Napoli          Mungi\Busco
+ - Si inserisce la versione sviluppata su branch makefile, ottenuta applicando
+     le modifiche di Schiavo delle foto      tcns05 e tcns06 (usata in ambito CCU/IDU/GTW)
+     alla versione di Mungi/Busco della foto tcns04a         (usata in ambito TCU AIACE)
+ - Si inseriscono  gestioni automatiche CVS (DATE, FILE, AUTHOR, LOG)
+
+
+                        strt_tcn.mod
+********************************************************
+                        \SWISV\TCNS\SRC\strt_tcn.c
+********************************************************
+        Gestione dello start del TCN in base alle opzioni
+        decise dall'utente in strt_usr.h
+        Il file deve percio' essere sempre ricompilato
+********************************************************
+01.00   1997.xxx.yy             Napoli              Carnevale
+        - Creazione
+02.00   1997.xxx.yy             Napoli              Carnevale
+        - ????????
+03.00   1997.dic.18,ven         Napoli              Carnevale
+        - Prima versione di cui vi sia traccia in TCN01:
+          non saprei neppure cosa indicare nelle caratteristiche
+03.01   1997.dic.18,ven         Napoli              Carnevale
+        - Versione in TCN01a
+        - Si agg. prot. locale:     void bmi_task()
+        - Si cambia il primo parametro di pi_init,
+            da  pi_init(                    0, STRT_PIL_TMO_NUM)
+            a   pi_init(STRT_PIL_SYSPOOL_SIZE, STRT_PIL_TMO_NUM)
+          ossia si passa la dimensione di:
+            mem_pool[], PIL system memory allocation pool
+        - Si agg.   #ifdef ATR_WTB
+                        Type_Configuration  *ls_cfg         * WTB LL configuration *
+                    #endif
+        - Si anticipa l'inizializ. di LP:   lp_init()
+          alla configuraz.  della MVB traffic store
+        - Si agg.   pi_free((void*)ts_cfg)
+                    pi_free((void*)ts_cfg->p_prt_cfg);
+          ma non mi chiedete perche' !!!
+        - Protetti dal solito pazzesco  #ifdef ATR_WTB
+              - Si agg. anche la configurazione di WTB traffic store
+              - Si aggiunge l'inizializ. di WTB link layer:
+                    - #ifdef STRT_BMI_TASK_ID
+                        pi_task_create(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO);
+                      #endif
+                    - nc_wtb_ls_cfg(&ls_cfg, 0, 0)
+                    - ls_t_Configure(ls_cfg)
+              - Si aggiunge lo start di WTB link layer:
+                    - ls_t_SetWeak()
+        - Si completa l'aggiunta della gestione bmi_task, con:
+              - #ifdef STRT_BMI_TASK_ID
+                    PI_TASK(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO)
+                    {
+                        bmi_report_task();
+                    }
+                #endif
+03.02   199z.xxx.yy             Napoli              Carnevale
+03.03   1998.xxx.yy             Napoli              Carnevale
+03.04   1998.xxx.yy             Napoli              Carnevale
+03.05   1998.giu.17,mer         Napoli              Carnevale
+        - Versione in Tcn02
+        - Si anticipa   include <stdio.h> e <string.h>
+        - Si agg.   ifdef STRT_CONFIGURE_TCN intorno a una pazzesca
+          cascata di if su include e prototipi !!!
+              - include lc_sys.h, pi_sys.h, am_sys.h, bax_incl.h, lm_layer.h, atr_nma.h
+              - #ifdef ATR_WTB
+                    include pdm_main.h
+                    extern UNSIGNED16 pdm_ftf_size
+                    void bmi_report_task(void)
+                #endif
+              - #ifdef STRT_MAP
+                    include map.h
+                    void map_npt(void)
+                    void map_npv(void)
+                    extern void uic_monitor(void)
+                #endif
+        - Si agg.   include lib_ver.h
+        - Si agg. tra le Globals (!?!)
+        const char application_version[] = STRT_PROJECT_STRING " (" __DATE__ " " __TIME__ ")";
+        const char library_version[]     = LIB_VER;
+        #ifdef ATR_WTB
+            static map_report old_map_Report;       * MAP Report function to call *
+        #endif
+        - Si agg. tra i Prototypes
+                void pdm_task(void);
+                void map_task(void);
+                #ifdef ATR_WTB
+                    void wtbll_Report(l_report r);
+                    void map_Report(map_ReportType r);
+                #endif
+        - Si agg. \n all'inizio delle stampe di ERROR
+        - Si sposta la maschera grafica ANSALDO, dalla partenza del task di shell
+          alla fase di inizializzazione HW
+        - static strt():    in  ifdef STRT_CONFIGURE_TCN
+            - Si agg.   Ulong station_id
+            - Si sost.  Type_Configuration      *ls_cfg         * WTB LL configuration
+              con   TYPE_LP_TS_CFG          *wtb_ts_cfg         * WTB traffic store configuration
+                    TYPE_LP_CB              wtb_cb              * WTB traffic store control block
+                    void                    *pdm_cfg            * PDM configuration
+                    Type_NodeDescriptor     node_descriptor     * node descriptor
+                    unsigned short          internal_mode       * PDM internal marshalling mode
+                    unsigned short          export_mode         * PDM export marshalling mode
+                    unsigned short          import_mode         * PDM import marshalling mode
+                    map_NodeConfigurationTable  map_cfg         * UIC Mapping Server configuration
+            - Si agg.   l'installaz. degli "interrupts captured by the MVBC"
+                    hw_install_lc_interrupts()
+            - In ifdef STRT_AUTO_ST_ID, si inserisce solo il posizionamento di station_id,
+              e solo se !=0, si chiama nc_set_app_st_conf(nc_ap_list, station_id)
+              (chissa' se e' una macro o una funzione !?!)
+            - Per distinguere MVB e WTB, si sost.   ts_cfg->
+              con   mvb_ts_cfg->    e   wtb_ts_cfg->
+            - Si completano le inizializz. per WTB
+            - Si abolisce ifdef STRT_BMI_TASK_ID, nella chiamata alla
+                pi_task_create(bmi_task,..,..)
+            - Si sost.      nc_mvb_tmo_cfg(&tmo_cfg)
+              con           #ifdef ATR_WTB
+                                nc_tmo_cfg(&tmo_cfg, 33, 32)
+                            #else
+                                nc_tmo_cfg(&tmo_cfg, 0, 0)
+                            #endif
+            - Si accorpano alle inizializ., le creazioni dei task:
+            - Si agg.       pi_task_create(sink_tmo, STRT_SINK_TMO_TASK_ID, STRT_SINK_TMO_TASK_PRIO)
+            - Si agg.       pi_task_create(messenger, STRT_MESSENGER_TASK_ID, STRT_MESSENGER_TASK_PRIO)
+            - ifdef ATR_WTB:    si agg. config. e start del pdm
+            - ifdef STRT_MAP:   Si agg. "initialize the UIC Mapping Server"
+            - ifdef STRT_SHELL_TASK_ID
+                si agg.     pi_task_create(shell_task, STRT_SHELL_TASK_ID, STRT_SHELL_TASK_PRIO)
+            - ifdef STRT_MAP:   si sost.    tcn_monitor     con     uic_monitor()
+        - La creazione dell'Application Task e' inalterata
+        - Nei task sink_tmo, bmi_task, pdm_task si introducono:
+                - install_os_error_handler()
+                - pi_task_exit()
+        - Si abol. il task messanger()
+        - nse_record(): si semplifica chiamando la funzione esterna
+              atr_record(module_name,line_number,event_type,event_action,list_length,p_list,0,0)
+        - Si trasferisce (non so dove) la const char *version_string()
+        - Si agg. le WTB Report functions:
+                - static void wtbll_Report(l_report r)
+                - static void map_Report(map_ReportType r)
+03.06   1998.xxx.yy             Napoli              Carnevale
+03.07   1999.xxx.yy             Napoli              Carnevale
+03.08   1999.mar.09,mar         Napoli              Carnevale
+        - Versione in Tcn03
+        - ifdef ATR_WTB
+            - si agg.   include atr_pdm.h
+                        extern unsigned long BITRATE
+        - Si agg. ifdef UMS, con relativi:
+            - include adid.h, uagt.h, uimcs.h, ungs.h, utbc.h, uwtm.h
+            - extern void ums_monitor(void);
+        - else
+            - unsigned short node_mode_from_vhdes(map_VehicleDescr *vhdes)
+            - si sost.  uic_monitor()   con     map_monitor()
+        - Nel casino degli if di compilazione, si agg. un check: pazzesco !!!
+        - Nei Globals si agg.:
+            - char strt_tcn_configured = FALSE
+            - char strt_tcn_failure    = FALSE
+            - ifdef UMS     static char id_ts[LI_INAUG_ENTRIES_MAX * sizeof(TYPE_InaugData)]
+        - Nei Prototypes:
+            - si elim.      extern void application_task(void)
+            - ifdef TCN     void get_ba_diagnosis_change(struct BA_STR_DIAGNOSIS *p_diagnosis)
+            - ifdef UMS     int uwtm_Report(UNSIGNED8 control, UNSIGNED8 mode)
+        - In ifdef __C166__     STRT_ROUTINE_NAME()
+            - ifdef STRT_RTX166_NO_ALLOC_IN_ISR
+                  int allow_isr_alloc = FALSE       else        = TRUE
+              e si agg. a pi_init()
+            - Non e' un task PIL, cosi' deve esplicitam. suicidarsi:
+                  os_delete_task(os_running_task_id())
+        - In ifdef _MRI, si sost.   static void vrtx_strt(void)
+          con                       PI_TASK(vrtx_strt, 0, STRT_BA_TASK_PRIO)
+        - Si promuovono da locali   a   static      le variabili di static strt()
+          e in piu' si sostituisce
+              Type_NodeDescriptor   node_descriptor
+          con:
+              ifdef UMS
+                static ums_NodeConfigurationTable   ums_cfg     * UIC Mapping Server cfg (12) *
+                static UWTM_NODE_CONFIG_TABLE_T     uwtm_cfg
+                static UIMCS_T_CONFIGURATION        uimcs_cfg
+              else
+                static map_NodeConfigurationTable   map_cfg     * UIC Mapping Server cfg (10) *
+              endif
+          e si agg.
+                static MvbcRedConfHeader            *mvbc_red_cfg
+        - static strt()
+            - Si anticipa   ifdef STRT_SHELL_TASK_ID per chiamare ushell_init()
+            - Si sost.  nc_set_db(get_ext_ncdb(), nc_db_ptr)
+              con       ifdef STRT_EXT_NCDB_ENABLED
+                        {
+                            void *ext_ncdb_ptr;
+                            hw_ext_data_init(&ext_ncdb_ptr, 0)
+                            nc_set_db(ext_ncdb_ptr, nc_db_ptr)
+                        }
+                        else
+                            nc_set_db(0, nc_db_ptr)
+                        endif
+              ossia si riceve in maniera diversa (HW) il puntatore all'area ext ncdb
+            - Si agg.   * fix the device status word according to our capabilities *
+                        lc_set_device_status_word(LC_DSW_DNR_MSK, LC_DSW_DNR_CLR);
+                        ifdef ATR_WTB
+                            lc_set_device_status_word(LC_DSW_TYPE_BRIDGE_MSK, LC_DSW_TYPE_BRIDGE_SET);
+                        endif
+            - Si sost.  pi_task_create(bmi_task, STRT_BMI_TASK_ID, STRT_BMI_TASK_PRIO)
+              con       ifdef UMS
+                            li_t_IDTSInit((void*)id_ts);
+                            uwtm_init();
+                        endif
+            - Si modifica la procedura di configurazione pdm
+              e vi si agg. la gestione di   ifdef UMS
+            - Dopo l'installaz. del 'network management'  si aggiunge:
+              * configure and start the MVBC line redundancy monitor if required *
+                    nc_mvbc_red_cfg(&mvbc_red_cfg)
+                    mvbc_red_init(mvbc_red_cfg)
+            - Si lascia a quasto punto solo la:
+                    pi_task_create(shell_task, STRT_SHELL_TASK_ID, STRT_SHELL_TASK_PRIO)
+            - Si cambia ancora in questo punto, sostituendo
+                ifdef STRT_MAP                          uic_monitor();
+              con:
+                if defined(STRT_MAP) && defined(UMS)    ums_monitor();
+                elif defined(STRT_MAP)                  map_monitor();
+            - Se la creazione dell'Application task va bene, si pone strt_tcn_configured=TRUE
+            - Prima di bam_task(), si aggiunge:
+                    * subscribe the ba diagnosis procedure *
+                    ba_subscribe_diagnosis(0, get_ba_diagnosis_change);
+            - Nella gestione error:, si pone    strt_tcn_failure = TRUE;
+        - Task sink_tmo(), bmi_task(), pdm_task(), shell_task():
+            - si elim. di nuovo     install_os_error_handler()
+                                    pi_task_exit()
+        - Task messenger(): si elim. di nuovo   install_os_error_handler()
+          e si agg.         ifdef UMS       uimcs_handler()
+        - Task map_task():  si elim. di nuovo   install_os_error_handler()
+                - pi_wait(ms2tick(64))      era 50
+        - Si agg. la MVB report function:
+                - static void get_ba_diagnosis_change(struct BA_STR_DIAGNOSIS *p_diagnosis)
+        - wtbll_report()
+                - Si elim. extern unsigned char pdjdp_my_device
+                - Si promuove a static:     Type_Topography	t
+                - Si agg. un filtro su report non validi
+                - Si agg.   ifdef UMS       pdm_new_wtb_topo(&t);
+        - ifdef UMS     static int uwtm_Report(UNSIGNED8 control, UNSIGNED8 mode)
+03.09   1999.lug.05,lun         Napoli              Carnevale
+        - Versione in Tcn04
+        - Si intr. la macro PI_TASK_DEF()
+        - In chiamata nc_node_cfg(), si agg. pdm_node_mode_mask() al primo parametro
+            (chissa' se e' una funzione o una macro e chissa' dove e' !!!)
+        - Da non credere, un aiuto per gli utenti:
+            - nell'avvio di shell, si agg. la stampa: "Type '?' for help"
+03.10   2001.dic.10,lun         Napoli              Mungi\Busco
+        - Si inserisce la maschera iniziale standard
+        - Si sost. macro        STRT_ROUTINE_NAME
+          con   nome fisso      startcn_init()
+          nello stile generale dei moduli ATR team Azionamenti
+03.11   2004.lug.15,gio         Napoli              Schiavo
+        -  si agg. condizione di configurazione sull'install. del mapping
+        -  si inserisce pragma hold(near 1024)
+
+*/

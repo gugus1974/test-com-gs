@@ -1,0 +1,174 @@
+;************************************************************************/
+;* 2004/nov/26,ven 13:20                \SWISV\TCNS\SRC\pi_rtx_a.a66    */
+;************************************************************************/
+;/* Operating system routines                                           */
+;************************************************************************/
+; $Date: 2004/11/26 12:33:59 $          $Revision: 1.2 $
+; $Author: mungiguerrav $
+
+
+$NOMACRO
+$SEGMENTED CASE MOD167
+
+        NAME    PI_RTX_A
+
+        REGDEF  R0 - R15
+
+
+; /*========================================================================*/
+; /* Routines */
+
+PI_RTX_A_CODE   SECTION CODE WORD 'FCODE'
+
+
+; /*------------------------------------------------------------------------*/
+; void pi_copy8(char huge *target, char huge *source, unsigned short size)
+; Variable 'target' assigned to Register 'R8/R9'
+; Variable 'source' assigned to Register 'R10/R11'
+; Variable 'size' assigned to Register 'R12'
+; Register usage: R4/R8-R12. Mask: 0x1F10
+
+pi_copy8    PROC    FAR
+            PUBLIC  pi_copy8
+
+            JB      R12.0,copy8Start
+            JB      R10.0,copy8Start
+            JB      R8.0,copy8Start
+            SHR     R12,#1
+            JMPR    cc_UC,pi_copy16
+
+copy8Start: CMP     R12,#0
+            JMP     cc_Z,copy8Exit
+
+copy8Loop:  EXTS    R11,#1
+            MOVB    RL4,[R10+]
+            EXTS    R9,#1
+            MOVB    [R8],RL4
+            ADD     R8,#1
+            SUB     R12,#1
+            JMP     cc_NZ,copy8Loop
+
+copy8Exit:  RETS
+
+pi_copy8    ENDP
+
+
+; /*------------------------------------------------------------------------*/
+; void pi_copy16(int huge *target, int huge *source, unsigned short size)
+; Variable 'target' assigned to Register 'R8/R9'
+; Variable 'source' assigned to Register 'R10/R11'
+; Variable 'size' assigned to Register 'R12'
+; Register usage: R4/R8-R12. Mask: 0x1F10
+
+pi_copy16   PROC    FAR
+            PUBLIC  pi_copy16
+
+            CMP     R12,#0
+            JMP     cc_Z,copy16Exit
+
+copy16Loop: EXTS    R11,#1
+            MOV     R4,[R10+]
+            EXTS    R9,#1
+            MOV     [R8],R4
+            ADD     R8,#2
+            SUB     R12,#1
+            JMP     cc_NZ,copy16Loop
+
+copy16Exit: RETS
+
+pi_copy16   ENDP
+
+
+; /*------------------------------------------------------------------------*/
+; void pi_zero8(char huge *target, unsigned short size)
+; Variable 'target' assigned to Register 'R8/R9'
+; Variable 'size' assigned to Register 'R10'
+; Register usage: R4/R8-R10. Mask: 0x0310
+
+pi_zero8    PROC    FAR
+            PUBLIC  pi_zero8
+
+            JB      R10.0,zero8Start
+            JB      R8.0,zero8Start
+            SHR     R10,#1
+            JMPR    cc_UC,pi_zero16
+
+zero8Start: CMP     R10,#0
+            JMP     cc_Z,zero8Exit
+            MOVB    RL4,#0
+
+zero8Loop:  EXTS    R9,#1
+            MOVB    [R8],RL4
+            ADD     R8,#1
+            SUB     R10,#1
+            JMP     cc_NZ,zero8Loop
+
+zero8Exit:  RETS
+
+pi_zero8    ENDP
+
+
+; /*------------------------------------------------------------------------*/
+; void pi_zero16(short huge *target, unsigned short size)
+; Variable 'target' assigned to Register 'R8/R9'
+; Variable 'size' assigned to Register 'R10'
+; Register usage: R4/R8-R10. Mask: 0x0310
+
+pi_zero16   PROC    FAR
+            PUBLIC  pi_zero16
+
+            CMP     R10,#0
+            JMP     cc_Z,zero16Exit
+            MOV     R4,#0
+
+zero16Loop: EXTS    R9,#1
+            MOV     [R8],R4
+            ADD     R8,#2
+            SUB     R10,#1
+            JMP     cc_NZ,zero16Loop
+
+zero16Exit: RETS
+
+pi_zero16   ENDP
+
+
+; /*------------------------------------------------------------------------*/
+
+PI_RTX_A_CODE   ENDS
+
+
+; /*========================================================================*/
+
+        END
+
+
+;****************************************************************************/
+; $Log: pi_rtx_a.a66,v $
+; Revision 1.2  2004/11/26 12:33:59  mungiguerrav
+; 2004/nov/26,ven 13:20           Napoli      Mungi
+; - Si aggiungono keyword CVS e storia invertita
+; - Si sostituiscono TAB con 4 spazi
+;
+;
+; ------------------   Fase transitoria tra *.mod e CVS    ------------
+;    Revision            1.1         2004/11/26 09:45:54     mungiguerrav
+;    2004/nov/26,ven 10:48           Napoli      Mungi
+;    - Si aggiungono immodificati dalle directory inferiori TCNS\A\XXX\SRC,
+;      prima di iniziare il processo di ripulitura e adeguamento alle regole
+;      di codifica e alle regole di gestione CVS
+;
+; --------------  Spostamento da A\XXX\SRC a SRC  ---------------------
+;
+;    Revision            1.2         2004/09/02 11:31:18     mungiguerrav
+;    2004/set/02,gio 13:25   Napoli          Mungi\Busco
+;    - Merge da branch di sviluppo  makefile
+;    - E' in effetti la creazione dei file nelle nuove directory dedicate alle
+;      singole schede registrate (DEA,DEV,STA,STB,STR)
+;    - Non sono ancora inseriti i token di gestioni automatiche CVS (DATE, FILE, AUTHOR, LOG)
+;
+;    Revision [makefile] 1.1.2.1     2004/07/09 16:24:25     buscob
+;    - Inserimento in CVS in branch makefile
+;    - Addio monolite !!
+;01.00   1996/set/24,mar             Napoli              Carnevale
+;        - Creazione non documentata
+

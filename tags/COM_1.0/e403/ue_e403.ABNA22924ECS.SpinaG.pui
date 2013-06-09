@@ -1,0 +1,29 @@
+[Open Files]
+Active File Display Mode=3
+Active File Index=2
+Open File Line0=2400
+Open File Line1=25940
+Open File Line2=41419
+Open File Line3=2786
+Open File Pos0=3200
+Open File Pos1=26794
+Open File Pos2=41858
+Open File Pos3=4284
+Open File Window Pos0=0,1,-1,-1,-4,-30,22,29,807,288
+Open File Window Pos1=0,1,-1,-1,-4,-30,66,87,851,348
+Open File Window Pos2=2,3,-1,-1,-4,-30,88,116,881,377
+Open File Window Pos3=0,1,-1,-1,-4,-30,88,116,697,511
+Open File0=C:\SW\e403\GTW\SRC\gtw_ncap.h
+Open File1=C:\SW\e403\DB\SRC\uic2ncdb.h
+Open File2=C:\SW\e403\GTW\SRC\gtw_appl.cc
+Open File3=C:\SW\e403\GTW\SRC\gtw_ncap.c
+Open File4=
+Remember Files=1
+
+[Project Information]
+Project Start=DA070100010019000B0030000100000038
+Working Time=139817
+
+[Folders]
+.\GTW\SRC\=1
+.\DB\SRC\=1

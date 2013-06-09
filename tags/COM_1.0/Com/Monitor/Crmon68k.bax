@@ -1,0 +1,34 @@
+set menupat=C:\MRI\MASTER\MON68K\menupat.exe
+echo off
+rem crmon68k.bat - puts source files in working dir.
+copy C:\MRI\MASTER\MON68K\board.src board.src
+copy C:\MRI\MASTER\MON68K\board.equ boardset.inc
+copy C:\MRI\MASTER\MON68K\board.lnk board.cmd
+copy C:\MRI\MASTER\MON68K\m360qdsr.ieq hwequ.inc
+copy C:\MRI\MASTER\MON68K\m360qdsr.inc hwdrv.inc
+copy C:\MRI\MASTER\MON68K\monvisi.inc .
+copy C:\MRI\MASTER\MON68K\monbase.src .
+copy C:\MRI\MASTER\MON68K\xmon68k.obj .
+copy C:\MRI\MASTER\MON68K\testcomm.src .
+copy C:\MRI\MASTER\MON68K\testcomm.lnk testcomm.cmd
+rem all files now copied to working directory.
+rem now let's patch the few files we need to.
+menupat BASEAD "$400000" board.cmd
+menupat SECT14 "SECT 14,$1000" board.cmd
+menupat ORDER "order 9,13" board.cmd
+menupat BASEAD "$400000" testcomm.cmd
+menupat SECT14 "SECT 14,$1000" testcomm.cmd
+menupat ORDER "order 9,13" testcomm.cmd
+menupat BAUDR "IO9600" boardset.inc
+menupat CONIO "POLLED+HWIO+VECTSTART+INITIO" boardset.inc
+menupat TARGT "CPU68360" boardset.inc
+menupat BOARD "MQUADS" boardset.inc
+menupat AVECT "0" boardset.inc
+menupat IOBAS "$0" boardset.inc
+menupat IOOFF "1" boardset.inc
+menupat TCONS "0" boardset.inc
+menupat ILEVL "0" boardset.inc
+menupat IOINT "$0" boardset.inc
+menupat PARIT "PAR_NONE" boardset.inc
+menupat UFLAG "$1" boardset.inc
+menupat MESBFSZ "64" boardset.inc

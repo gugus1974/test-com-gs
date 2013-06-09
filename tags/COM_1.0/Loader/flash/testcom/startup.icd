@@ -1,0 +1,2 @@
+capture loadlog.txt 
+macro gwtest\gwtest.icd 

@@ -1,0 +1,14 @@
+/*********************************************************************************
+* 20/03/13                                             v.1.00        tstio.c *
+**********************************************************************************
+* Funzioni per il test della EEPROM                                              *
+**********************************************************************************
+* 					                                                             *
+*********************************************************************************/
+#include <stdio.h>
+#include <string.h>
+#include "hw_com.h"
+short di_cmd(short argc, char *argv[]);
+short do_cmd(short argc, char *argv[]);
+short tstio_led(short argc, char *argv[]);
+short tstio(short argc, char *argv[] );

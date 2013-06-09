@@ -1,0 +1,602 @@
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002    Page   1
+
+Command line: C:\MRI\ASM68K\LNK68K.exe  -o boot.o -c boot.lnk -f i,c,x,t -m 
+
+
+LISTABS	NOINTERNALS
+LISTABS	PUBLICS
+LISTMAP CROSSREF,PUBLICS/ADDR
+CHIP	68360
+ALIAS	9,code
+ALIAS	13,const
+ALIAS	13,strings
+ALIAS	13,literals
+ALIAS	13,vars
+ALIAS   13,ehsftbl
+ALIAS   13,ehscfn
+ALIAS   13,0
+ALIAS	14,zerovars
+ALIAS	14,tags
+*ABSOLUTE	9,13
+ORDER	9,13,initfini
+SECT 14	= $100000
+SECT 9	= $008000
+
+
+
+
+
+ LOAD \sw\com\bsp\crt0.o
+ LOAD bootcnfg.o
+ LOAD devices.o
+ LOAD devcnfg.o
+ LOAD \sw\com\bsp\atrcom.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\vtdm.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\router.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\logio.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\boot.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\cpu.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\rtcore.lib
+ LOAD C:\MASTER\target\lib\68010\microtec\packt.lib
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   2
+
+
+
+OUTPUT MODULE NAME:    boot
+OUTPUT MODULE FORMAT:  IEEE
+
+
+SECTION SUMMARY
+---------------
+
+SECTION    ATTRIBUTE                     START      END        LENGTH     ALIGN
+
+m68k_crt0_vec
+           ABSOLUTE DATA                 00000000   0000000F   00000010   0 (BYTE)  
+m68k_crt0
+           ABSOLUTE CODE                 00000400   00000557   00000158   0 (BYTE)  
+9          NORMAL CODE                   00008000   0000A01B   0000201C   4 (LONG)  
+code                       (9)           00008000   0000A01B   0000201C   4 (LONG)  
+13         NORMAL DATA                   0000A01C   0000A17B   00000160   4 (LONG)  
+const                      (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+strings                    (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+literals                   (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+vars                       (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+ehsftbl                    (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+ehscfn                     (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+0                          (13)          0000A01C   0000A17B   00000160   4 (LONG)  
+initfini                                 0000A17C   0000A17C   00000000   0 (BYTE)  
+14         NORMAL DATA                   00100000   001175C3   000175C4   4 (LONG)  
+zerovars                   (14)          00100000   001175C3   000175C4   4 (LONG)  
+tags                       (14)          00100000   001175C3   000175C4   4 (LONG)  
+
+
+MODULE SUMMARY
+--------------
+
+MODULE         SECTION:START        SECTION:END       FILE
+
+crt0                14:00100000          14:00103FFF  \sw\com\bsp\crt0.o   
+            m68k_crt0_:00000000  m68k_crt0_:0000000F      
+             m68k_crt0:00000400   m68k_crt0:00000557      
+bootcnfg            14:00104000          14:00116CCF  C:\SW\Com\Boot\bootcnfg.o   
+                     9:00008000           9:00008000      
+                    13:0000A01C          13:0000A0DB      
+                    13:0000A0DC          13:0000A137      
+devices              9:00008000           9:00008000  C:\SW\Com\Boot\devices.o   
+                    13:0000A138          13:0000A147      
+                    13:0000A148          13:0000A153      
+devcnfg              9:00008000           9:00008003  C:\SW\Com\Boot\devcnfg.o   
+board.o              9:00008004           9:00008043  \sw\com\bsp\atrcom.lib  L
+                    13:0000A154          13:0000A17B      
+intrrpt.o            9:00008044           9:000088B7  C:\MASTER\target\lib\68010\microtec\logio.lib  L
+                    14:00116CD0          14:00116CD3      
+buffers.o            9:000088B8           9:00008C83  C:\MASTER\target\lib\68010\microtec\logio.lib  L
+                    14:00116CD4          14:00116CDB      
+logio.o              9:00008C84           9:0000915B  C:\MASTER\target\lib\68010\microtec\logio.lib  L
+                    14:00116CDC          14:00116CEF      
+cold.o               9:0000915C           9:00009167  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   3
+
+warm.o               9:00009168           9:000093C7  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+data.o               9:000093C8           9:0000941B  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+                    14:00116CF0          14:001171B7      
+boot.o               9:0000941C           9:000095EB  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+go.o                 9:000095EC           9:0000962B  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+bootc.o              9:0000962C           9:000096F3  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+                    14:001171B8          14:001175B7      
+inet_addr.           9:000096F4           9:00009753  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+bootasm.o            9:00009754           9:00009835  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+environ.o            9:00009838           9:0000997B  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+probemem.o           9:0000997C           9:00009A03  C:\MASTER\target\lib\68010\microtec\boot.lib  L
+                    14:001175B8          14:001175BB      
+data.o              14:001175BC          14:001175BF  C:\MASTER\target\lib\68010\microtec\cpu.lib  L
+physvbr.o            9:00009A04           9:00009A13  C:\MASTER\target\lib\68010\microtec\cpu.lib  L
+bcopy.o              9:00009A14           9:00009A8B  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+bzero.o              9:00009A8C           9:00009AEF  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+getenv.o             9:00009AF0           9:00009B43  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+isdigit.o            9:00009B44           9:00009B5F  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+iswhite.o            9:00009B60           9:00009B7B  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+longjmp.o            9:00009B7C           9:00009B8B  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+setjmp.o             9:00009B8C           9:00009B97  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strchr.o             9:00009B98           9:00009BBB  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strcmp.o             9:00009BBC           9:00009BE7  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strcpy.o             9:00009BE8           9:00009BFF  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strcspn.o            9:00009C00           9:00009C2F  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strlen.o             9:00009C30           9:00009C47  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strncmp.o            9:00009C48           9:00009C93  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strncpy.o            9:00009C94           9:00009CC3  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strspn.o             9:00009CC4           9:00009CF7  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strtok.o             9:00009CF8           9:00009D5F  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+                    14:001175C0          14:001175C3      
+strtol.o             9:00009D60           9:00009DB3  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+strtoul.o            9:00009DB4           9:00009EC3  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+crc16.o              9:00009EC4           9:00009F33  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+_umulsi3.o           9:00009F34           9:00009F6F  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+_mulsi3.o            9:00009F70           9:00009FAB  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+_udivsi3.o           9:00009FAC           9:0000A01B  C:\MASTER\target\lib\68010\microtec\rtcore.lib  L
+
+
+
+LOCAL SYMBOL TABLE
+------------------
+
+SYMBOL                                    ATTRIB   SECTION   OFFS/ADDR  MODULE:FUNCTION
+
+cicr                                      REG                D0         devcnfg:logio_devi
+
+
+PUBLIC SYMBOL TABLE
+-------------------
+
+SYMBOL                                    SECTION          ADDRESS     MODULE
+
+_crt0_cold_start                          m68k_crt0        00000400    crt0
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   4
+
+_crt0_warm_start                          m68k_crt0        00000538    crt0
+_logio_device_install                     9                00008000    devcnfg
+_logio_board_init                         9                00008004    board.o
+_logio_board_control                      9                00008016    board.o
+_logio_set_vector_and_test                9                00008044    intrrpt.o
+_logio_get_vector_and_test                9                000081A4    intrrpt.o
+_logio_get_vector_table                   9                0000821E    intrrpt.o
+_logio_vector_list                        9                00008256    intrrpt.o
+_logio_set_callout                        9                00008294    intrrpt.o
+_logio_set_interrupt_entry                9                00008300    intrrpt.o
+_logio_get_interrupt_entry                9                00008366    intrrpt.o
+_logio_delete_events_from_id              9                000083CC    intrrpt.o
+_logio_default_int_handler                9                0000848C    intrrpt.o
+_logio_device_vector_list                 9                000087D8    intrrpt.o
+_logio_call_callout                       9                00008842    intrrpt.o
+_logio_buff_init                          9                000088B8    buffers.o
+_logio_buff_get                           9                000089A8    buffers.o
+_logio_buff_keep                          9                00008AC8    buffers.o
+_logio_set_lw_mark                        9                00008ADC    buffers.o
+_logio_get_bufpool                        9                00008B18    buffers.o
+_logio_bufpool_attrib_list                9                00008C34    buffers.o
+_logio_init                               9                00008C86    logio.o
+_logio_device_create                      9                00008DD0    logio.o
+_logio_device_delete                      9                00008E82    logio.o
+_logio_device_get_name                    9                00008F06    logio.o
+_logio_device_list                        9                00008F7C    logio.o
+_logio_device_open                        9                00008FFA    logio.o
+_logio_malloc_init                        9                00009058    logio.o
+_logio_malloc                             9                0000909A    logio.o
+_logio_free                               9                000090D2    logio.o
+_logio_not_supported                      9                000090EE    logio.o
+_logio_heap_init                          9                000090F4    logio.o
+_logio_heap_get                           9                00009118    logio.o
+_boot_cold_start                          9                0000915C    cold.o
+_boot_warm_start                          9                00009170    warm.o
+_boot_logio                               9                000093C8    data.o
+_boot_loop                                9                0000944C    boot.o
+_boot_method_go                           9                000095EC    go.o
+_boot_sys_crt0                            9                0000962C    bootc.o
+_inet_addr                                9                000096F4    inet_addr.o
+_boot_segv_handler                        9                00009754    bootasm.o
+_boot_exception_catch                     9                00009772    bootasm.o
+_boot_panic                               9                0000979E    bootasm.o
+_boot_jump                                9                00009828    bootasm.o
+_initenv                                  9                00009838    environ.o
+_boot_memory_probe                        9                0000997C    probemem.o
+_cpu_get_physical_vbr                     9                00009A04    physvbr.o
+_cpu_set_physical_vbr                     9                00009A0A    physvbr.o
+_bcopy                                    9                00009A14    bcopy.o
+_bzero                                    9                00009A8C    bzero.o
+_getenv                                   9                00009AF0    getenv.o
+_isdigit                                  9                00009B44    isdigit.o
+_iswhite                                  9                00009B60    iswhite.o
+_longjmp                                  9                00009B7C    longjmp.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   5
+
+_setjmp                                   9                00009B8C    setjmp.o
+_strchr                                   9                00009B98    strchr.o
+_strcmp                                   9                00009BBC    strcmp.o
+_strcpy                                   9                00009BE8    strcpy.o
+_strcspn                                  9                00009C00    strcspn.o
+_strlen                                   9                00009C30    strlen.o
+_strncmp                                  9                00009C48    strncmp.o
+_strncpy                                  9                00009C94    strncpy.o
+_strspn                                   9                00009CC4    strspn.o
+_strtok                                   9                00009CF8    strtok.o
+_strtol                                   9                00009D60    strtol.o
+_strtoul                                  9                00009DB4    strtoul.o
+_crc16                                    9                00009EC4    crc16.o
+___umulsi3                                9                00009F34    _umulsi3.o
+___mulsi3                                 9                00009F70    _mulsi3.o
+___udivsi3                                9                00009FAC    _udivsi3.o
+_boot_item_target                         13               0000A01C    bootcnfg
+_boot_item_memory_rom                     13               0000A020    bootcnfg
+_boot_method_table                        13               0000A080    bootcnfg
+_boot_user_vectors                        13               0000A098    bootcnfg
+_rtr_tx_que_len                           13               0000A09C    bootcnfg
+_rtr_rx_que_len                           13               0000A0A0    bootcnfg
+_boot_environ_rom                         13               0000A0A4    bootcnfg
+_logio_malloc_nbuff                       13               0000A0BC    bootcnfg
+_logio_dev_max                            13               0000A0C0    bootcnfg
+_logio_max_event_number                   13               0000A0C4    bootcnfg
+_logio_table_increment                    13               0000A0C8    bootcnfg
+_logio_max_bufpools                       13               0000A0CC    bootcnfg
+_logio_heap_size                          13               0000A0D0    bootcnfg
+_boot_logio_ws_length                     13               0000A0D4    bootcnfg
+_boot_logio_buffer_length                 13               0000A0D8    bootcnfg
+_boot_device_table                        13               0000A138    devices
+_logio_board_fops                         13               0000A154    board.o
+_logio_board_method                       13               0000A170    board.o
+_logio_board_id                           13               0000A178    board.o
+_crt0_init_stack                          14               00100000    crt0
+_boot_item_memory_ram                     14               00104000    bootcnfg
+_crt0_init_stktop                         14               00104000    crt0
+_boot_logio_ws                            14               00104060    bootcnfg
+_logio_int_table_list                     14               00116CD0    intrrpt.o
+_logio_bufpool_root                       14               00116CD4    buffers.o
+_logio_bufpool_count                      14               00116CD8    buffers.o
+_logio_device_table                       14               00116CDC    logio.o
+_logio_device_count                       14               00116CE0    logio.o
+_logio_malloc_free_list                   14               00116CE4    logio.o
+_logio_heap_base                          14               00116CE8    logio.o
+_logio_heap_len                           14               00116CEC    logio.o
+_boot_reset_counter                       14               00116CF0    data.o
+_boot_xtrace_ren                          14               00116CF4    data.o
+_boot_router_ren                          14               00116CF8    data.o
+_boot_item_list                           14               00116CFC    data.o
+_boot_timer_id                            14               00116D9C    data.o
+_boot_console_id                          14               00116DA0    data.o
+_boot_bridge_id                           14               00116DA4    data.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   6
+
+_boot_bridge_ip_addr                      14               00116DA8    data.o
+_boot_bridge_ether_addr                   14               00116DAC    data.o
+_boot_bridge_ether_ok                     14               00116DB4    data.o
+_boot_rarp_ip_addr                        14               00116DB8    data.o
+_boot_rarp_ether_addr                     14               00116DBC    data.o
+_boot_rarp_ether_ok                       14               00116DC4    data.o
+_boot_argv                                14               00116DC8    data.o
+_boot_verbosity                           14               00116DCC    data.o
+_boot_timer_ns_per_count                  14               00116DD0    data.o
+_boot_timer_rollover                      14               00116DD4    data.o
+_boot_magic                               14               00116DD8    data.o
+_boot_segv_ok                             14               00116DDC    data.o
+_boot_segv_env                            14               00116DE0    data.o
+_boot_panic_pattern                       14               00116E14    data.o
+_boot_panic_registers                     14               00116E18    data.o
+_environ                                  14               00116E70    data.o
+_boot_environ_ram                         14               00116E74    data.o
+_boot_environ_strings                     14               00116EB0    data.o
+_boot_environ_area                        14               00116EB4    data.o
+_boot_environ_nul                         14               001170B4    data.o
+_boot_panic_stack                         14               001170B8    data.o
+_boot_evt                                 14               001171B8    bootc.o
+_cpu_target                               14               001175BC    data.o
+
+
+CROSS REFERENCE TABLE
+---------------------
+
+SYMBOL                                    SECTION          ADDRESS     MODULE
+
+_crt0_cold_start                          m68k_crt0        00000400   -crt0
+                                                                       bootasm.o
+_crt0_warm_start                          m68k_crt0        00000538   -crt0
+_logio_device_install                     9                00008000   -devcnfg
+                                                                       board.o
+_logio_board_init                         9                00008004   -board.o
+_logio_board_control                      9                00008016   -board.o
+_logio_set_vector_and_test                9                00008044   -intrrpt.o
+                                                                       data.o
+_logio_get_vector_and_test                9                000081A4   -intrrpt.o
+                                                                       data.o
+_logio_get_vector_table                   9                0000821E   -intrrpt.o
+                                                                       data.o
+_logio_vector_list                        9                00008256   -intrrpt.o
+                                                                       data.o
+_logio_set_callout                        9                00008294   -intrrpt.o
+                                                                       data.o
+_logio_set_interrupt_entry                9                00008300   -intrrpt.o
+                                                                       data.o
+_logio_get_interrupt_entry                9                00008366   -intrrpt.o
+                                                                       data.o
+_logio_delete_events_from_id              9                000083CC   -intrrpt.o
+                                                                       data.o
+                                                                       logio.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   7
+
+_logio_default_int_handler                9                0000848C   -intrrpt.o
+                                                                       data.o
+_logio_device_vector_list                 9                000087D8   -intrrpt.o
+                                                                       data.o
+_logio_call_callout                       9                00008842   -intrrpt.o
+                                                                       data.o
+_logio_buff_init                          9                000088B8   -buffers.o
+                                                                       data.o
+                                                                       logio.o
+_logio_buff_get                           9                000089A8   -buffers.o
+                                                                       data.o
+_logio_buff_keep                          9                00008AC8   -buffers.o
+                                                                       data.o
+_logio_set_lw_mark                        9                00008ADC   -buffers.o
+_logio_get_bufpool                        9                00008B18   -buffers.o
+_logio_bufpool_attrib_list                9                00008C34   -buffers.o
+                                                                       data.o
+_logio_init                               9                00008C86   -logio.o
+                                                                       data.o
+                                                                       warm.o
+_logio_device_create                      9                00008DD0   -logio.o
+                                                                       data.o
+                                                                       warm.o
+_logio_device_delete                      9                00008E82   -logio.o
+                                                                       data.o
+_logio_device_get_name                    9                00008F06   -logio.o
+                                                                       data.o
+_logio_device_list                        9                00008F7C   -logio.o
+                                                                       data.o
+_logio_device_open                        9                00008FFA   -logio.o
+                                                                       boot.o
+                                                                       data.o
+                                                                       warm.o
+_logio_malloc_init                        9                00009058   -logio.o
+_logio_malloc                             9                0000909A   -logio.o
+                                                                       intrrpt.o
+_logio_free                               9                000090D2   -logio.o
+                                                                       intrrpt.o
+_logio_not_supported                      9                000090EE   -logio.o
+                                                                       board.o
+_logio_heap_init                          9                000090F4   -logio.o
+_logio_heap_get                           9                00009118   -logio.o
+_boot_cold_start                          9                0000915C   -cold.o
+                                                                       bootc.o
+                                                                       warm.o
+_boot_warm_start                          9                00009170   -warm.o
+                                                                       bootc.o
+                                                                       cold.o
+                                                                       crt0
+_boot_logio                               9                000093C8   -data.o
+                                                                       warm.o
+_boot_loop                                9                0000944C   -boot.o
+                                                                       warm.o
+_boot_method_go                           9                000095EC   -go.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   8
+
+                                                                       bootcnfg
+_boot_sys_crt0                            9                0000962C   -bootc.o
+                                                                       crt0
+_inet_addr                                9                000096F4   -inet_addr.o
+                                                                       boot.o
+_boot_segv_handler                        9                00009754   -bootasm.o
+                                                                       bootc.o
+_boot_exception_catch                     9                00009772   -bootasm.o
+                                                                       bootc.o
+_boot_panic                               9                0000979E   -bootasm.o
+                                                                       warm.o
+_boot_jump                                9                00009828   -bootasm.o
+                                                                       go.o
+_initenv                                  9                00009838   -environ.o
+                                                                       warm.o
+_boot_memory_probe                        9                0000997C   -probemem.o
+                                                                       warm.o
+_cpu_get_physical_vbr                     9                00009A04   -physvbr.o
+                                                                       bootc.o
+                                                                       warm.o
+_cpu_set_physical_vbr                     9                00009A0A   -physvbr.o
+                                                                       bootc.o
+_bcopy                                    9                00009A14   -bcopy.o
+                                                                       intrrpt.o
+_bzero                                    9                00009A8C   -bzero.o
+                                                                       warm.o
+                                                                       logio.o
+                                                                       intrrpt.o
+_getenv                                   9                00009AF0   -getenv.o
+                                                                       boot.o
+                                                                       warm.o
+_isdigit                                  9                00009B44   -isdigit.o
+                                                                       inet_addr.o
+_iswhite                                  9                00009B60   -iswhite.o
+                                                                       strtoul.o
+                                                                       strtol.o
+_longjmp                                  9                00009B7C   -longjmp.o
+                                                                       bootasm.o
+_setjmp                                   9                00009B8C   -setjmp.o
+                                                                       probemem.o
+_strchr                                   9                00009B98   -strchr.o
+                                                                       boot.o
+_strcmp                                   9                00009BBC   -strcmp.o
+                                                                       boot.o
+                                                                       logio.o
+_strcpy                                   9                00009BE8   -strcpy.o
+                                                                       environ.o
+                                                                       logio.o
+_strcspn                                  9                00009C00   -strcspn.o
+                                                                       strtok.o
+_strlen                                   9                00009C30   -strlen.o
+                                                                       getenv.o
+                                                                       environ.o
+_strncmp                                  9                00009C48   -strncmp.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page   9
+
+                                                                       getenv.o
+_strncpy                                  9                00009C94   -strncpy.o
+                                                                       boot.o
+                                                                       logio.o
+_strspn                                   9                00009CC4   -strspn.o
+                                                                       strtok.o
+_strtok                                   9                00009CF8   -strtok.o
+                                                                       boot.o
+_strtol                                   9                00009D60   -strtol.o
+                                                                       go.o
+_strtoul                                  9                00009DB4   -strtoul.o
+                                                                       strtol.o
+_crc16                                    9                00009EC4   -crc16.o
+                                                                       environ.o
+___umulsi3                                9                00009F34   -_umulsi3.o
+                                                                       _udivsi3.o
+___mulsi3                                 9                00009F70   -_mulsi3.o
+                                                                       strtoul.o
+                                                                       logio.o
+___udivsi3                                9                00009FAC   -_udivsi3.o
+                                                                       buffers.o
+_boot_item_target                         13               0000A01C   -bootcnfg
+                                                                       bootc.o
+                                                                       crt0
+_boot_item_memory_rom                     13               0000A020   -bootcnfg
+                                                                       warm.o
+_boot_method_table                        13               0000A080   -bootcnfg
+                                                                       boot.o
+_boot_user_vectors                        13               0000A098   -bootcnfg
+                                                                       bootc.o
+_rtr_tx_que_len                           13               0000A09C   -bootcnfg
+_rtr_rx_que_len                           13               0000A0A0   -bootcnfg
+_boot_environ_rom                         13               0000A0A4   -bootcnfg
+                                                                       environ.o
+_logio_malloc_nbuff                       13               0000A0BC   -bootcnfg
+                                                                       logio.o
+_logio_dev_max                            13               0000A0C0   -bootcnfg
+                                                                       logio.o
+_logio_max_event_number                   13               0000A0C4   -bootcnfg
+                                                                       logio.o
+_logio_table_increment                    13               0000A0C8   -bootcnfg
+                                                                       intrrpt.o
+_logio_max_bufpools                       13               0000A0CC   -bootcnfg
+                                                                       logio.o
+                                                                       buffers.o
+_logio_heap_size                          13               0000A0D0   -bootcnfg
+                                                                       logio.o
+_boot_logio_ws_length                     13               0000A0D4   -bootcnfg
+                                                                       warm.o
+_boot_logio_buffer_length                 13               0000A0D8   -bootcnfg
+                                                                       warm.o
+_boot_device_table                        13               0000A138   -devices
+                                                                       warm.o
+_logio_board_fops                         13               0000A154   -board.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page  10
+
+_logio_board_method                       13               0000A170   -board.o
+                                                                       devices
+_logio_board_id                           13               0000A178   -board.o
+_crt0_init_stack                          14               00100000   -crt0
+_boot_item_memory_ram                     14               00104000   -bootcnfg
+                                                                       warm.o
+_crt0_init_stktop                         14               00104000   -crt0
+                                                                       bootasm.o
+_boot_logio_ws                            14               00104060   -bootcnfg
+                                                                       warm.o
+_logio_int_table_list                     14               00116CD0   -intrrpt.o
+                                                                       logio.o
+_logio_bufpool_root                       14               00116CD4   -buffers.o
+                                                                       logio.o
+_logio_bufpool_count                      14               00116CD8   -buffers.o
+                                                                       logio.o
+_logio_device_table                       14               00116CDC   -logio.o
+_logio_device_count                       14               00116CE0   -logio.o
+_logio_malloc_free_list                   14               00116CE4   -logio.o
+_logio_heap_base                          14               00116CE8   -logio.o
+_logio_heap_len                           14               00116CEC   -logio.o
+_boot_reset_counter                       14               00116CF0   -data.o
+                                                                       environ.o
+                                                                       bootc.o
+                                                                       warm.o
+_boot_xtrace_ren                          14               00116CF4   -data.o
+                                                                       warm.o
+_boot_router_ren                          14               00116CF8   -data.o
+                                                                       warm.o
+_boot_item_list                           14               00116CFC   -data.o
+                                                                       bootasm.o
+                                                                       warm.o
+_boot_timer_id                            14               00116D9C   -data.o
+                                                                       boot.o
+_boot_console_id                          14               00116DA0   -data.o
+                                                                       boot.o
+                                                                       warm.o
+_boot_bridge_id                           14               00116DA4   -data.o
+                                                                       boot.o
+_boot_bridge_ip_addr                      14               00116DA8   -data.o
+                                                                       boot.o
+                                                                       warm.o
+_boot_bridge_ether_addr                   14               00116DAC   -data.o
+                                                                       warm.o
+_boot_bridge_ether_ok                     14               00116DB4   -data.o
+                                                                       warm.o
+_boot_rarp_ip_addr                        14               00116DB8   -data.o
+                                                                       warm.o
+_boot_rarp_ether_addr                     14               00116DBC   -data.o
+                                                                       warm.o
+_boot_rarp_ether_ok                       14               00116DC4   -data.o
+                                                                       warm.o
+_boot_argv                                14               00116DC8   -data.o
+_boot_verbosity                           14               00116DCC   -data.o
+Microtec Research 68K Linker  Version 7.1J    Wed Jun 12 11:02:42 2002
+    Page  11
+
+                                                                       warm.o
+_boot_timer_ns_per_count                  14               00116DD0   -data.o
+                                                                       boot.o
+_boot_timer_rollover                      14               00116DD4   -data.o
+                                                                       boot.o
+_boot_magic                               14               00116DD8   -data.o
+                                                                       bootc.o
+                                                                       warm.o
+_boot_segv_ok                             14               00116DDC   -data.o
+                                                                       probemem.o
+                                                                       bootasm.o
+                                                                       bootc.o
+                                                                       crt0
+_boot_segv_env                            14               00116DE0   -data.o
+                                                                       probemem.o
+                                                                       bootasm.o
+_boot_panic_pattern                       14               00116E14   -data.o
+                                                                       bootasm.o
+_boot_panic_registers                     14               00116E18   -data.o
+                                                                       bootasm.o
+_environ                                  14               00116E70   -data.o
+                                                                       getenv.o
+                                                                       environ.o
+                                                                       warm.o
+_boot_environ_ram                         14               00116E74   -data.o
+                                                                       environ.o
+_boot_environ_strings                     14               00116EB0   -data.o
+                                                                       environ.o
+_boot_environ_area                        14               00116EB4   -data.o
+                                                                       environ.o
+_boot_environ_nul                         14               001170B4   -data.o
+                                                                       environ.o
+_boot_panic_stack                         14               001170B8   -data.o
+                                                                       bootasm.o
+_boot_evt                                 14               001171B8   -bootc.o
+_cpu_target                               14               001175BC   -data.o
+                                                                       bootc.o
+                                                                       warm.o
+                                                                       crt0
+
+
+START ADDRESS:   00000000
+
+Link Completed 
