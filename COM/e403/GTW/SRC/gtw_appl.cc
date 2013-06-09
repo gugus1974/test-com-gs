@@ -103,10 +103,10 @@ typedef struct {
 //ErrorEvent  (conf_write_fail, 0x001F, "Unable to write the configuration to the EEPROM");
 //ErrorEvent  (wtb_fail,        0x0020, "WTB hardware failure");
 //WarningEvent(comm_change,     0x0021, "COMM signal change during operation");
-ErrorEvent  (mvb_a_fail,      0x0022, "MVB line A failure");
-WarningEvent(mvb_a_ok,        0x0023, "MVB line A OK");
-ErrorEvent  (mvb_b_fail,      0x0024, "MVB line B failure");
-WarningEvent(mvb_b_ok,        0x0025, "MVB line B OK");
+//ErrorEvent  (mvb_a_fail,      0x0022, "MVB line A failure");
+//WarningEvent(mvb_a_ok,        0x0023, "MVB line A OK");
+//ErrorEvent  (mvb_b_fail,      0x0024, "MVB line B failure");
+//WarningEvent(mvb_b_ok,        0x0025, "MVB line B OK");
 //ErrorEvent  (wtb_hangup,      0x0026, "WTB Link Layer hangup");
 
 
@@ -123,18 +123,18 @@ unsigned long			ticks;						/* current time in ticks                */
 //static char				is_A_flag;							/* TRUE if we are the "A" unit     */
 //static unsigned char	standby_status = GTW_STANDBY_READY;	/* status of the standby unit      */
 static NcEleID			station_id;							/* station ID value                */
-static char				mvb_failure_flag;					/* the MVB is not working properly */
+//static char				mvb_failure_flag;					/* the MVB is not working properly */
 
-static char				mvb_shd_failure_flag;		/* the MVB signals a SHD               */
-static char				mvb_a_failure_flag;			/* the MVB signals a failure on line A */
-static char				mvb_b_failure_flag;			/* the MVB signals a failure on line B */
-static char				wtb_failure_flag;			/* the WTB is not working properly     */
+//static char				mvb_shd_failure_flag;		/* the MVB signals a SHD               */
+//static char				mvb_a_failure_flag;			/* the MVB signals a failure on line A */
+//static char				mvb_b_failure_flag;			/* the MVB signals a failure on line B */
+//static char				wtb_failure_flag;			/* the WTB is not working properly     */
 //static char				hw_failure_flag;			/* some hardware not working properly  */
 //static char				failure_flag;				/* this board is in failure (latched)  */
 //
-static char				mvb_activity_flag;			/* we are communicating over the MVB    */
-static char				wtb_inaugurated_flag;		/* the WTB is inaugurated               */
-static char				wtb_master_flag;			/* this board is the WTB master         */
+//static char				mvb_activity_flag;			/* we are communicating over the MVB    */
+//static char				wtb_inaugurated_flag;		/* the WTB is inaugurated               */
+//static char				wtb_master_flag;			/* this board is the WTB master         */
 //static char				wtb_intermediate_flag;		/* this GTW is intermediate         */
 //static char				comm_flag;					/* value of the COMM signal (0 -> WTB*) */
 //static char				mvb_red_working_flag;		/* the MVB redundancy module is active  */
@@ -714,7 +714,7 @@ void mvb_red_check(void)
 	}
 //	mvb_red_working_flag = TRUE;
 
-	/* handle the transitions */
+	/* handle the transitions 
 	if (!status.line_ok[0] && !mvb_a_failure_flag) {
 		log_event(mvb_a_fail);
 		mvb_a_failure_flag = TRUE;
@@ -731,6 +731,7 @@ void mvb_red_check(void)
 		log_event(mvb_b_ok);
 		mvb_b_failure_flag = FALSE;
 	}
+	*/
 }
 
 
@@ -1786,19 +1787,6 @@ PI_TASK(application_task, STRT_APPLICATION_TASK_ID, STRT_APPLICATION_TASK_PRIO)
 				led_user6(led_time < APPL_GTWS_LED_ON_MS);
 				led_time = (led_time + APPL_CYCLE_MS) % (APPL_GTWS_LED_ON_MS + APPL_GTWS_LED_OFF_MS);
 			}
-
-
-			/* set the leds */
-			set_led_hfw(wtb_failure_flag);
-			set_led_hfm(mvb_shd_failure_flag || mvb_failure_flag ||
-						mvb_a_failure_flag || mvb_b_failure_flag);
-			set_led_wna(wtb_inaugurated_flag);
-			set_led_mna(mvb_activity_flag);
-			set_led_wms(wtb_master_flag);
-			led_user1(mvb_a_failure_flag);
-			led_user2(mvb_b_failure_flag);
-			led_user3(wtb_inaugurated_flag);
-			led_user4(wtb_master_flag);
 
 
 

@@ -1,39 +1,19 @@
 [Open Files]
 Active File Display Mode=3
-Open File Line0=21542
-Open File Line1=25675
-Open File Line2=4542
-Open File Line3=292
-Open File Line4=11397
-Open File Line5=252
-Open File Line6=3210
-Open File Pos0=21145
-Open File Pos1=32026
-Open File Pos2=4871
-Open File Pos3=1196
-Open File Pos4=10555
-Open File Pos5=797
-Open File Pos6=3650
-Open File Window Pos0=0,1,-1,-1,-4,-30,44,58,1091,505
-Open File Window Pos1=0,1,-1,-1,-4,-30,66,87,908,534
-Open File Window Pos2=0,1,-1,-1,-4,-30,0,0,758,490
-Open File Window Pos3=0,1,-1,-1,-4,-30,110,145,912,500
-Open File Window Pos4=0,1,-1,-1,-4,-30,110,145,912,500
-Open File Window Pos5=0,1,-1,-1,-4,-30,22,29,824,384
-Open File Window Pos6=0,1,-1,-1,-4,-30,66,87,844,442
-Open File0=C:\SW\e403\GTW\SRC\gtw_appl.cc
-Open File1=C:\SW\e403\GTW\SRC\TSTIO.C
-Open File2=C:\SW\e403\GTW\SRC\TSTFLASH.C
-Open File3=C:\SW_COM\testcom\testcom\testcom.icd
-Open File4=C:\SW\tcns\A\COM\SRC\hw_com.c
-Open File5=C:\SW\e403\gtw\SRC\TSTFLASH.H
-Open File6=C:\SW\lib\SRC\am29f040.c
-Open File7=
+Open File Line0=3277
+Open File Line1=3704
+Open File Pos0=3363
+Open File Pos1=4832
+Open File Window Pos0=0,1,-1,-1,-4,-30,110,145,930,500
+Open File Window Pos1=0,1,-1,-1,-4,-30,0,0,820,355
+Open File0=C:\SW\e403\GTW\SRC\TSTFLASH.C
+Open File1=C:\SW\e403\GTW\SRC\gtw_appl.cc
+Open File2=
 Remember Files=1
 
 [Project Information]
 Project Start=DD07020003001B0005000400210000002E
-Working Time=37590
+Working Time=145612
 
 [Folders]
 C:\SW\=1
@@ -43,10 +23,8 @@ C:\SW\ - e403 - doc - Sorgenti Puca TEST_DEW-01 del 22-11-11=1
 C:\SW\ - e403 - doc - Sorgenti Puca TEST_DEW-01 del 22-11-11 - source=1
 C:\SW\ - e403 - doc - Sorgenti Puca TEST_DEW-01 del 22-11-11 - dewcamp=1
 C:\SW\ - e403 - doc - Sorgenti Puca TEST_DEW-01 del 22-11-11 - dewcamp - source=1
-C:\SW\ - tcns=1
 C:\SW\ - tcns - SRC=1
-C:\SW\ - tcns - A=1
 C:\SW\ - tcns - A - COM=1
 C:\SW\ - tcns - A - COM - SRC=1
-C:\SW\ - lib=1
 C:\SW\ - lib - SRC=1
+C:\SW\ - e403=1
