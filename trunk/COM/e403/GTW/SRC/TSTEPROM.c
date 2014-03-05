@@ -56,6 +56,7 @@ short tstEEPROM(short argc, char *argv[] )
                     break;
                 }
             }   
+            printf("\n"); 
             
           	/*lettura del buffer*/
             for (j=0;j<32;j++){
