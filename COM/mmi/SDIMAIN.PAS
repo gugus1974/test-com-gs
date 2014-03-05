@@ -25,7 +25,8 @@ type
     btnRiprova: TButton;
     ToolBar1: TPanel;
     btnStop: TButton;
-    ConsoRichEdit: TRichEdit;
+    Memo2: TMemo;
+    Button1: TButton;
         procedure FileExit1Execute(Sender: TObject);
         procedure HelpAbout1Execute(Sender: TObject);
         procedure FormCreate(Sender: TObject);
@@ -44,6 +45,7 @@ type
     procedure btnStopClick(Sender: TObject);
 //    procedure Button1Click(Sender: TObject);
     procedure ShowTestResult(FileName: String);
+    procedure Button1Click(Sender: TObject);
     private
 
         procedure StartTest;
@@ -223,7 +225,7 @@ var
 begin
        if (fileexists(FileName)) then
        begin
-        While ConsoRichEdit.Lines.Count > 1000 Do ConsoRichEdit.Lines.Delete(0);//azzera la lista
+        While Memo2.Lines.Count > 1000 Do Memo2.Lines.Delete(0);//azzera la lista
 
         AssignFile(testoFile, FileName);
         Reset(testoFile);
@@ -231,7 +233,7 @@ begin
         while not EOF(testoFile) do
         begin
                 ReadLn(testoFile, buffer);
-                ConsoRichEdit.Lines.Add('buffer');
+                Memo2.Lines.Add('buffer');
         end;
         CloseFile(testoFile);
        end;
@@ -290,7 +292,10 @@ var
 begin
     resstr := '';
     cntTimeOut := 0;
-    ComPortDriver.InputTimeout := 1000;
+   // now for the Ascii reception
+   While Memo2.Lines.Count > 1000 Do Memo2.Lines.Delete(0);//azzera la lista
+
+   ComPortDriver.InputTimeout := 1000;
     DataPtr := @RxData;
     ComPortDriver.FlushBuffers(true,true);
     Passed := false;
@@ -306,13 +311,13 @@ begin
         resstr := resstr+s;
 
         // now for the Ascii reception
-        While ConsoRichEdit.Lines.Count > 1000 Do ConsoRichEdit.Lines.Delete(0);//azzera la lista
+        While Memo2.Lines.Count > 1000 Do Memo2.Lines.Delete(0);//azzera la lista
 
         // Get current line
-        If ConsoRichEdit.Lines.Count = 0 Then ConsoRichEdit.Lines.Add('');
+        If Memo2.Lines.Count = 0 then Memo2.Lines.Add('');
 
-        if ConsoRichEdit.Lines.Count <> 0 then
-                s := ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1]
+        if Memo2.Lines.Count <> 0 then
+                s := Memo2.Lines[Memo2.Lines.Count-1]
         else
                 s := '';
         // Parse incoming text
@@ -324,41 +329,41 @@ begin
 
         #13: // CR - Carriage return
                 begin
-                if ConsoRichEdit.Lines.Count <> 0 then
-                        ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
+                if Memo2.Lines.Count <> 0 then
+                        Memo2.Lines[Memo2.Lines.Count-1] := s
                 else
-                        ConsoRichEdit.Lines.Add( s );
-//                ConsoRichEdit.Lines.Add('');
+                        Memo2.Lines.Add( s );
+//                Memo2.Lines.Add('');
                 s := '';
                 end;
 
         #10:  // Line Feed
                 begin
-                if ConsoRichEdit.Lines.Count <> 0 then
-                        ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
-                else
-                        ConsoRichEdit.Lines.Add( s );
-                ConsoRichEdit.Lines.Add('');
-                s := '';
+                        if Memo2.Lines.Count <> 0 then
+                                Memo2.Lines[Memo2.Lines.Count-1] := s
+                        else
+                                Memo2.Lines.Add( s );
+                        Memo2.Lines.Add('');
+                        s := '';
                 end;
-        #8: // Backspace - delete last char
-                delete( s, length(s), 1 );
-                else // Any other char - add it to the current line
-                s := s + p^;
-                end;
+//        #8: // Backspace - delete last char
+//                        delete( s, length(s), 1 );
+        else // Any other char - add it to the current line
+           s := s + p^;
+        end;
         dec( DataSize );
         inc( p );
         end;
         // If current line isn't empty
-        if (s<>'') then
-        if ConsoRichEdit.Lines.Count <> 0 then
+(*        if (s<>'') then
+        if Memo2.Lines.Count <> 0 then
                 // Update current line
-                ConsoRichEdit.Lines[ConsoRichEdit.Lines.Count-1] := s
+                Memo2.Lines[Memo2.Lines.Count-1] := s
         else
                 // New line - add it
-                ConsoRichEdit.Lines.Add( s );
-        ConsoRichEdit.Update;
-
+                Memo2.Lines.Add( s );
+        Memo2.Update;
+*)
         (* Cerca l'esito positivo *)
         Passed := (pos(pass,resstr) > 0);
 
@@ -676,7 +681,7 @@ begin
         (*********************************************)
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('wrongcommand','???','ERROR',2);
+            Passed := TestCommand('wrongcommand','???','ERROR',10);
         end
         else
         begin
@@ -760,7 +765,7 @@ begin
 
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('filleeprom','TEST OK','TEST KO',40);
+            Passed := TestCommand('tste2prom','TEST OK','TEST KO',40);
         end
         else
         begin
@@ -963,7 +968,7 @@ begin
 
         if (BDMPort<>'NONE') then
         begin
-            Passed := TestCommand('verts','TSPASSED','ERROR',10);
+            Passed := TestCommand('tstmvb','TEST_TM_MVB_OK','KO',0);
         end
         else
         begin
@@ -1171,9 +1176,9 @@ begin
     testnames[i] := 'Memoria RAM';
     RAMTestIndex := i;
     inc(i);
-    testnames[i] := 'Caricamento applicativo';
-    LOADTestIndex := i;
-    inc(i);
+    //testnames[i] := 'Caricamento applicativo';
+    //LOADTestIndex := i;
+    //inc(i);
     testnames[i] := 'Interfaccia Seriale';
     SERIALTestIndex := i;
     inc(i);
@@ -1243,22 +1248,17 @@ begin
     ComPortDriver.PortName := COMPort;
 
     Caption := 'COM Board Tester v.'+Version;
-    While ConsoRichEdit.Lines.Count > 1000 Do ConsoRichEdit.Lines.Delete(0);//azzera la lista
+    While Memo2.Lines.Count > 1000 Do Memo2.Lines.Delete(0);//azzera la lista
     if (Not ComPortDriver.Connect) then
     begin
     Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+')';
         MessageDlg('Impossibile aprire la porta seriale: '+COMPort,mtError,[mbOK],0);
         Application.Terminate;
-//       ConsolleForm.StatusBar1.Panels[1].Text := COMPort +' 38400 8N1 '+ 'CLOSED';
-        ConsoRichEdit.Lines.Add('Aperta porta seriale '+COMPort)
+        Memo2.Lines.Add('Aperta porta seriale '+COMPort)
     end
     else
     begin
     Caption := Caption+'    (BDMPort:'+UpperCase(BDMPort)+', COMPort:'+UpperCase(COMPort)+' OPEN)';
-
-    //        ConsolleForm.StatusBar1.Panels[0].Text :=  ComPortDriver.PortName;
-//        ConsolleForm.StatusBar1.Panels[1].Text :=  'OPEN';
-//        ConsolleForm.StatusBar1.Panels[2].Text := IntToStr(ComPortDriver.BaudRateValue);
     end;
 
     (* Lancia icd32 per sbloccare il reset della scheda COM *)
@@ -1421,10 +1421,9 @@ begin
     end;
 
     Wait(10);
-
+ (*
     if (Not StopTest and Not UserStopTest) then
     begin
-        MessagePanel('Errore TEST BDM:',mtConfirmation,[mbYES]);
         if (Not TestLoad) then
         begin
             StopTest := true;
@@ -1435,7 +1434,7 @@ begin
     begin
         DisplayTestStatus(LOADTestIndex,-1, 'NON ESEGUITO');
     end;
-
+*)
     Wait(10);
 
     if (Not StopTest and Not UserStopTest) then
@@ -1456,6 +1455,7 @@ begin
     if (Not StopTest and Not UserStopTest) then
     begin
         if (Not TestFlash) then
+        if (False) then
         begin
             BoardOK := false;
         end;
@@ -1468,7 +1468,8 @@ begin
     Wait(100);
     if (Not fileexists('ram2flash.res')) then
         ExecAppWait('LOAD_COM_IN_FLASH.BAT','');
-    Wait(100);
+    (*attendere scrittura in flash*)
+    Wait(20000);
 
     if (Not StopTest and Not UserStopTest) then
     begin
@@ -1745,6 +1746,12 @@ begin
     UserStopTest := True;
 end;
 
+
+procedure TSDIAppForm.Button1Click(Sender: TObject);
+begin
+    TestCommand('wrongcommand','???','ERROR',10);
+
+end;
 
 end.
 

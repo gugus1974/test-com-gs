@@ -16,6 +16,7 @@ type
     Comments: TLabel;
     Label1: TLabel;
     Label2: TLabel;
+    procedure OKButtonClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -28,6 +29,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TAboutBox.OKButtonClick();
+begin
+AboutBox.Close;
+end;
 
 end.
  

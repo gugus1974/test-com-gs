@@ -1,7 +1,7 @@
 Opening log file C:\sw\mmi\exe\testram.res
 >loadv testram.hex
 Loading ...  loaded.
-Load time was 0.01s.
+Load time was 0.00s.
 Verifying ...  verified.
 Verify time was 0.00s.
 Map file does not exist.
