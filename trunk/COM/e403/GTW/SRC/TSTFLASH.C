@@ -201,25 +201,8 @@ int wr (void)
 //        am29f040(sctstr, offset)  = data;
         am29f040(pt_flash, 0)  = dt;
 
-//		*flash2 = 0xAAAA;
-//		*flash1 = 0x5555;
-//		*flash2 = 0xA0A0;
-//		/***   scrittura della flash         ***/
-//		*pt_flash = dt;
 		/***  attesa fine scrittura           ***/
 		er = am29f040_wait(pt_flash, 0, dt);
-//		dat = *pt_flash;
-//		data1 = *pt_flash;
-//		while (dat != data1) {
-//			dat = *pt_flash;
-//			data1 = *pt_flash;
-//            if ( _getkey()  == '\t' ) 
-//		    {
-//			    er = 4;	
-//			    break;
-//		    }				
-//
-//		}
 
 		i++;
 		if(i==10000){
@@ -230,11 +213,6 @@ int wr (void)
 			er = 5;
 			break;
 		}
-//		if (pt_ram == (unsigned short  *)(0x00EFFE))
-//		{
-//			pt_ram = (unsigned short  *)(0x00FFFE);
-//			pt_flash = (unsigned short  *)(0x40FFFE);
-//		}
 		pt_ram++;
 	}
 	printf("\r\n");
@@ -355,291 +333,6 @@ int chip_erasesect(unsigned short  * addr)
 }
 
 
-/**********************************************************/
-/* Funzione di write & verify flash                       */
-/* Variabili di ingresso:                                 */
-/*   dt           dato da scrivere nella flash            */
-/* Valore ritornato:   codice errore                      */
-/**********************************************************/
-//int wr_vrf(short data)
-//{
-//	unsigned short  mask;
-//	unsigned short data3,data1,ok1,ok2,tim1,tim2,i,data2,j,k,dt,cnt,cnt_dt;
-//	int  er;
-//	unsigned short  * pt_flash;
-//	unsigned short  off,seg;
-//	unsigned long app; 
-//	char c;
-//    
-//	printf("WRITE/VERIFY FLASH SHIT 0 nei dati per 1 negli indirizzi\r\n");
-//	er = 0;
-//	i=60000;
-//
-//
-//	pt_flash = (unsigned short  *)0x400000;//address start flash memory
-//    
-//	/*** ciclo di scrittura e verifica su tutti gli indirizzi ***/
-//	for ( cnt = 1; cnt <21 ; cnt++)
-//	{
-//	    mask=0xFFFF;
-//		for ( cnt_dt = 0; cnt_dt <17 ; cnt_dt++)
-//	    {		
-//	        data = mask;
-//    		k = 10000;
-//    		tim1 = 0;
-//    		while( (((data3 = *pt_flash) & mask) != mask) && ((c = _getkey())  != '\r') ) 
-//    		{    
-//                if ( k > 10000) 
-//		        {	   
-//			        app = (unsigned long) pt_flash;
-//        			off = (unsigned int)(app & 0x00FFFF);
-//        			app = app >> 16;
-//        			seg = (unsigned int)(app & 0x0000FF);
-//        			printf("\r1-KO!!! Ad Address %02x%04x Bit %02d atteso 1 letto 0",seg,off, cnt_dt);
-//        			k = 0;
-//        			tim1 = 1;
-//        			er = 13;
-//        	    }
-//		        k++;		
-//       		    if ( c == '\t' )
-//    		    {
-//        		    er = 9;
-//        			break;
-//    		    }				
-//		    }
-//
-//			printf("@%6X  %4X\n",pt_flash,mask);
-//	        /* azzera bit */
-//	        mask ^= (1<<cnt_dt);
-//	        //            am29f040(sctstr, 0)       = 0xF0F0;//KEY1= 5555
-//            am29f040(sctstr, KEY1)    = 0xAAAA;//KEY1= 5555
-//            am29f040(sctstr, KEY2)    = 0x5555;//KEY2= 2AAA
-//            am29f040(sctstr, KEY1)    = 0xA0A0;
-//    		/***   scrittura della flash         ***/
-//    		*pt_flash = mask;
-//
-//    		/***  attesa fine scrittura           ***/
-//    		data3 = *pt_flash;
-//    		ok1 = 0;     
-//    		ok2 = 0;
-//    		tim1 = 0;
-//    		tim2 = 0;
-//    		/*attendi operazione di scrittura */
-//    		while (!(ok1 && ok2)) {
-//    			if (!(ok1 || tim1)) {
-//    				if ((data3 & 0x8000) == (mask & 0x8000)){
-//    					ok1 = 1;
-//    				}
-//    				else {
-//    					if ((data3 & 0x2000) == 0x2000){
-//    						data1 = *pt_flash;
-//    						if ((data1 & 0x8000) != (mask & 0x8000)){
-//    							er = 11;
-//    							tim1 = 1;
-//    						}
-//    						else ok1 = 1;
-//    					}
-//    				}
-//    			}    
-//    			if (!(ok2 || tim2)) {
-//    				if ((data3 & 0x0080) == (mask & 0x0080)){
-//    					ok2 = 1;
-//    				}
-//    				else {
-//    					if ((data3 & 0x0020) == 0x0020){
-//    						data1 = *pt_flash;
-//    						if ((data1 & 0x0080) != (mask & 0x0080)){
-//    							er = 12;
-//    							tim2 = 1;
-//    						}	
-//    						else ok2 = 1;
-//    					}
-//    				}
-//    			}
-//    			if (tim1 || tim2) break;
-//    			data3 = *pt_flash;
-//    		    if ( _getkey()  == '\t' ) {
-//    			   er = 9;	
-//    			   break;
-//    		    }				
-//    		}
-//	        /*verifica scrittura in flash*/
-//            k = 10000;
-//    		tim1 = 0;
-//    		while( (((data3 = *pt_flash) & mask) != mask) && ((c = _getkey())  != '\r') ) 
-//    		{    
-//                if ( k > 10000) 
-//		        {	   
-//			        app = (unsigned long) pt_flash;
-//        			off = (unsigned int)(app & 0x00FFFF);
-//        			app = app >> 16;
-//        			seg = (unsigned int)(app & 0x0000FF);
-//        			printf("\r2-KO!!! Ad Address %02x%04x Bit %02d atteso 1 letto 0",seg,off, cnt_dt);
-//        			k = 0;
-//        			tim1 = 1;
-//        			er = 13;
-//        	    }
-//		        k++;		
-//       		    if ( c == '\t' )
-//    		    {
-//        		    er = 9;
-//        			break;
-//    		    }				
-//		    }
-//	    }
-//
-//		/* shift l'indirizzo flash successivo*/
-//	    pt_flash=(unsigned short  *)( 0x400000 + (1<<cnt));
-//
-//	}
-//	
-//
-//	if(chip_erase()) 
-//	    printf("ERASE FAILED \n");
-//	else
-//	    printf("ERASE OK\n");
-//
-//	
-//	/*** ciclo di scrittura e verifica su tutti gli indirizzi ***/
-//	printf("\n");
-//	for ( pt_flash = sctstr; pt_flash <= flashlimit; pt_flash=pt_flash+1)
-//	{
-//	/***    procedura di start write     ***/
-//       
-//	    j = 0;
-//        data2 = 0xFFFE;		
-//	    for (dt = 0x0001; dt != 0x0000; dt = dt << 1)
-//	    {		
-//		    k = 10000;
-//		    tim1 = 0;
-//   	    
-//            //printf("-> @%06lx *pt=%04x data3:%04x  data2:%04x\r",pt_flash,*pt_flash,data3,data2);
-//		    /*legge  e verifica fino a max tentativi o '\r'*/
-//		    while( (((data3 = *pt_flash)  & dt) == 0)/* && ((c=_getkey())  != '\r') */)
-//		    {
-//    		     if ( k > 10000) //1000 tentativi
-//    		     {	   
-//        			app = (unsigned long) pt_flash;
-//        			off = (unsigned int)(app & 0x00FFFF);
-//        			app = app >> 16;
-//        			seg = (unsigned int)(app & 0x0000FF);
-//        			printf("\n1 KO!!! Ad Address %02x%04x Bit %02d atteso 1 letto 0",seg,off, j);
-//        			k = 0;
-//        			tim1 = 1;
-//        			er = 10;
-//    		     }
-//    		     k++;
-//    		     if ( (c=_getkey()) == '\t' ){
-//    			    er = 9;
-//    			    break;
-//    		     }				
-//		    }
-//    		if ( tim1 ) printf("\r\n");
-//    		if ( er == 9 ) break;	
-//    		
-////            am29f040(sctstr, 0)       = 0xF0F0;//KEY1= 5555
-//            am29f040(sctstr, KEY1)    = 0xAAAA;//KEY1= 5555
-//            am29f040(sctstr, KEY2)    = 0x5555;//KEY2= 2AAA
-//            am29f040(sctstr, KEY1)    = 0xA0A0;
-//    		/***   scrittura della flash         ***/
-//    		*pt_flash = ( short)data2;
-//    		/***  attesa fine scrittura           ***/
-//            printf("@%06lx wr data2:%04x\r",pt_flash,data2);
-//
-//    		ok1 = 0;     
-//    		ok2 = 0;
-//    		tim1 = 0;
-//    		tim2 = 0;
-//    		data3 = *pt_flash;
-//    		while (!(ok1 && ok2)) {
-//    			if (!(ok1 || tim1)) {
-//    				if ((data3 & 0x8000) == (data2 & 0x8000)){//scrittura terminata
-//    					ok1 = 1;
-//    				}
-//    				else {
-//    					if ((data3 & 0x2000) == 0x2000){
-//    						data1 = *pt_flash;
-//    						if ((data1 & 0x8000) != (data2 & 0x8000)){
-//    							er = 11;
-//    							tim1 = 1;
-//    						}
-//    						else ok1 = 1;
-//    					}
-//    				}
-//    			}    
-//    			if (!(ok2 || tim2)) {
-//    				if ((data3 & 0x0080) == (data2 & 0x0080)){
-//    					ok2 = 1;
-//    				}
-//    				else {
-//    					if ((data3 & 0x0020) == 0x0020)
-//    					{
-//    						data1 = *pt_flash;
-//    						if ((data1 & 0x0080) != (data2 & 0x0080)){
-//    							er = 12;
-//    							tim2 = 1;
-//    						}	
-//    						else ok2 = 1;
-//    					}
-//    				}
-//    			}
-//    			
-//    			if (tim1 || tim2)
-//    			{
-//    			     printf("\nerrore di timeout in scrittura in flash di %04x\n",data2);
-//    			     break;
-//    			}
-//
-//    			data3 = *pt_flash;
-//   		    
-//    		    if ( (c=_getkey())   == '\t' ) 
-//    		    {
-//    			   er = 9;	
-//    			   break;
-//    		    }				
-//    		}
-//            //printf("@%06lx \r",(pt_flash));
-//
-//    		if ( er == 9 ) break;
-//    		i++;
-//    		if (i==60000)
-//    		{
-//    			printf(".");
-//    			i = 0;
-//    		}
-//    		k = 1000;
-//    		tim1 = 0;
-////            printf(" .. vrf  *pt=%04x data3=%04x  mask = %04x \r",(*pt_flash),data3,dt);
-//		while( ((data3 = *pt_flash)  & dt) != 0 /*&& ((c = _getkey())  != '\r') */) 
-//		{    
-//		    if ( k > 1000) 
-//		    {	   
-//    			app = (unsigned long) pt_flash;
-//    			off = (unsigned int)(app & 0x00FFFF);
-//    			app = app >> 16;
-//    			seg = (unsigned int)(app & 0x0000FF);
-//    			printf("%x2 KO!!! Ad Address %02x%04x Bit %02d atteso 0x%04x letto  0x%04X   )\r",k,seg,off, j,data,(*pt_flash));
-//    			k = 0;
-//    			tim1 = 1;
-//    			er = 13;
-//            }
-//		    k++;		
-//		    if (( c = _getkey()) == '\t' )
-//		    {
-//			    er = 9;
-//			    break;
-//		    }				
-//		}
-//		if ( tim1 ) printf("\r\n");
-//		if ( er == 9 ) break;	
-//		j++;
-//		data2 = data2 << 1;
-//	    }
-//        if ( er == 9 ) break;
-//	}
-//	printf("\r\n");
-//	return er;
-//}
 
 /*dopo la cancellacione verifica che la flash sia a FFFFh poi scrive e
  verifica la word data per tutto lo spazio di indirizzi*/
@@ -746,150 +439,6 @@ int wr_vrf_fast(unsigned short data)
     		
 }
 
-/**********************************************************/
-/* Programma test della flash                             */
-/**********************************************************/
-//void tstflash (void )
-//{
-//	int error,error5555,errorAAAA,errorSECT,i;
-//	unsigned int k,j,seg,off,exit;
-//	unsigned short  data3;
-//	unsigned short  * sectaddr;
-//	unsigned short  * sectstart;
-//	unsigned short  * sectend;
-//	unsigned long app;
-//	char c;
-//
-//
-//	i=i;
-//	exit = 0;
-//	printf("TEST ERASE FLASH...\n");
-//	error = chip_erase();
-//	if(error) 
-//	    printf("ERASE FAILED (error = %d)\n",error);
-//	else
-//	    printf("ERASE OK\n");
-//	    
-//	for(i=0;i<1000;i++);
-//	
-//	
-//	
-//	if (!error ) {
-//		error5555 = wr_vrf(0x5555);
-//	    printf("\nwr_vrf (error %d)\n",error5555);
-//		
-//		for(i=0;i<1000;i++);
-//		//* test di ersa sectore: verifica che sia riuscita la cancellazione a settori , verificando che ogni locazione sia a FFFF*//
-//		
-//		
-//		if (error5555==0 || error5555==9) {	
-////            printf("TEST SECTOR ERASING ...\n ");
-//			for ( sectstart = sctstr; sectstart <= sectlimit; sectstart += sctdelta)
-//			{
-////				printf("ERASING from @%06lX\n",sectstart);
-//				if (!(errorSECT = chip_erasesect(sectstart)))
-//				{
-//				    printf("ERASED from @%06lX\n",sectstart);
-//					sectend = sectstart + dimsct;
-////					printf("3 VERIFY ERASING SECTOR start @%06lX -> end @%06lX \n",sectstart,sectend);
-//					for ( sectaddr = sectstart; sectaddr <= sectend; sectaddr++)
-//					{
-//						k = 10000;
-//						j = 0;
-//						while( ((data3 = *sectaddr) != 0xFFFF) && ((c = _getkey())  != '\r') ) { 
-//						     if ( k > 10000) 
-//						     {	   
-//    							app = (unsigned long) sectaddr;
-//    							off = (unsigned int)(app & 0x00FFFF);
-//    							app = app >> 16;
-//    							seg = (unsigned int)(app & 0x0000FF);
-//    							printf("\rKO!!! Ad Address %02x%04x letto %04x",seg,off,data3);
-//    							k = 0;
-//    							j = 1;
-//						     }
-//						     if ( c == '\t' ) 
-//	     				     {
-//    							errorSECT = 9;
-//    							exit = 1;
-//    							break;
-//	     				     }				
-//						     k++;		
-//						}
-//						if ( j ) printf("\r\n");
-//						if ( exit ) break;	
-//					}	
-//				}
-//				else {
-//				    printf("\nerrorSECT = %d\n",errorSECT);
-//				    break;   
-//				}
-//				if ( exit ) break;	
-//			}
-//	 	}
-////	 	if(!errorSECT) 
-////	 	    errorAAAA = wr_vrf(0xAAAA);
-//	 	 
-//	 	
-//	} 
-//	
-//	/* lettura dello codice/*
-//    /* send the autoselect command */
-//    am29f040(sctstr, 0)       = 0xF0F0;
-//    am29f040(sctstr, KEY1)    = 0xAAAA;
-//    am29f040(sctstr, KEY2)    = 0x5555;
-//    am29f040(sctstr, KEY1)    = 0x9090;
-//
-//    /* check the manufacture code and Am29F040 device code */
-//    if (am29f040(sctstr, 0) != 0x0101 || am29f040(sctstr, 1) != 0xA4A4)
-//        printf("\nAM29F04O NOT detected\n");
-//    else
-//        printf("\nAM29F04O  detected\n");
-//
-//    /* reset to read mode and return */
-//    am29f040(sctstr, 0)       = 0xF0F0;
-//	
-//	
-//	switch (error){
-//		case 0:
-//			//save_stato (TFLAWRVROK);
-//			//ram2flash ();
-//			break;
-//		case 1:
-//			prn_stato (0,TFLATOTERSCH1KO);
-//			break;
-//		case 2:
-//			prn_stato (0,TFLATOTERSCH2KO);
-//			break;
-//		case 3:
-//			prn_stato (0,TFLAFZEXITTOTERS);
-//			break;
-//		case 6:
-//			prn_stato (0,TFLASCTERSCH1KO);
-//			break;
-//		case 7:
-//			prn_stato (0,TFLASCTERSCH2KO);
-//			break;
-//		case 8:
-//			prn_stato (0,TFLAFZEXITSCTERS);
-//			break;
-//		case 9:
-//			prn_stato (0,TFLAFZEXITWRVR);
-//			break;
-//		case 10:
-//			prn_stato (0,TFLAVR1KO);
-//			break;
-//		case 11:
-//			prn_stato (0,TFLAPRGCH1KO);
-//			break;
-//		case 12:
-//			prn_stato (0,TFLAPRGCH2KO);
-//			break;
-//		case 13:
-//			prn_stato (0,TFLAVR0KO);
-//			break;
-//	}
-//	printf("\r\n");
-//}
 
 /**********************************************************/
 /* Programma test della flash VELOCE 5555 AAAA            */
@@ -946,6 +495,7 @@ short tstflash_vel (short argc, char *argv[] )
 
 	    if (error5555!=0) printf("\nwr_vrf (error %d)\n",error5555);
 		for(i=0;i<1000;i++);
+		
 		//* test di ersa sectore: verifica che sia riuscita la cancellazione a settori , verificando che ogni locazione sia a FFFF*//
 		if (error5555==0) {	
             printf("TEST SECTOR ERASING ...\n ");
@@ -1267,28 +817,74 @@ void save_stato (unsigned short stato)
 {
 	unsigned short i,dt,dat,data1;
 	unsigned short  * pt_flash;
+	unsigned char report_written;
 		
 	i=0;
-	pt_flash = (unsigned short  *)(0x4E0000);
-	while ( ((dt = (*pt_flash)) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x4EFFFE))){
-		pt_flash++;
-		i++;
+	report_written=0;
+	
+	while(!report_written)
+	{
+    	pt_flash = (unsigned short  *)(0x4E0000);
+	
+	    if((*pt_flash) == 0xFFFF)//flash erased
+	    {
+    	 	/***    procedura di start write     ***/
+            am29f040(sctstr, KEY1)    = 0xAAAA;
+            am29f040(sctstr, KEY2)    = 0x5555;
+            am29f040(sctstr, KEY1)    = 0xA0A0;
+        	/***   scrittura della flash         ***/
+        	am29f040(pt_flash ,0)     = 0x1234;
+           	/***  attesa fine scrittura           ***/
+    	    dat = *pt_flash;
+        	data1 = *pt_flash;
+        	while (dat != data1) {
+        		dat = *pt_flash;
+        		data1 = *pt_flash;
+        	}
+            printf("\nFlash pronta ...",pt_flash, (*pt_flash) );
+
+    	}
+    	else if((*pt_flash) == 0x1234)//flash ready to write report
+    	{
+        	while ( ((dt = (*pt_flash)) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x4EFFFE))){
+        		pt_flash++;
+        		i++;
+        	}
+        	/***    procedura di start write     ***/
+            am29f040(sctstr, KEY1)    = 0xAAAA;
+            am29f040(sctstr, KEY2)    = 0x5555;
+            am29f040(sctstr, KEY1)    = 0xA0A0;
+        	/***   scrittura della flash         ***/
+        	am29f040(pt_flash ,0)     = stato;
+        	/***  attesa fine scrittura           ***/
+        	dat = *pt_flash;
+        	data1 = *pt_flash;
+        	while (dat != data1) 
+        	{
+        		dat = *pt_flash;
+        		data1 = *pt_flash;
+        	}
+            printf("\n salvo @%06lX codice @%04X \n",pt_flash, (*pt_flash) );
+        	prn_stato(i,stato);
+        	report_written = 1;//exit
+        	
+    	}
+    	else
+    	{
+    	    //sector erase
+            printf("\nCancellazione flash in corso ...",pt_flash, (*pt_flash) );
+
+    	    am29f040_sector_erase(0x400000,7);
+    	}
 	}
-	/***    procedura di start write     ***/
-    am29f040(sctstr, KEY1)    = 0xAAAA;
-    am29f040(sctstr, KEY2)    = 0x5555;
-    am29f040(sctstr, KEY1)    = 0xA0A0;
-	/***   scrittura della flash         ***/
-	am29f040(pt_flash ,0)     = stato;
-	/***  attesa fine scrittura           ***/
-	dat = *pt_flash;
-	data1 = *pt_flash;
-	while (dat != data1) {
-		dat = *pt_flash;
-		data1 = *pt_flash;
-	}
-    printf("\n salvo @%06lX codice @%04X \n",pt_flash, (*pt_flash) );
-	prn_stato(i,stato);
+	   
+    
+
+    
+   
+	
+	
+	
 }
 
 short prn_report(short argc, char *argv[])
@@ -1299,11 +895,19 @@ short prn_report(short argc, char *argv[])
 	printf("PROG.  COD.                    DESCRIZIONE DEL TEST                       ESITO\r\n");
 	i=0;
 	pt_flash = (unsigned short  *)(0x4E0000);
-	while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x4EFFFE))){
-		prn_stato(i,dt);
-		pt_flash++;
-		i++;
-	}
+    if (*pt_flash == 0x1234)
+    {
+	    pt_flash++;
+	    while ( ((dt = *pt_flash) != 0xFFFF) && (pt_flash <= (unsigned short  *)(0x4EFFFE))){
+		    prn_stato(i,dt);
+		    pt_flash++;
+		    i++;
+	    }
+    }
+    else
+        {
+            printf("\nreport non disponibile\n");
+        }
 }
 
 
