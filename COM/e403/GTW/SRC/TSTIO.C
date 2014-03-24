@@ -808,10 +808,11 @@ short tstio(short argc, char *argv[] )
     /*  TEST1 shift degli 1 sulle uscite */
     for(i=1;i<55;i++)
     {
+        printf("ciclo %d\n",i); 
         /*reset error */
         err[i]=0;
         ko1 = 1;
-        while ( (ko1 == 1) && ((c=sio_poll_key(10)) != '\r'))
+        while ( (ko1 == 1) && ((c=sio_poll_key(1)) != '\t'))
 		{		
             /*set a 0 di tutti i DO*/
             clearDO();
@@ -835,12 +836,12 @@ short tstio(short argc, char *argv[] )
             result[1] = lettura_di_prec[1]^lettura_di[1];
             result[2] = lettura_di_prec[2]^lettura_di[2];
             result[3] = lettura_di_prec[3]^lettura_di[3];
-            //        printf("\nVRFY:");
-            //        printbits(result[0],16,'0','1');
-            //        printbits(result[1],16,'0','1');
-            //        printbits(result[2],16,'0','1');
-            //        printbits(result[3],6,'0','1');
-            //        printf("\n");
+//                    printf("\nVRFY:");
+//                    printbits(result[0],16,'0','1');
+//                    printbits(result[1],16,'0','1');
+//                    printbits(result[2],16,'0','1');
+//                    printbits(result[3],6,'0','1');
+//                    printf("\n");
             ko1 = 0;
             /*controlla le variazioni degli ingressi*/
             for(j=0;j<4;j++){
@@ -866,7 +867,7 @@ short tstio(short argc, char *argv[] )
         }
 
         ko1 = 1;
-        while ( (ko1 == 1) && ((c=sio_poll_key(10)) != '\r'))
+        while ( (ko1 == 1) && ((c=sio_poll_key(1)) != '\t'))
 		{		
 
             /* TEST0*/
