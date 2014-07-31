@@ -485,7 +485,7 @@ error:
 
 void hw_monitor(void)
 {
-	ushell_register("ver", "", "Print the version string", version_dump);
+//	ushell_register("ver", "", "Print the version string", version_dump);
 #ifdef __C166__
 	ushell_register("rom_crc", "", "Print the CRC of the ROM", rom_crc);
 #endif
@@ -493,33 +493,35 @@ void hw_monitor(void)
 	ushell_register("t", "", "Show target info", target_cmd);
 
 	ushell_register("reset", "", "Reset the board", reset_cmd);
-	ushell_register("nmi", "", "Send a Non-Maskable Interrupt", nmi_cmd);
+//	ushell_register("nmi", "", "Send a Non-Maskable Interrupt", nmi_cmd);
 
 #ifdef __C166__
 	ushell_register("reboot", "<addr>", "Reboot to addr", reboot_cmd);
 	ushell_register("resetrom", "", "Reset to ROM", reset2rom_cmd);
  	ushell_register("bootload", "", "Start the bootstrap loader", bootstrap_loader_cmd);
 #endif
-
+/*
 	ushell_register("dm", "[<addr> [<size>]]", "Dump a memory region", memory_dump);
 	ushell_register("sm", "<addr> <data..>", "Set a memory region", memory_set);
 	ushell_register("crc16", "<addr> <len>", "Calculate the CRC-16 of a memory region", crc16_cmd);
-
+*/
 #if defined(__C166__) || defined(_MRI)
 	ushell_register("cpu", "", "Measure the CPU usage", cpu_cmd);
 #endif
-
+/*
 	ushell_register("flash_check", "<base>", "Check that there is a FLASH at that address", flash_check);
 	ushell_register("flash_sector_erase", "<base> <sector num>", "Erase a FLASH sector", flash_sector_erase);
 	ushell_register("flash_write", "<base> <offset> <data..>", "Write data to a FLASH", flash_write);
 	ushell_register("flash_chip_erase", "", "Write data to a FLASH", flash_chiperase);
-
+*/
+/*
 #ifdef O_COM
 	ushell_register("eeprom_read_status", "", "Read the serial EEPROM status byte", eeprom_read_status);
 	ushell_register("eeprom_write_status", "<status>", "Write the serial EEPROM status byte", eeprom_write_status);
 	ushell_register("eeprom_read", "[<addr> [<size>]]", "Read data from the serial EEPROM", eeprom_read);
 	ushell_register("eeprom_write", "<addr> <data..>", "Write data from the serial EEPROM", eeprom_write);
 #endif
+*/
 }
 
 

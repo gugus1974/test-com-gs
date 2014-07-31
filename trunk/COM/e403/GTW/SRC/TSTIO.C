@@ -808,7 +808,7 @@ short tstio(short argc, char *argv[] )
     /*  TEST1 shift degli 1 sulle uscite */
     for(i=1;i<55;i++)
     {
-        printf("ciclo %d\n",i); 
+        printf("\n--> TEST INGRESSO  %d di 55 <-- \n",i); 
         /*reset error */
         err[i]=0;
         ko1 = 1;

@@ -543,7 +543,7 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    6 - test TX/RX MVB\n");       
             printf("    7 - test LED\n");       
             printf("    8 - test REPORT\n");       
-//            printf("   10 - COPY RAM to ROM\n");       
+            printf("   10 - COPY RAM to ROM\n");       
             printf("    x - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
             break;
@@ -616,8 +616,8 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    else if (strcmp(s,"10") == 0)
     	    {
                 printf("COPY RAM->ROM\n");
-//	             hw_ram2rom ();
-	            //hw_reset();
+	            hw_ram2rom ();
+	            hw_reset();
             }
             else
                 stsTest = 0;

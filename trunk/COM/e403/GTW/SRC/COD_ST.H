@@ -60,6 +60,11 @@
 #define  TESTIOKO 		0x0301
 /* Test MVB  SW1 OK */ 
 #define  TESTSW1OK 		0x0302
+#define  TESTSW1_KO0 	0x0303
+#define  TESTSW1_KO1 	0x0304
+#define  TESTSW1_KO2 	0x0305
+#define  TESTSW1_KO4 	0x0306
+#define  TESTSW1_KO8 	0x0307
 
 
 

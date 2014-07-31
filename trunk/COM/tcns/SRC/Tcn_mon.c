@@ -139,9 +139,9 @@ static short version_dump(short argc, char *argv[])
 
 	if (argc != 1) return -1;
 
-	if (application_version[0])	printf("*** Application : %s\n", application_version[0] != ' ' ?
+//	if (application_version[0])	printf("*** Application : %s\n", application_version[0] != ' ' ?
 										application_version : application_version + 1);
-	if (library_version[0])     printf("*** Library     : %s\n", library_version);
+//	if (library_version[0])     printf("*** Library     : %s\n", library_version);
 
 	printf("*** TCN NCDB    : ");
 
@@ -2029,7 +2029,7 @@ static short mac_trace_cmd(short argc, char *argv[])
 
 void tcn_monitor(void)
 {
-	ushell_register("ver", "", "Print the version string", version_dump);
+//	ushell_register("ver", "", "Print the version string", version_dump);
 
 	ushell_register("m", "", "Dump the MVBC status", mvbc_dump);
 	ushell_register("pp", "<num>", "Display a phisical port", pp_dump);
