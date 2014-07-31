@@ -522,7 +522,7 @@ static void strt(void)
     hw_monitor();
 #ifdef STRT_CONFIGURE_TCN
     if (station_id) {
-        tcn_monitor();
+//        tcn_monitor();
 #if defined(STRT_MAP) && defined(UMS)
         ums_monitor();
 #elif defined(STRT_MAP)
@@ -562,7 +562,7 @@ error:
         ushell_init();
         hw_monitor();
 #ifdef STRT_CONFIGURE_TCN
-        tcn_monitor();
+//        tcn_monitor();
         address = 0;
 #endif
         pi_task_create(shell_task, STRT_SHELL_TASK_ID, STRT_SHELL_TASK_PRIO);

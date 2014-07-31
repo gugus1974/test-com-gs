@@ -361,7 +361,7 @@ static short flash_sector_erase(short argc, char *argv[])
 /*---------------------------------------------------------------------------------------------*/
 static short flash_chiperase(short argc, char *argv[])
 {
-	if (argc != 3) return -1;
+	if (argc != 1) return -1;
 
 	if (am29f040_chip_erase(0x400000) == AM29F040_OK)
 		printf("FLASH ERASE OK\n");
@@ -512,7 +512,7 @@ void hw_monitor(void)
 	ushell_register("flash_check", "<base>", "Check that there is a FLASH at that address", flash_check);
 	ushell_register("flash_sector_erase", "<base> <sector num>", "Erase a FLASH sector", flash_sector_erase);
 	ushell_register("flash_write", "<base> <offset> <data..>", "Write data to a FLASH", flash_write);
-	ushell_register("flash_chip_erase", "<base> ", "Write data to a FLASH", flash_chiperase);
+	ushell_register("flash_chip_erase", "", "Write data to a FLASH", flash_chiperase);
 
 #ifdef O_COM
 	ushell_register("eeprom_read_status", "", "Read the serial EEPROM status byte", eeprom_read_status);

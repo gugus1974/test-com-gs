@@ -598,6 +598,21 @@ void prn_stato (unsigned int prg, unsigned int cod)
 		case TESTSW1OK:
 			printf("%04d  %04x  Test SW1 MVBC ..............................................   OK  ",prg,cod);
 			break;
+		case TESTSW1_KO0:
+			printf("%04d  %04x  Test SW1 MVBC fallito in posizione 0........................   KO  ",prg,cod);
+			break;
+		case TESTSW1_KO1:
+			printf("%04d  %04x  Test SW1 MVBC fallito in posizione 1........................   KO  ",prg,cod);
+			break;
+		case TESTSW1_KO2:
+			printf("%04d  %04x  Test SW1 MVBC fallito in posizione 2........................   KO  ",prg,cod);
+			break;
+		case TESTSW1_KO4:
+			printf("%04d  %04x  Test SW1 MVBC fallito in posizione 4........................   KO  ",prg,cod);
+			break;
+		case TESTSW1_KO8:
+			printf("%04d  %04x  Test SW1 MVBC fallito in posizione 8........................   KO  ",prg,cod);
+			break;
 		case TESTLED_OK:
 			printf("%04d  %04x  Test LED....................................................   OK  ",prg,cod);
 			break;

@@ -1470,6 +1470,7 @@ int t_mvbel (void)
 	unsigned long j;
 	char c;
 	static unsigned char   stato=0;
+	static unsigned char   next_step=0;
 	unsigned char   test_mvb_lineA,test_mvb_lineB;
 	unsigned char   test_mvb_lineAOFF,test_mvb_lineBOFF;
 	unsigned short  off,seg,p2val,fcval,ecval,isr0val,isr1val;
@@ -1608,11 +1609,15 @@ int t_mvbel (void)
 	        
 	        case 1:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA A
                	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);
-        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+//        		while (((c=sio_poll_key(2))!= '0') && ((c=sio_poll_key(2))!= '1') && ((*regmr & 0x0200) != 0)) //BUSY=0x200
+        		next_step=0;
+        		while ( !next_step)
         		{ 
+        		    c=sio_poll_key(2);
+        		    if ((c=='0') || (c== '1')) next_step=1;
         		} 
                 *FC15_DATAptr = *FC15_DATAptr + 1;
-        		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
+        		*regmr=0x0020;/* set SMSM :invia master frame manualmente */
 
 //                if (strcmp(c,"1")==0)  
                 if ( c == '1')  
@@ -1643,9 +1648,18 @@ int t_mvbel (void)
 	        case 3: //ATTENDE CARATTERE DI ESITO TEST SU LINEA A
               	set_out_port(0, DOP0_KMA|DOP0_KMB, 0);
 
-        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+/*
+        		while (((c=sio_poll_key(2))!= '0') && ((c=sio_poll_key(2))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		} 
+*/
+        		next_step=0;
+        		while ( !next_step)
+        		{ 
+        		    c=sio_poll_key(2);
+        		    if ((c=='0') || (c== '1')) next_step=1;
+        		} 
+
                 *FC15_DATAptr = *FC15_DATAptr + 1;
         		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
 
@@ -1679,9 +1693,19 @@ int t_mvbel (void)
 	        
 	        case 5:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA 5
               	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMB);
-        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+/*
+        		while (((c=sio_poll_key(2))!= '0') && ((c=sio_poll_key(2))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		} 
+
+*/
+        		next_step=0;
+        		while ( !next_step)
+        		{ 
+        		    c=sio_poll_key(2);
+        		    if ((c=='0') || (c== '1')) next_step=1;
+        		} 
+
                 *FC15_DATAptr = *FC15_DATAptr + 1;
         		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
 
@@ -1712,10 +1736,18 @@ int t_mvbel (void)
 
 	        case 7: //ATTENDE CARATTERE DI ESITO TEST SU LINEA B
               	set_out_port(0, DOP0_KMA|DOP0_KMB, 0);
-
-        		while (((c=sio_poll_key(1))!= '0') && ((c=sio_poll_key(1))!= '1') && ((*regmr & 0x0200) != 0))
+/*
+        		while (((c=sio_poll_key(2))!= '0') && ((c=sio_poll_key(2))!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		} 
+*/
+        		next_step=0;
+        		while ( !next_step)
+        		{ 
+        		    c=sio_poll_key(2);
+        		    if ((c=='0') || (c== '1')) next_step=1;
+        		} 
+
                 *FC15_DATAptr = *FC15_DATAptr + 1;
         		*regmr=0x0020;					/* set SMSM :invia master frame manualmente */
 
@@ -1935,14 +1967,18 @@ short test_SW1 (short argc, char *argv[] )
 
     printf("TEST SW1\n");
     while (!exit){
-        if ((c=sio_poll_key(10))  == '\t') exit= 1;
+        if ((c=sio_poll_key(2))  == '\t') 
+            {
+            
+                exit= 1;
   		
+  		    }
             
         switch(sts_testsw1)
         {
             case 0://premi invio verificare 1
                 printf("step 1: Posizionare SW1 su 1 e premere INVIO\n");
-                while ((c=sio_poll_key(10))  != '\r')
+                while ((c=sio_poll_key(2))  != '\r')
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -1954,11 +1990,13 @@ short test_SW1 (short argc, char *argv[] )
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
         	        sts_testsw1 = 10;// errore
+           	        save_stato (TESTSW1_KO1);
+
         	    }
                 break;
             case 1://premi invio verificare 2
                 printf("step 2: Posizionare SW1 su 2 e premere INVIO\n");
-                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
+                while (((c=sio_poll_key(2))  != '\r')/*&&((c=sio_poll_key(2))  != 'x')*/)
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -1973,11 +2011,12 @@ short test_SW1 (short argc, char *argv[] )
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
         	        sts_testsw1 = 10;// errore
+           	        save_stato (TESTSW1_KO2);
         	    }
                 break;
             case 2://premi invio verificare 4
                 printf("step 3: Posizionare SW1 su 4 e premere INVIO\n");
-                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
+                while (((c=sio_poll_key(2))  != '\r')/*&&((c=sio_poll_key(2))  != 'x')*/)
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -1992,11 +2031,12 @@ short test_SW1 (short argc, char *argv[] )
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
         	        sts_testsw1 = 10;// errore
+           	        save_stato (TESTSW1_KO4);
         	    }
                 break;
             case 3://premi invio verificare 8
                 printf("step 4: Posizionare SW1 su 8 e premere INVIO\n");
-                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
+                while (((c=sio_poll_key(2))  != '\r')/*&&((c=sio_poll_key(2))  != 'x')*/)
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -2011,11 +2051,12 @@ short test_SW1 (short argc, char *argv[] )
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
         	        sts_testsw1 = 10;// errore
+           	        save_stato (TESTSW1_KO8);
         	    }
                 break;
             case 4://premi invio verificare 0
                 printf("step 5: Posizionare SW1 su 0 e premere INVIO\n");
-                while (((c=sio_poll_key(10))  != '\r')&&((c=sio_poll_key(10))  != 'x'))
+                while (((c=sio_poll_key(2))  != '\r')/*&&((c=sio_poll_key(2))  != 'x')*/)
                 {
                     data1 = *regdaor & 0x000F;  // legge il DA per l'indirizzamento hw
                     printf("SW1 %x\r",data1);    
@@ -2031,6 +2072,7 @@ short test_SW1 (short argc, char *argv[] )
         	    else{
         	        old_sts_testsw1 = sts_testsw1;
         	        sts_testsw1 = 10;// errore
+           	        save_stato (TESTSW1_KO0);
         	    }
                 break;
             case 5://test terminato
@@ -2042,6 +2084,7 @@ short test_SW1 (short argc, char *argv[] )
                 printf("ERROR riletto %x\n",data1);
                 sts_testsw1 = old_sts_testsw1;//ritorna al test precedente
                 error = old_sts_testsw1;
+
                 break;
             default:
              break;
