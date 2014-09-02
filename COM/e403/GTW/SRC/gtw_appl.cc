@@ -549,7 +549,8 @@ static short TestCOM_cmd(short argc, char *argv[])
             break;
             
          case 1 :
-    		if (!get_line(s, sizeof(s), FALSE))
+    		    
+    		    if (!get_line(s, sizeof(s), FALSE))
     		    stsTest = 0;
     		
     		if(strcmp(s,"x") == 0)
@@ -600,6 +601,7 @@ static short TestCOM_cmd(short argc, char *argv[])
     		{		
     	        printf("test TX/RX MVB\n");
     	        tstmvb_txrx(0,0);
+                stsTest = 0;
     	    }
     	    else if (strcmp(s,"7") == 0)
     	    {
