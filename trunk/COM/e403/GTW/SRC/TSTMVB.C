@@ -1598,7 +1598,7 @@ int t_mvbel (void)
 	    {
 	        default:
 	        case 0:// AVVIA TEST SU LINEA A
-            	printf("\n\nPROVA TRASMISSIONE CON RELÈ CHIUSI SULLA LINEA A:\n\n");
+            	printf("\n\nPROVA TRASMISSIONE CON RELE' CHIUSI SULLA LINEA A:\n\n");
             	printf("Verificare con un oscilloscopio che tra i pin 1 e 2 del connettore MVB1\n");
             	printf("della scheda EMD sia presente un segnale di trasmissione seriale con   \n");
             	printf("bit rate di 1 usec e ampiezza co mpresa tra 2 e 12 V p.p.\n\n");
@@ -1609,12 +1609,11 @@ int t_mvbel (void)
 	        
 	        case 1:// AVVIA TRASMISSIONE ED ATTENDE CARATTERE DI ESITO TEST TEST SU LINEA A
                	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);
-//        		while (((c=sio_poll_key(2))!= '0') && ((c=sio_poll_key(2))!= '1') && ((*regmr & 0x0200) != 0)) //BUSY=0x200
-        		next_step=0;
-        		while ( !next_step)
+        		//while (((c=sio_poll_key(2))!= '0') && ((c=sio_poll_key(2))!= '1') && ((*regmr & 0x0200) != 0))
+           		c=0x00;
+           		while ((c!= '0') && (c!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		    c=sio_poll_key(2);
-        		    if ((c=='0') || (c== '1')) next_step=1;
         		} 
                 *FC15_DATAptr = *FC15_DATAptr + 1;
         		*regmr=0x0020;/* set SMSM :invia master frame manualmente */
@@ -1653,11 +1652,10 @@ int t_mvbel (void)
         		{ 
         		} 
 */
-        		next_step=0;
-        		while ( !next_step)
+           		c=0x00;
+           		while ((c!= '0') && (c!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		    c=sio_poll_key(2);
-        		    if ((c=='0') || (c== '1')) next_step=1;
         		} 
 
                 *FC15_DATAptr = *FC15_DATAptr + 1;
@@ -1682,7 +1680,7 @@ int t_mvbel (void)
 
 	        case 4:// AVVIA TEST SU LINEA B
 	               
-            	printf("\n\nPROVA TRASMISSIONE CON RELÈ CHIUSI SULLA LINEA B:\n\n");
+            	printf("\n\nPROVA TRASMISSIONE CON RELE' CHIUSI SULLA LINEA B:\n\n");
             	printf("Verificare con un oscilloscopio che tra i pin 4 e 5 del connettore MVB1\n");
             	printf("della scheda EMD sia presente un segnale di trasmissione seriale con   \n");
             	printf("bit rate di 1 usec e ampiezza co mpresa tra 2 e 12 V p.p.\n\n");
@@ -1699,11 +1697,10 @@ int t_mvbel (void)
         		} 
 
 */
-        		next_step=0;
-        		while ( !next_step)
+           		c=0x00;
+           		while ((c!= '0') && (c!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		    c=sio_poll_key(2);
-        		    if ((c=='0') || (c== '1')) next_step=1;
         		} 
 
                 *FC15_DATAptr = *FC15_DATAptr + 1;
@@ -1741,11 +1738,10 @@ int t_mvbel (void)
         		{ 
         		} 
 */
-        		next_step=0;
-        		while ( !next_step)
+           		c=0x00;
+           		while ((c!= '0') && (c!= '1') && ((*regmr & 0x0200) != 0))
         		{ 
         		    c=sio_poll_key(2);
-        		    if ((c=='0') || (c== '1')) next_step=1;
         		} 
 
                 *FC15_DATAptr = *FC15_DATAptr + 1;
@@ -1769,7 +1765,7 @@ int t_mvbel (void)
 
 	        case 8: //SALVA ESITO TEST
 	                
-	                printf("\n\nESITO TEST\n");
+	                printf("\n\nESITO TEST:\n");
 	                if (test_mvb_lineA) save_stato(TESTMVB_LINE_A_OK);// Test TX MVB su LINEA A OK
 	                else                save_stato(TESTMVB_LINE_A_KO);// Test TX MVB su LINEA A KO
 	                
