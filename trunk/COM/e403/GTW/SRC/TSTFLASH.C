@@ -646,6 +646,73 @@ void prn_stato (unsigned int prg, unsigned int cod)
 			printf("%04d  %04x  Test ISOLAMENTO MVB su LINEA B..............................   KO  ",prg,cod);
 			break;
 
+		case TESTMVB_LOOP_AB_INT_CLS_OK:
+			printf("%04d  %04x  Test loop interno con KMA e KMB chiusi......................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LOOP_AB_INT_CLS_KO:
+			printf("%04d  %04x  Test loop interno con KMA e KMB chiusi......................   KO  ",prg,cod);
+			break;
+
+	
+		case TESTMVB_LOOP_AB_INT_OPEN_OK:
+			printf("%04d  %04x  Test MVB loop interno con KMA e KMB aperti..................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LOOP_AB_INT_OPEN_KO:
+			printf("%04d  %04x  Test MVB loop interno con KMA e KMB aperti..................   KO  ",prg,cod);
+			break;
+
+	
+		case TESTMVB_LOOP_AB_EXT_CLS_OK:
+			printf("%04d  %04x  Test MVB loop esterno con KMA e KMB chiusi..................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LOOP_AB_EXT_CLS_KO:
+			printf("%04d  %04x  Test MVB loop esterno con KMA e KMB chiusi..................   KO  ",prg,cod);
+			break;
+
+	
+		case TESTMVB_LOOP_B_EXT_OK:
+			printf("%04d  %04x  Test MVB loop esterno con KMA aperto e KMB chiuso...........   OK  ",prg,cod);
+			break;
+		case TESTMVB_LOOP_B_EXT_KO:
+			printf("%04d  %04x  Test MVB loop esterno con KMA aperto e KMB chiuso...........   KO  ",prg,cod);
+			break;
+
+
+		case TESTMVB_LOOP_AB_EXT_CLS2_OK:
+			printf("%04d  %04x  Test 2 MVB loop esterno con KMA e KMB chiusi................   OK  ",prg,cod);
+			break;
+		case TESTMVB_LOOP_AB_EXT_CLS2_KO:
+			printf("%04d  %04x  Test 2 MVB loop esterno con KMA e KMB chiusi................   KO  ",prg,cod);
+			break;
+
+
+		case TESTMVB_LOOP_A_EXT_OK:
+			printf("%04d  %04x  Test MVB loop esterno con KMA chiuso e KMB aperto...........   OK  ",prg,cod);
+			break;
+		case TESTMVB_LOOP_A_EXT_KO:
+			printf("%04d  %04x  Test MVB loop esterno con KMA chiuso e KMB aperto...........   KO  ",prg,cod);
+			break;
+
+		case TESTMVB_FEV_OK:
+			printf("%04d  %04x  Test registro FEV  con KMA e KMB chiuso.....................   OK  ",prg,cod);
+			break;
+		case TESTMVB_FEV_KO:
+			printf("%04d  %04x  Test registro FEV  con KMA e KMB chiuso.....................   KO  ",prg,cod);
+			break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		case TE2PROMOK:
 			printf("%04d  %04x  Test EEPROM.................................................   OK  ",prg,cod);
 			break;
