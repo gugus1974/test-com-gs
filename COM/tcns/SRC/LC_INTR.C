@@ -132,8 +132,9 @@ void _lc_intr_hdlr_0_k(unsigned short ts_id)
 
     ivr0 = p_ir->ivr0.w; /* Read 1st interrupt vector */
 
-    while ((ivr0 & TM_IVR_IAV) != 0)
-    {
+    while ((ivr0 & TM_IVR_IAV) != 0) //Indicates that at least one bit is set in the corresponding ISRi and that VEC3..0 is an
+    {                                //applicable interrupt vector
+
         ivr0_vec = ivr0 & TM_IVR_MASK;
 
         p_isrt = lci_ctrl_blk[ts_id].p_isr     [ivr0_vec];

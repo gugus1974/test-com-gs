@@ -82,8 +82,29 @@
 #define  TESTMVB_LINE_B_KO 		0x0621
 #define  TESTMVB_LINE_B_OFF_OK 	0x0622
 #define  TESTMVB_LINE_B_OFF_KO 	0x0623
+//1
+#define  TESTMVB_LOOP_AB_INT_CLS_OK 	0x0650 	//test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi
+#define  TESTMVB_LOOP_AB_INT_CLS_KO   0x0651
+//2
+#define  TESTMVB_LOOP_AB_INT_OPEN_OK 	0x0652 	// test del loop interno con interrogazione del proprio stato e KMA e KMB aperti
+#define  TESTMVB_LOOP_AB_INT_OPEN_KO 	0x0653
+//3
+#define  TESTMVB_LOOP_AB_EXT_CLS_OK 	0x0654 	//test esterno KMA=1 e KMB=1
+#define  TESTMVB_LOOP_AB_EXT_CLS_KO 	0x0655
+//4
+#define  TESTMVB_LOOP_B_EXT_OK 				0x0656 	//test esterno KMA=0 e KMB=1
+#define  TESTMVB_LOOP_B_EXT_KO  			0x0657
+//5
+#define  TESTMVB_LOOP_AB_EXT_CLS2_OK  0x0658 	//test esterno  KMA=1 e KMB=1
+#define  TESTMVB_LOOP_AB_EXT_CLS2_KO  0x0659                               
+//6
+#define  TESTMVB_LOOP_A_EXT_OK 		  	0x0660 		//test esterno KMA=1 e KMB=0
+#define  TESTMVB_LOOP_A_EXT_KO 			  0x0661
+//7
+#define  TESTMVB_FEV_OK 							0x0662 		//test esterno KMA=1 e KMB=0
+#define  TESTMVB_FEV_KO 							0x0663
 
-
+//test esterno KMA=1 e KMB=1
 
 /* Test PIO OK */
 #define  TPIOOK 		0x0710
