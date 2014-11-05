@@ -176,8 +176,8 @@ static void do_hw_init(void)
         printf("\n\n\n");
         printf("############################################\n");
         printf("#                                          #\n");
-        printf("#              TEST COM v 1.0              #\n");
-        printf("#                                         L#\n");
+        printf("#              TEST COM v 2.0              #\n");
+        printf("#                                          #\n");
         printf("############################################\n");
 #else
         hw_init(0);
@@ -403,28 +403,6 @@ static void strt(void)
         pi_free((void*)mvb_ts_cfg->p_prt_cfg);
         pi_free((void*)mvb_ts_cfg);
 
-//#ifdef ATR_WTB
-//        /* configure the WTB traffic store */
-//        Check(nc_wtb_ts_cfg(&wtb_ts_cfg));
-//        Check(lp_create(WTB_TS_ID, LP_HW_TYPE_HDLC, wtb_ts_cfg, 0));
-//        Check(lp_enquiry(WTB_TS_ID, &wtb_cb));
-//        wtb_ts_cfg->pb_pit = wtb_cb.pb_pit;
-//        wtb_ts_cfg->pb_pcs = wtb_cb.pb_pcs;
-//        wtb_ts_cfg->pb_prt = wtb_cb.pb_prt;
-//        wtb_ts_cfg->pb_frc = wtb_cb.pb_frc;
-//        pi_free((void*)wtb_ts_cfg->p_prt_cfg);
-//        wtb_ts_cfg->p_prt_cfg = 0;
-//
-//        /* initialize the WTB link layer */
-//        ls_t_Init();
-//        Check(ls_t_Reset());
-//
-//#ifdef UMS
-//        /* initialize the UMS */
-//        li_t_IDTSInit((void*)id_ts);
-//        uwtm_init();
-//#endif
-//#endif
 
         /* configure the datasets (PD) */
         Check(nc_mvb_ds_cfg());

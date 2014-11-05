@@ -87,7 +87,7 @@
 #define STRT_SINK_TMO_TASK_PRIO		50
 #define STRT_APPLICATION_TASK_PRIO  1
 //#define STRT_SHELL_TASK_PRIO        0
-#define STRT_SHELL_TASK_PRIO        55
+#define STRT_SHELL_TASK_PRIO        51
 
 /* this macro enables the external NCDB */
 #define STRT_EXT_NCDB_ENABLED
