@@ -867,24 +867,7 @@ PI_TASK(application_task, STRT_APPLICATION_TASK_ID, STRT_APPLICATION_TASK_PRIO)
 //    testflash_init();
 //	hw_watchdog_service();//addomestica il cane
 
-	if (station_id == GTWM_ST_ID || station_id == GTWS_ST_ID) {
 
-		while (1) {
-
-			/* get the current time */
-			ticks = pi_ticks_elapsed();
-
-			/* execute the application loop and blink the led */
-			if (station_id == GTWM_ST_ID) {
-				gtwm_loop();
-				led_user6(led_time < APPL_GTWM_LED_ON_MS);
-				led_time = (led_time + APPL_CYCLE_MS) % (APPL_GTWM_LED_ON_MS + APPL_GTWM_LED_OFF_MS);
-			}
-			/* wait for the next execution time */
-			wait_ticks = ms2tick(APPL_CYCLE_MS) - (pi_ticks_elapsed() - ticks);
-			pi_wait (wait_ticks > 0 ? wait_ticks : 1);
-		}
-	}
 }
 
 
