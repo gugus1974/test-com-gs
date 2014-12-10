@@ -541,8 +541,9 @@ static short TestCOM_cmd(short argc, char *argv[])
             printf("    4 - test MVB Traffic Memory\n");       
             printf("    5 - test SW1 MVB \n");       
             printf("    6 - test TX/RX MVB\n");       
-            printf("    7 - test LED\n");       
-            printf("    8 - test REPORT\n");       
+            printf("    7 - test TX/RX MVB con DEW\n");       
+            printf("    8 - test LED\n");       
+            printf("    9 - test REPORT\n");       
             printf("   10 - COPY RAM to ROM\n");       
             printf("    x - EXIT\n");       
             stsTest = 1;/*attesa della scelta*/
@@ -605,11 +606,17 @@ static short TestCOM_cmd(short argc, char *argv[])
     	    }
     	    else if (strcmp(s,"7") == 0)
     	    {
+    	        printf("test TX/RX MVB con DEW\n");
+    	        t_mvbel_stim();
+                stsTest = 0;
+    	    }
+    	    else if (strcmp(s,"8") == 0)
+    	    {
                 printf("test LED\n");
                 tstio_led(0,0);
                 stsTest = 0;
             }
-    	    else if (strcmp(s,"8") == 0)
+    	    else if (strcmp(s,"9") == 0)
     	    {
                 printf("REPORT TEST\n");
                 prn_report(0,0);
@@ -859,8 +866,8 @@ extern "C" void gtw_test_install(void);
 
 PI_TASK(application_task, STRT_APPLICATION_TASK_ID, STRT_APPLICATION_TASK_PRIO)
 {
-	int			  led_time = 0;		/* application LED blink time                 */
-	int			  wait_ticks;		/* ticks to wait for next execution           */
+//	int			  led_time = 0;		/* application LED blink time                 */
+//	int			  wait_ticks;		/* ticks to wait for next execution           */
 //	unsigned long new_station_id;	/* station id requested by redundancy control */
 
 //    ushell_register("testcom", "", "esegue il Test COM", TestCOM_cmd);
