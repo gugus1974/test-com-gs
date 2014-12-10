@@ -8,3 +8,4 @@ short tstmvb_txrx(short argc, char *argv[] );
 short test_mvb (short argc, char *argv[] );
 short test_SW1 (short argc, char *argv[] );
 void MVB_init (void);
+short t_mvbel_stim(void);

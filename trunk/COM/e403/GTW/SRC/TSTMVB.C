@@ -7,6 +7,8 @@
 *****************************************************************************/
 
 #include "stdio.h"
+//#include "pi_vrtx.h"
+
 //#include "shd_var.h"
 #include "tstflash.h"   
 #include "cod_st.h"
@@ -1483,6 +1485,7 @@ short t_mvbel (void)
 	unsigned long j;
 	char c;
 	static unsigned char   stato=0;
+	static unsigned char   endtest=0;
 	static unsigned char   next_step=0;
 	unsigned char   test_mvb_lineA,test_mvb_lineB;
 	unsigned char   test_mvb_lineAOFF,test_mvb_lineBOFF;
@@ -1625,8 +1628,9 @@ FC15_DATAptr = (unsigned short  *)st_FC15_DATA0; // pp -data area address page 0
 /* 5 - test esterno KMA=1 e KMB=1  */
 /* 6 - test esterno KMA=1 e KMB=0  */
 /* 7 - test esterno KMA=1 e KMB=1  *//* test FEV interrupt  */
-
-	while( stato != 20 )	
+	endtest = 0;
+	stato = 0;
+	while( !endtest )	
 	{
 	    switch (stato)
 	    {
@@ -1792,6 +1796,194 @@ FC15_DATAptr = (unsigned short  *)st_FC15_DATA0; // pp -data area address page 0
                     stato = 7;
 	           break;
 
+    
+        	case 10: //SALVA ESITO TEST STIM
+        	                
+        	    printf("\n\nESITO TEST :\n");
+        	    if (test_mvb_lineA) save_stato(TESTMVB_LINE_A_OK);// Test TX MVB su LINEA A OK
+        	    else                save_stato(TESTMVB_LINE_A_KO);// Test TX MVB su LINEA A KO
+        	    
+        	    if (test_mvb_lineAOFF)  save_stato(TESTMVB_LINE_A_OFF_OK);// Test ISOL MVB su LINEA A OK
+        	    else                    save_stato(TESTMVB_LINE_A_OFF_KO);// Test ISOL MVB su LINEA A KO
+        
+        	    if (test_mvb_lineB) save_stato(TESTMVB_LINE_B_OK);// Test TX MVB su LINEA B OK
+        	    else                save_stato(TESTMVB_LINE_B_KO);// Test TX MVB su LINEA B KO
+        	
+        	    if (test_mvb_lineBOFF)  save_stato(TESTMVB_LINE_B_OFF_OK);// Test ISOL MVB su LINEA B OK
+        	    else                    save_stato(TESTMVB_LINE_B_OFF_KO);// Test ISOL MVB su LINEA B KO
+                
+              if (test_mvb_lineA && test_mvb_lineAOFF && test_mvb_lineB && test_mvb_lineBOFF&&
+             	   (er[1]==0) &&(er[2]==0) &&(er[3]==0) &&(er[4]==0) &&(er[5]==0) &&(er[6]==0) &&(er[7]==0) )
+                    er[10]=0;
+                else
+                    er[10]=1;
+              
+              endtest = 1;//bye bye             
+        	break;
+	    }
+}
+
+	return er[10];
+}
+
+
+short t_mvbel_stim (void)
+{
+	unsigned short data1,i,vp;
+	unsigned short er[20];
+	unsigned long j;
+	char c;
+	static unsigned char   stato=0;
+	static unsigned char   endtest=0;
+	static unsigned char   next_step=0;
+	unsigned char   test_mvb_lineA,test_mvb_lineB;
+	unsigned char   test_mvb_lineAOFF,test_mvb_lineBOFF;
+	unsigned short  off,seg,p2val,fcval,ecval,isr0val,isr1val;
+	unsigned long   app; 
+	unsigned short  * st_DA_PITptr;
+	unsigned short  * st_DA_PCSptr;
+	unsigned short  * st_DA_DATA0ptr;
+	unsigned short  * st_DA_DATA1ptr;
+	unsigned short  * st_DA_PCSptr1;
+	unsigned short  * st_DA_DATA0ptr1;
+	unsigned short  * st_DA_DATA1ptr1;
+	unsigned short  * FC15_PCSptr;
+	unsigned short  * FC15_DATAptr;
+
+	for(i=0;i<20;i++) er[i] = 0;
+
+	*regscr1 = 0x0000; 						/* reset software funmode MCM=4 (Memory Configuration Modes)*/
+	*regscr = 0x0000;                       /* reset software funmode MCM=0*/
+	for (i = 0; i<20; i++);					/* istruzione di attesa				*/
+//09/12/2014 23.28
+	*regscr = 0x0001;						/* Motorola Mode,Config Mode, 
+	*regscr = 0x0409;						/* Motorola Mode,Config Mode, 
+//09/12/2014 23.29	                                           TMO43.7us, MAS=1	,*/
+	*regmcr = funmode;						/* write MCM 4				*/
+	/* read MVBC type*/
+	if ((*regmcr & 0xF800) == 0x0000)       printf("MVBC01 detected\n");
+	else if ((*regmcr & 0xF800) == 0x1000)  printf("MVBC02A detected\n");
+	else if ((*regmcr & 0xF800) == 0x1800)  printf("MVBC02B detected\n");
+	else if ((*regmcr & 0xF800) == 0x2000)  printf("MVBC02C detected\n");
+	    
+	/* DA ORA MCM = 4*/
+	for (i = 0; i<20; i++);								/* istruzione di attesa				*/
+	/* azzera la LA port index table così tutti i LA port puntano al port 0 */
+    for (st_DA_PITptr=(unsigned short  *) st_LA_PIT; st_DA_PITptr<=(unsigned short  *) end_LA_PIT; st_DA_PITptr++) *st_DA_PITptr = 0;	
+	/* azzera tutti gli LA PCS per disattivare tutti gli LA port  */
+    for (st_DA_PITptr=(unsigned short  *) st_LA_PCS; st_DA_PITptr<=(unsigned short  *) end_LA_PCS; st_DA_PITptr++) *st_DA_PITptr = 0;	
+	/* azzera la DA port index table così tutti i DA port puntano al port 0 */
+    for (st_DA_PITptr=(unsigned short  *) st_DA_PIT; st_DA_PITptr<=(unsigned short  *) end_DA_PIT; st_DA_PITptr++) *st_DA_PITptr = 0;	
+	/* azzera tutti i DA PCS per disattivare tutti i DA port  */
+    for (st_DA_PITptr=(unsigned short  *) st_DA_PCS; st_DA_PITptr<=(unsigned short  *) end_DA_PCS; st_DA_PITptr++) *st_DA_PITptr = 0;	
+
+    /* configuazione forzata address		*/
+ //            /* sovrascrive Device address 0x000E*/
+	data1 = *regdaor1;						/* legge il Device Address			*/ 
+	*regdr = 0x0009;						/* LAA=1 SLM=1 LS=0 ,blocca lo switch tra le linee LAA=1 SLM=1		*/
+	printf ( "DR = %04x DA=%04x\n",*regdr,data1);  
+//09/12/2014 23.30	
+	*regdaor1 = 0x000E;
+//09/12/2014 23.30
+	*regdaok = 0x0094;						/* 94 sovrascrive indirizzo hardware            */
+	data1 = *regdaor1;						/* legge il Device Address			            */ 
+	printf ( "MVB Device Address =%04x\n",data1);
+    /* abilita tutte le interrupt			*/
+	*regimr0 = 0xFFFF;						
+	*regimr1 = 0xFFFF;
+	*regivr0 = 0;
+	*regivr1 = 0;
+
+	/* PIT 1 */
+	st_DA_PITptr = (unsigned short  *)(st_DA_PIT + data1*2);
+	*st_DA_PITptr = 0x0001; /* utilizza il DA pit n°1 per il proprio device add.*/
+	/* PIT 2 */
+	st_DA_PITptr = (unsigned short  *)(st_DA_PIT + 0x000D*2);
+	*st_DA_PITptr = 0x0002;						/* utilizza il DA port n°2 per il device add. della stim*/
+
+	st_DA_PCSptr = (unsigned short  *)(st_DA_PCS + (0x0001<<3));
+	*st_DA_PCSptr = 0xF420;		/* FC=15, sink port, no check seq., no write always, DTI1, no queue, no num data, no forcing data*/
+	*(st_DA_PCSptr + 1) = 0x0000;
+
+	st_DA_PCSptr1 = (unsigned short  *)(st_DA_PCS + (0x0002<<3));
+	*st_DA_PCSptr1 = 0xF440;		/* FC=15, sink port, no check seq., no write always, DTI2, no queue, no num data, no forcing data*/
+	*(st_DA_PCSptr1 + 1) = 0x0000;/*Port Index PI=000hex is used to assign all unused Logical and Device Addresses*/
+
+/* address DATA AREA (DA)*/
+vp = 0;
+	st_DA_DATA0ptr =  (unsigned short  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
+	st_DA_DATA0ptr1 =  (unsigned short  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
+vp = 1;
+	st_DA_DATA1ptr =  (unsigned short  *)(st_DA_DATA+(((0x0001<<4)&0xFFC0)|(vp<<5)|((0x0001<<3)&0x0018)));
+	st_DA_DATA1ptr1 =  (unsigned short  *)(st_DA_DATA+(((0x0002<<4)&0xFFC0)|(vp<<5)|((0x0002<<3)&0x0018)));
+	
+/* Set TM for device status report */
+FC15_PCSptr = (unsigned short  *)st_FC15_PCS; //pp-psc address
+FC15_DATAptr = (unsigned short  *)st_FC15_DATA0; // pp -data area address page 0
+*FC15_PCSptr = 0xF860;		/* FC=15, source port, no check seq., no write always, DTI3, no queue, no num data, no forcing data*/
+*(FC15_PCSptr + 1) = 0x0000;
+*FC15_DATAptr = 0x0001;
+	
+	*regmfs = data1 | 0xF000; 			        /* master frame di richiesta proprio stato*/ 
+	*regmr = 0;
+		
+	printf("set Master Frame %x\n",*regmfs); /*  */            
+	
+
+	/* connect to the MVB line A*/
+	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);
+
+	*regscr1 = 0x050B;	/* predispone per l'inizializzazione dei reg.	*/
+
+	for (i = 0; i<30000; i++);					/* istruzione di attesa				*/
+//
+//    *regisr0=0;
+//	*regivr0=0;
+//	*regisr1=0;
+//	*regivr1=0;
+//	*regfc=0;
+//	*regec=0;
+//	*st_DA_DATA0ptr=0;
+//	*(st_DA_DATA0ptr+1)=0;
+//	*(st_DA_DATA0ptr+2)=0;
+//	*(st_DA_DATA0ptr+3)=0;
+//	*st_DA_DATA1ptr=0;
+//	*(st_DA_DATA1ptr+1)=0;
+//	*(st_DA_DATA1ptr+2)=0;
+//	*(st_DA_DATA1ptr+3)=0;
+//	*st_DA_DATA0ptr1=0;
+//	*(st_DA_DATA0ptr1+1)=0;
+//	*(st_DA_DATA0ptr1+2)=0;
+//	*(st_DA_DATA0ptr1+3)=0;
+//	*st_DA_DATA1ptr1=0;
+//	*(st_DA_DATA1ptr1+1)=0;
+//	*(st_DA_DATA1ptr1+2)=0;
+//	*(st_DA_DATA1ptr1+3)=0;
+
+    stato = 0;
+    test_mvb_lineA = 0;
+    test_mvb_lineAOFF = 0;
+    test_mvb_lineB = 0;
+    test_mvb_lineBOFF = 0;
+    
+
+	for (i = 0; i<20000; i++) ;					/* istruzione di attesa				*/
+
+
+/* 1 - test del loop interno con interrogazione del proprio stato e KMA e KMB chiusi */
+/* 2 - test del loop interno con interrogazione del proprio stato e KMA e KMB aperti */
+/* 3 - test esterno KMA=1 e KMB=1  */
+/* 4 - test esterno KMA=0 e KMB=1  */
+/* 5 - test esterno KMA=1 e KMB=1  */
+/* 6 - test esterno KMA=1 e KMB=0  */
+/* 7 - test esterno KMA=1 e KMB=1  *//* test FEV interrupt  */
+	endtest = 0;
+	stato = 10;
+	while( !endtest )	
+	{
+	    switch (stato)
+	    {
+	        default:
         	case 10: 
                 /* 1 - TEST DEL LOOP INTERNO CON INTERROGAZIONE DEL PROPRIO STATO E KMA E KMB CHIUSI */
                	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA|DOP0_KMB);	
@@ -1822,18 +2014,17 @@ FC15_DATAptr = (unsigned short  *)st_FC15_DATA0; // pp -data area address page 0
             	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
             	printf("\n\n 1 - TEST DEL LOOP INTERNO CON INTERROGAZIONE DEL PROPRIO STATO E KMA E KMB CHIUSI\r\n");
             	
-            	for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
+            	for (off=0; off != 0x1FFE; off++)	
             	{
-            //		while (((c=_getkey())!= '\t') && ((*regmr & 0x0200) != 0)){
-               		c=0x00;
+
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
-            			{ 
-            		    c=sio_poll_key(2);
-            			} 
-            			if ( c == '\t') break; 
-            
-//                	*FC15_DATAptr = *FC15_DATAptr + 1;
-            			*regmr=0x0020;					/* invia master frame manualmente */
+            		{ 
+            		    c=sio_poll_key(1);
+            		} 
+            		if ( c == '\t') break; 
+         
+                	*FC15_DATAptr = *FC15_DATAptr + 1;
+            		*regmr=0x0020;					/* invia master frame manualmente */
             	}
             	printf("\r\n");
             	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
@@ -1848,12 +2039,7 @@ FC15_DATAptr = (unsigned short  *)st_FC15_DATA0; // pp -data area address page 0
             	*regivr1=0;
             	*regfc=0;
             	*regec=0;
-            	/*
-            	Interrupt Status Register (ISR0): Address 0yFC0H
-Bit Number 15  14  13  12   11  10   9   8   7   6    5    4    3    2    1    0
-Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI1
-            	**/
-            	
+             	
             	if (  /*(isr0val != 0x0685) | (isr1val != 0) | */(fcval != 0x3FFC) | ( ecval > 10) | 
             	    (*st_DA_DATA0ptr == 0) | ( *st_DA_DATA1ptr == 0) | (*st_DA_DATA0ptr1 != 0) | (*st_DA_DATA1ptr1 != 0) )
             	{
@@ -1893,17 +2079,18 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
         	    for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
         	    {
                		c=0x00;
+
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
             		{ 
-            		    c=sio_poll_key(2);
+            		    c=sio_poll_key(1);
             		} 
                 	if ( c == '\t') break; 
-            	    
-//            	    *FC15_DATAptr = *FC15_DATAptr + 1;
+          	    
+            	    	*FC15_DATAptr = *FC15_DATAptr + 1;
             		*regmr=0x0020;					/* invia master frame manualmente */
             	}
             	printf("\r\n");
-        	    for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
+        	for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
         
             	isr0val = *regisr0;
             	isr1val = *regisr1;
@@ -1955,13 +2142,14 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
         
             	for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
             	{
-        
+       
                		c=0x00;
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
             		{ 
-            		    c=sio_poll_key(2);
+            		    c=sio_poll_key(1);
             		} 
             		if ( c == '\t') break; 
+
             		*regmr=0x0020;					/* invia master frame manualmente */
             	}
             	printf("\r\n");
@@ -2017,7 +2205,7 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
                		c=0x00;
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
             		{ 
-            		    c=sio_poll_key(2);
+            		    c=sio_poll_key(1);
             		} 
         		    if ( c == '\t') break; 
         		    *regmr=0x0020;					/* invia master frame manualmente */
@@ -2082,7 +2270,7 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
                		c=0x00;
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
             		{ 
-            		    c=sio_poll_key(2);
+            		    c=sio_poll_key(1);
             		} 
             		if ( c == '\t') break; 
             		*regmr=0x0020;					/* invia master frame manualmente */
@@ -2132,8 +2320,8 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
             break;
 
             case 15:/* test esterno KMA=1 e KMB=0  */
-               	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMA);	
-            	printf("6 - TEST ESTERNO LINEA 2 KMA=1 E KMB=0\r\n");
+               	set_out_port(0, DOP0_KMA|DOP0_KMB, DOP0_KMB);	
+            	printf("6 - TEST ESTERNO LINEA 2 KMA=0 E KMB=1\r\n");
         	    for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
         	    for (off=0; off != 0x1FFE; off++)	/*while ( (c=_getkey())!= '\t')*/
         	    {
@@ -2141,14 +2329,13 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
                		c=0x00;
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
             		{ 
-            		    c=sio_poll_key(2);
+            		    c=sio_poll_key(1);
             		} 
             		if ( c == '\t') break; 
             		*regmr=0x0020;					/* invia master frame manualmente */
         	    }
         	    printf("\r\n");
         	    for (i = 0; i<20000; i++);					/* istruzione di attesa				*/
-            	//p2val = (P2 & 0x0600);
             	isr0val = *regisr0;
             	isr1val = *regisr1;
             	fcval = *regfc;
@@ -2201,7 +2388,7 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
                		c=0x00;
                		while ((c!= '\t') && ((*regmr & 0x0200) != 0))
             		{ 
-            		    c=sio_poll_key(2);
+            		    c=sio_poll_key(1);
             		} 
             		if ( c == '\t') break; 
             		*regmr=0x0020;					/* invia master frame manualmente */
@@ -2238,20 +2425,7 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
             break;
     
         	case 20: //SALVA ESITO TEST STIM
-        	                
         	    printf("\n\nESITO TEST :\n");
-        	    if (test_mvb_lineA) save_stato(TESTMVB_LINE_A_OK);// Test TX MVB su LINEA A OK
-        	    else                save_stato(TESTMVB_LINE_A_KO);// Test TX MVB su LINEA A KO
-        	    
-        	    if (test_mvb_lineAOFF)  save_stato(TESTMVB_LINE_A_OFF_OK);// Test ISOL MVB su LINEA A OK
-        	    else                    save_stato(TESTMVB_LINE_A_OFF_KO);// Test ISOL MVB su LINEA A KO
-        
-        	    if (test_mvb_lineB) save_stato(TESTMVB_LINE_B_OK);// Test TX MVB su LINEA B OK
-        	    else                save_stato(TESTMVB_LINE_B_KO);// Test TX MVB su LINEA B KO
-        	
-        	    if (test_mvb_lineBOFF)  save_stato(TESTMVB_LINE_B_OFF_OK);// Test ISOL MVB su LINEA B OK
-        	    else                    save_stato(TESTMVB_LINE_B_OFF_KO);// Test ISOL MVB su LINEA B KO
-                
                 
           	    if (!er[1]) save_stato(TESTMVB_LOOP_AB_INT_CLS_OK);
         	    else       		save_stato(TESTMVB_LOOP_AB_INT_CLS_KO);
@@ -2282,14 +2456,13 @@ Symbol    EMF ESF DMF DSF AMFX MFC SFC RTI BTI DTI7 DTI6 DTI5 DTI4 DTI3 DTI2 DTI
                     er[10]=0;
                 else
                     er[10]=1;
-                            
+               endtest =1;             
         	break;
 	    }
     }
 
 	return er[10];
 }
-
 
 
 
